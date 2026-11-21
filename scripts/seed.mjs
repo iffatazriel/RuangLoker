@@ -490,10 +490,12 @@ const rows = [
   },
 ];
 
-await db.delete(jobs);
-await db.insert(jobs).values(rows).onConflictDoNothing();
+// Upsert per slug: ID lowongan tetap sama antar seed, jadi CV target dan lamaran tidak putus.
+for (const row of rows) {
+  await db.insert(jobs).values(row).onConflictDoUpdate({ target: jobs.slug, set: { ...row, updatedAt: now } });
+}
 
-console.log(`Seed selesai: ${rows.length} lowongan contoh dimasukkan.`);
+console.log(`Seed selesai: ${rows.length} lowongan contoh diperbarui atau dimasukkan.`);
 
 // Contoh skor: CV yang langsung dibuat dari profil fresh graduate (belum menulis ringkasan
 // atau uraian), dinilai terhadap lowongan Staff Admin. Tidak ada akun yang dibuat.

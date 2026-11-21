@@ -67,6 +67,26 @@ Buka `http://localhost:4321`. Panel kurasi: `/kelola`. Aplikasi pelamar: `/app`.
 > **Penting:** `VAULT_SECRET` mengunci enkripsi brankas. Kalau nilainya hilang atau berubah, berkas
 > lama tidak bisa dibuka lagi. Simpan di secret manager saat produksi, jangan di git.
 
+## Produksi
+
+```bash
+npm ci --include=dev && npm run build
+npm run db:migrate
+HOST=0.0.0.0 PORT=4321 node dist/server/entry.mjs
+```
+
+Variabel wajib di `.env` produksi:
+
+| Variabel | Isi |
+| --- | --- |
+| `DATABASE_URL` | `file:/var/lib/ruangloker/ruangloker.db` atau URL libSQL/Turso |
+| `VAULT_SECRET`, `VAULT_DIR` | Kunci brankas (jangan pernah diganti) dan folder berkas di luar folder publik |
+| `ADMIN_EMAILS` | Email akun yang boleh membuka `/kelola` dan konfirmasi pembayaran |
+| `PAYMENT_BANK_NAME`, `PAYMENT_ACCOUNT_NUMBER`, `PAYMENT_ACCOUNT_NAME`, `PAYMENT_QRIS_URL` | Info transfer/QRIS yang tampil di `/pesanan`. Selama kosong, pengguna diminta tidak transfer dulu |
+
+Cadangkan database **dan** `VAULT_DIR` bersama-sama; salah satu tanpa yang lain tidak bisa dipulihkan.
+Jalankan di belakang HTTPS (Caddy/Nginx). Jangan jalankan `db:seed` di produksi.
+
 ## Perintah
 
 | Perintah | Fungsi |
@@ -74,10 +94,10 @@ Buka `http://localhost:4321`. Panel kurasi: `/kelola`. Aplikasi pelamar: `/app`.
 | `npm run dev` | Server pengembangan |
 | `npm run build` | Build produksi (SSR) |
 | `npm run check` | Typecheck Astro + TypeScript |
-| `npm test` | Unit test (`node:test`) untuk rubrik Skor CV |
+| `npm test` | Unit test (`node:test`): Skor CV, surat lamaran, harga |
 | `npm run db:generate` | Buat migrasi dari `src/db/schema.ts` |
 | `npm run db:migrate` | Terapkan migrasi |
-| `npm run db:seed` | Isi 15 lowongan contoh |
+| `npm run db:seed` | Isi/perbarui 15 lowongan contoh (upsert per slug, ID tetap) |
 | `npm run db:reset` | Hapus database lokal |
 
 ## Aturan produk yang sudah dikunci di kode
@@ -95,12 +115,17 @@ Buka `http://localhost:4321`. Panel kurasi: `/kelola`. Aplikasi pelamar: `/app`.
    ditolak walaupun tombolnya diakali.
 7. **Mencabut izin data sensitif menghapus berkas fisiknya.** Consent yang dicabut tetapi datanya
    tetap disimpan adalah pelanggaran, bukan fitur.
-8. **Berkas tidak pernah punya URL publik.** Unduhan melewati pemeriksaan sesi pemilik; user lain
+8. **Berkas tidak pernah punya URL publik**, kecuali tautan CV untuk HRD (`/c/[token]`): hanya CV aktif,
+   token acak 30 hari, bisa dicabut. Unduhan lain melewati pemeriksaan sesi pemilik; user lain
    mendapat 404, bukan 403 yang membocorkan keberadaan berkas.
 9. **Kegagalan login tidak membedakan** email tidak terdaftar vs kata sandi salah.
+10. **Lamaran tidak pernah terkirim otomatis.** RuangLoker hanya membuka Gmail, WhatsApp, atau formulir
+    dengan isi terisi; pelamar sendiri yang menekan kirim lalu menandai terkirim.
+11. **Kredit hanya bertambah lewat konfirmasi admin**, sekali per pesanan (indeks unik di `credit_ledger`).
 
 ## Keputusan yang masih terbuka
 
 - Definisi terukur "lowongan valid" (KPI 90% di blueprint butuh definisi ini).
-- Kebijakan refund kredit saat lowongan kedaluwarsa setelah dipilih.
+- Kebijakan refund kredit saat lowongan kedaluwarsa setelah dipilih (sekarang: kuota/kredit tidak kembali saat lamaran dibatalkan).
+- Payment gateway (Midtrans/Xendit) menggantikan konfirmasi manual.
 - Alur consent UU PDP untuk KTP (wajib, harus terpisah dari consent pemasaran).
