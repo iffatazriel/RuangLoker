@@ -1,5 +1,6 @@
 ---
 import AppLayout from '../layouts/AppLayout.astro';
+import { listApplications } from '../db/applications';
 import { getAccountOverview, formatBytes, hasSensitiveConsent, listFiles } from '../db/account';
 import { listCvs } from '../db/cv';
 import { countActiveJobs } from '../db/queries';
@@ -12,14 +13,18 @@ const [cvList, vaultFiles] = await Promise.all([listCvs(user.id), listFiles(user
 const firstCv = cvList[0] ?? null;
 const hasCvPdf = vaultFiles.some((f) => f.kind === 'cv');
 
+const apps = await listApplications(user.id);
 const journey = [
   { done: overview.completeness.percent === 100, title: 'Lengkapi profil', body: 'Data ini dipakai ulang untuk CV dan setiap lamaran.', href: '/profil', cta: 'Isi profil' },
   { done: cvList.length > 0, title: 'Buat CV ATS', body: 'CV disusun dari profilmu, lalu dinilai dengan aturan terbuka.', href: '/cv', cta: 'Buat CV' },
   { done: hasCvPdf, title: 'Unduh PDF CV', body: 'PDF disimpan ke brankas dan siap dilampirkan saat melamar.', href: firstCv ? `/cv/${firstCv.id}` : '/cv', cta: 'Buka CV' },
-  { done: false, title: 'Pilih lowongan, kirim sendiri', body: 'Lamar dari email atau WhatsApp milikmu. Antrean lamaran otomatis menyusul.', href: '/lowongan', cta: 'Cari lowongan' },
+  { done: apps.some((a) => a.status === 'terkirim'), title: 'Pilih lowongan, kirim sendiri', body: 'Pilih sampai 5 lowongan, lalu kirim satu per satu dari email atau WhatsApp milikmu.', href: '/lowongan', cta: 'Cari lowongan' },
 ];
 const currentIndex = journey.findIndex((s) => !s.done);
-const current = journey[currentIndex];
+const allDone = currentIndex === -1;
+const current = allDone
+  ? { title: 'Lamaran pertamamu sudah terkirim', body: 'Lanjut lamar lowongan lain, atau cek riwayat dan balasan HRD di email atau WhatsApp milikmu.', href: '/lowongan', cta: 'Cari lowongan lagi' }
+  : journey[currentIndex];
 
 const missingLabels: Record<string, string> = {
   fullName: 'nama lengkap',
@@ -61,7 +66,7 @@ const nextSteps = [
   </div>
 
   <section class="mt-4 overflow-hidden rounded-[24px] bg-accent md:hidden p-5 text-white shadow-[0_16px_36px_rgb(28_124_244/0.25)] sm:p-6" aria-label="Langkah sekarang">
-    <p class="m-0 text-[12.5px] font-semibold text-white/80">Langkah {currentIndex + 1} dari {journey.length}</p>
+    <p class="m-0 text-[12.5px] font-semibold text-white/80">{allDone ? 'Semua langkah selesai' : `Langkah ${currentIndex + 1} dari ${journey.length}`}</p>
     <h2 class="m-0 mt-1 text-[22px] leading-tight font-bold sm:text-[26px]">{current.title}</h2>
     <p class="m-0 mt-1.5 max-w-[34em] text-[14px] leading-relaxed text-white/85">{current.body}</p>
     <div class="mt-4 flex gap-1.5" aria-hidden="true">

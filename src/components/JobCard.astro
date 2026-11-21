@@ -11,9 +11,11 @@ import {
 interface Props {
   job: JobWithDistance;
   compact?: boolean;
+  selectable?: boolean;
 }
 
-const { job, compact = false } = Astro.props;
+const { job, compact = false, selectable = false } = Astro.props;
+const canSelect = selectable && ['Email', 'WhatsApp', 'Google Form'].includes(job.applyChannel);
 
 const labels = trustLabels(job);
 const daysLeft = totalDaysLeft(job);
@@ -28,9 +30,15 @@ const channelClass =
 ---
 
 <article
-  class="card flex flex-col gap-3 p-4 transition hover:-translate-y-0.5 hover:shadow-[0_16px_36px_rgb(15_23_18/0.08)]"
+  class="card relative flex flex-col gap-3 p-4 transition hover:-translate-y-0.5 hover:shadow-[0_16px_36px_rgb(15_23_18/0.08)]"
   data-job-card
 >
+  {canSelect && (
+    <label class="absolute top-3 right-3 z-10 flex cursor-pointer items-center gap-1.5 rounded-lg bg-white/90 px-2 py-1 text-[12px] font-semibold text-muted">
+      <input type="checkbox" name="jobId" value={job.id} form="lamar-semua" class="size-4 accent-[var(--color-accent)]" data-pick />
+      Pilih
+    </label>
+  )}
   <div class="flex items-start gap-3">
     <div
       class="grid size-11 shrink-0 place-items-center rounded-xl bg-accent-soft text-[12px] font-extrabold text-accent-2"

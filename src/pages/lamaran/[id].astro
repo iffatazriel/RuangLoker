@@ -1,7 +1,7 @@
 ---
 import AppLayout from '../../layouts/AppLayout.astro';
 import { getProfile } from '../../db/account';
-import { activeCvFile, activeCvLink, getApplication } from '../../db/applications';
+import { activeCvFile, activeCvLink, getApplication, parseQueue } from '../../db/applications';
 import { CHANNEL_LABELS, formatDate } from '../../lib/format';
 import { CV_LINK_PLACEHOLDER, gmailComposeUrl, mailtoUrl, TEMPLATES, TONES, waUrl } from '../../lib/letter';
 
@@ -28,10 +28,12 @@ const okText: Record<string, string> = {
   'tautan-baru': 'Tautan CV dibuat.',
 };
 const done = app.status !== 'draf';
+const queue = parseQueue(Astro.url.searchParams.get('antrean'));
+const queueUrl = queue.length ? `/lamaran/antrean?ids=${queue.join(',')}` : '';
 ---
 
 <AppLayout title={`Lamaran ${app.jobTitle}`} active="lamaran" userName={profile?.fullName || user.email}>
-  <a href="/lamaran" class="mt-4 inline-block text-[12.5px] font-semibold text-muted no-underline hover:text-ink">Semua lamaran</a>
+  <a href={queueUrl || '/lamaran'} class="mt-4 inline-block text-[12.5px] font-semibold text-muted no-underline hover:text-ink">{queueUrl ? 'Kembali ke antrean' : 'Semua lamaran'}</a>
   <div class="mt-1 flex flex-wrap items-end justify-between gap-3">
     <div class="min-w-0">
       <h1 class="m-0 text-2xl font-extrabold tracking-tight">{app.jobTitle}</h1>
@@ -108,7 +110,7 @@ const done = app.status !== 'draf';
           {!done && (
             <li class="grid gap-2">
               <b>3. Sudah terkirim?</b>
-              <form method="POST" action={`/api/lamaran/${app.id}`}><input type="hidden" name="action" value="terkirim" /><button class="btn btn-ghost btn-sm w-full" type="submit">Tandai terkirim</button></form>
+              <form method="POST" action={`/api/lamaran/${app.id}`}><input type="hidden" name="action" value="terkirim" />{queueUrl && <input type="hidden" name="next" value={queueUrl} />}<button class="btn btn-ghost btn-sm w-full" type="submit">{queueUrl ? 'Tandai terkirim, lanjut' : 'Tandai terkirim'}</button></form>
             </li>
           )}
         </ol>

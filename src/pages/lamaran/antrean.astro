@@ -1,0 +1,48 @@
+---
+import AppLayout from '../../layouts/AppLayout.astro';
+import { getProfile } from '../../db/account';
+import { getApplication, parseQueue } from '../../db/applications';
+import { CHANNEL_LABELS } from '../../lib/format';
+
+const user = Astro.locals.user!;
+const ids = parseQueue(Astro.url.searchParams.get('ids'));
+const items = (await Promise.all(ids.map((id) => getApplication(user.id, id)))).filter((a) => a !== null);
+if (items.length === 0) return Astro.redirect('/lamaran');
+
+const profile = await getProfile(user.id);
+const queueParam = items.map((a) => a.id).join(',');
+const sent = items.filter((a) => a.status !== 'draf').length;
+const current = items.find((a) => a.status === 'draf');
+const quotaHit = Astro.url.searchParams.has('kuota');
+const skipped = Number(Astro.url.searchParams.get('lewat') ?? 0);
+---
+
+<AppLayout title="Antrean lamaran" active="lamaran" userName={profile?.fullName || user.email}>
+  <a href="/lamaran" class="mt-4 inline-block text-[12.5px] font-semibold text-muted no-underline hover:text-ink">Semua lamaran</a>
+  <h1 class="m-0 mt-1 text-2xl font-extrabold tracking-tight">Antrean kirim</h1>
+  <p class="m-0 mt-1 text-[13px] text-muted">Kirim satu per satu dari akunmu. Tidak ada yang terkirim otomatis.</p>
+
+  {quotaHit && <p class="mt-3 rounded-xl border border-ink bg-white px-4 py-2.5 text-[13px] font-semibold" role="alert">Sebagian lowongan tidak masuk antrean karena kuota Gratis bulan ini habis.</p>}
+  {skipped > 0 && <p class="mt-3 rounded-xl border border-line bg-white px-4 py-2.5 text-[13px]" role="status">{skipped} lowongan dilewati karena sudah tutup atau harus dilamar lewat portal perusahaan.</p>}
+
+  <section class="card mt-4 p-4">
+    <div class="flex items-center justify-between text-[13px]"><b>{sent} dari {items.length} terkirim</b>{!current && <span class="pill pill-solid">Selesai</span>}</div>
+    <div class="mt-2 h-2 overflow-hidden rounded-full bg-surface-3"><div class="h-full rounded-full bg-accent" style={`width:${(sent / items.length) * 100}%`}></div></div>
+  </section>
+
+  <ol class="m-0 mt-4 grid list-none gap-2 p-0">
+    {items.map((a, i) => (
+      <li class:list={['card flex items-center gap-3 p-4', a === current && 'border-accent']}>
+        <span class:list={['grid h-8 w-8 shrink-0 place-items-center rounded-full text-[13px] font-bold', a.status === 'draf' ? 'bg-accent-soft text-accent' : 'bg-accent text-white']}>{i + 1}</span>
+        <span class="min-w-0 flex-1"><b class="block text-[14px]">{a.jobTitle}</b><span class="text-[12.5px] text-muted">{a.company} · {CHANNEL_LABELS[a.channel] ?? a.channel}</span></span>
+        {a.status === 'draf' ? (
+          <a href={`/lamaran/${a.id}?antrean=${queueParam}`} class:list={['btn btn-sm', a !== current && 'btn-ghost']}>Kirim</a>
+        ) : (
+          <span class="text-[12.5px] font-semibold text-muted">{a.status === 'terkirim' ? 'Terkirim' : 'Dibatalkan'}</span>
+        )}
+      </li>
+    ))}
+  </ol>
+
+  {!current && <a href="/lamaran" class="btn mt-4">Lihat riwayat lamaran</a>}
+</AppLayout>

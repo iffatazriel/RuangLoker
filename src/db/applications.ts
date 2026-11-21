@@ -2,6 +2,8 @@ import { and, count, desc, eq, gte, isNull, ne } from 'drizzle-orm';
 import { db } from './index';
 import { applications, cvLinks, files, type Application, type CvLink, type Job, type Profile } from './schema';
 import { listCvs } from './cv';
+import { getProfile } from './account';
+import { logAudit } from '../lib/auth';
 import { buildApplication, type LetterApplicant, type LetterTemplate, type LetterTone } from '../lib/letter';
 import { hashToken, linkToken, newLinkNonce } from '../lib/vault';
 
@@ -141,4 +143,50 @@ export async function touchCvLink(link: CvLink): Promise<void> {
     .update(cvLinks)
     .set({ accessCount: link.accessCount + 1, lastAccessedAt: new Date() })
     .where(eq(cvLinks.id, link.id));
+}
+
+export const SUPPORTED_CHANNELS = new Set(['Email', 'WhatsApp', 'Google Form']);
+export const MAX_QUEUE = 5;
+
+export function isPreparable(job: Job): boolean {
+  return (
+    job.isActive &&
+    ['verified', 'manual_checked'].includes(job.verificationStatus) &&
+    !(job.expiresAt && job.expiresAt.getTime() < Date.now()) &&
+    SUPPORTED_CHANNELS.has(job.applyChannel)
+  );
+}
+
+// Pakai lamaran terbuka untuk lowongan yang sama, atau buat baru kalau kuota masih ada.
+export async function prepareApplication(
+  user: { id: number; email: string },
+  job: Job,
+): Promise<{ app: Application; created: boolean } | { error: 'kuota' }> {
+  const open = await findOpenApplication(user.id, job.id);
+  if (open) return { app: open, created: false };
+  if ((await quotaState(user.id)).remaining <= 0) return { error: 'kuota' };
+
+  const { applicant, cvId } = await applicantFor(user.id, await getProfile(user.id), user.email);
+  const template: LetterTemplate = job.category === 'Admin' ? (applicant.experience ? 'formal' : 'fresh') : 'retail';
+  const { subject, body } = composeFor(job, applicant, template, 'formal');
+  const app = await createApplication({
+    userId: user.id,
+    jobId: job.id,
+    cvId,
+    jobTitle: job.title,
+    company: job.company,
+    channel: job.applyChannel,
+    target: job.applyTarget,
+    template,
+    tone: 'formal',
+    subject,
+    body,
+  });
+  await logAudit(user.id, 'lamaran.siapkan', String(app.id), `${job.title} · ${job.company}`);
+  return { app, created: true };
+}
+
+export function parseQueue(raw: string | null): number[] {
+  const ids = (raw ?? '').split(',').map(Number).filter((n) => Number.isInteger(n) && n > 0);
+  return [...new Set(ids)].slice(0, MAX_QUEUE);
 }

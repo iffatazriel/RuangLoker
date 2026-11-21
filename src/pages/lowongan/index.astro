@@ -127,6 +127,8 @@ const description = `${jobs.length} lowongan valid${city ? ` di ${city}` : ' di 
   </section>
 
   <section class="mx-auto max-w-6xl px-4 pt-4 pb-10">
+    {Astro.url.searchParams.get('error') === 'pilih' && <p class="card m-0 mb-3 p-3 text-[13px] font-semibold" role="alert">Pilih minimal satu lowongan yang bisa dilamar lewat Email, WhatsApp, atau Google Form.</p>}
+    {Astro.url.searchParams.get('error') === 'maks' && <p class="card m-0 mb-3 p-3 text-[13px] font-semibold" role="alert">Maksimal 5 lowongan per antrean.</p>}
     <div class="flex items-baseline justify-between gap-3">
       <h2 class="m-0 text-[15px] font-bold">
         {jobs.length} lowongan ditemukan
@@ -146,13 +148,33 @@ const description = `${jobs.length} lowongan valid${city ? ` di ${city}` : ' di 
       </div>
     ) : (
       <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {jobs.map((job) => <JobCard job={job} />)}
+        {jobs.map((job) => <JobCard job={job} selectable={!!Astro.locals.user} />)}
       </div>
     )}
   </section>
+
+  {Astro.locals.user && (
+    <form id="lamar-semua" method="POST" action="/api/lamaran/massal" class="fixed inset-x-3 bottom-[92px] z-40 mx-auto hidden max-w-xl items-center gap-3 rounded-2xl border border-line bg-white p-3 shadow-[0_12px_32px_rgb(15_23_42/0.12)] md:bottom-5" data-pick-bar>
+      <p class="m-0 min-w-0 flex-1 text-[12.5px] text-muted"><b class="block text-[13.5px] text-ink"><span data-pick-count>0</span> dari 5 dipilih</b>Masuk antrean, lalu kamu kirim satu per satu.</p>
+      <button class="btn btn-sm" type="submit">Lamar semua</button>
+    </form>
+  )}
 </Base>
 
 <script>
+  const picks = Array.from(document.querySelectorAll<HTMLInputElement>('[data-pick]'));
+  const bar = document.querySelector<HTMLElement>('[data-pick-bar]');
+  const countEl = document.querySelector('[data-pick-count]');
+  const syncPicks = () => {
+    const n = picks.filter((p) => p.checked).length;
+    if (countEl) countEl.textContent = String(n);
+    bar?.classList.toggle('hidden', n === 0);
+    bar?.classList.toggle('flex', n > 0);
+    picks.forEach((p) => (p.disabled = !p.checked && n >= 5));
+  };
+  picks.forEach((p) => p.addEventListener('change', syncPicks));
+  syncPicks();
+
   const btn = document.getElementById('gps-btn') as HTMLButtonElement | null;
   const form = document.querySelector('[data-filter-form]') as HTMLFormElement | null;
   const hint = document.getElementById('gps-hint');

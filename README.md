@@ -31,7 +31,9 @@ dan mockup visual di [`Wireframe Platform Lamaran Kerja 1-Klik.html`](./Wirefram
 - **Skor CV 100 poin** (`src/lib/cv-score.ts`, aturan `v1`): fungsi murni, deterministik, tanpa AI. Setiap pengurangan punya alasan yang bisa dibaca pengguna. Riwayat skor disimpan di `cv_scores`.
 - **PDF dengan text layer asli** via `@react-pdf/renderer` (font standar Helvetica, tanpa browser). Disimpan ke brankas sebagai `kind='cv'` dengan nama `CV_Nama-Lengkap_Posisi.pdf`, menggantikan CV lama.
 
-Belum dibangun: CV kreatif, antrean kirim lamaran, pembayaran, dashboard perusahaan.
+Slice 4–5: Siapkan lamaran (surat otomatis per kanal, salin/buka Gmail/WhatsApp/form, tautan CV publik bertoken), antrean "Lamar semua" sampai 5 lowongan, riwayat lamaran, kuota Gratis 3/bulan.
+
+Belum dibangun: CV kreatif, pembayaran, dashboard perusahaan.
 
 ## Stack
 
