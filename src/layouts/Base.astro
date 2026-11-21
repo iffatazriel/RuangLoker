@@ -55,7 +55,7 @@ const currentUser = Astro.locals.user ?? null;
     <slot name="header">
       <header class="sticky top-3 z-50 px-4">
         <div
-          class="mx-auto flex max-w-6xl flex-wrap items-center gap-3 rounded-full border border-white/90 bg-white/92 px-3 py-2 shadow-sm backdrop-blur"
+          class="mx-auto flex max-w-6xl items-center gap-2 rounded-full sm:gap-3 border border-white/90 bg-white/92 px-3 py-2 shadow-sm backdrop-blur"
         >
           <a href="/" class="flex items-center gap-2.5 no-underline">
             <span
@@ -74,20 +74,16 @@ const currentUser = Astro.locals.user ?? null;
             <a href="/perusahaan" class="hidden rounded-full px-3 py-1.5 no-underline hover:bg-surface-2 hover:text-ink sm:inline">
               Untuk Perusahaan
             </a>
-            {currentUser ? (
-              <a href="/app" class="rounded-full px-3 py-1.5 no-underline hover:bg-surface-2 hover:text-ink">
-                Dashboard
-              </a>
-            ) : (
+            {!currentUser && (
               <a href="/masuk" class="rounded-full px-3 py-1.5 no-underline hover:bg-surface-2 hover:text-ink">
                 Masuk
               </a>
             )}
           </nav>
           {currentUser ? (
-            <a href="/app" class="btn btn-sm">Buka dashboard</a>
+            <a href="/app" class="btn btn-sm whitespace-nowrap">Dashboard</a>
           ) : (
-            <a href="/daftar" class="btn btn-sm">Daftar Gratis</a>
+            <a href="/daftar" class="btn btn-sm whitespace-nowrap">Daftar Gratis</a>
           )}
         </div>
       </header>

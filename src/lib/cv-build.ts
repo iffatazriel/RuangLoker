@@ -69,8 +69,22 @@ export function buildSectionsFromProfile(profile: ProfileSource | null, accountE
   };
 }
 
-// Kontak, posisi, dan keahlian diambil ulang dari profil. Ringkasan, pengalaman, dan pendidikan
-// yang sudah dirapikan di halaman CV tidak ditimpa, karena di profil bentuknya hanya teks bebas.
+// Gabungan tanpa duplikat (tidak peka huruf besar/kecil); urutan profil didahulukan.
+export function mergeSkills(fromProfile: string[], fromCv: string[]): string[] {
+  const seen = new Set<string>();
+  const merged: string[] = [];
+  for (const skill of [...fromProfile, ...fromCv]) {
+    const name = skill.trim();
+    const key = name.toLowerCase();
+    if (!name || seen.has(key)) continue;
+    seen.add(key);
+    merged.push(name);
+  }
+  return merged;
+}
+
+// Kontak dan posisi diambil ulang dari profil, keahlian digabung. Ringkasan, pengalaman, dan
+// pendidikan yang sudah dirapikan di halaman CV tidak ditimpa, karena di profil bentuknya teks bebas.
 export function refreshSectionsFromProfile(
   current: CvSections,
   profile: ProfileSource | null,
@@ -81,7 +95,7 @@ export function refreshSectionsFromProfile(
     ...current,
     contact: fresh.contact,
     targetRole: fresh.targetRole || current.targetRole,
-    skills: fresh.skills.length ? fresh.skills : current.skills,
+    skills: mergeSkills(fresh.skills, current.skills),
     education: current.education.length ? current.education : fresh.education,
     experience: current.experience.length ? current.experience : fresh.experience,
   };

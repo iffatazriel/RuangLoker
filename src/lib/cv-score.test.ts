@@ -181,20 +181,20 @@ test('nama berkas CV dirapikan', () => {
   assert.equal(cvFileName('', ''), 'CV_Pelamar.pdf');
 });
 
-test('perbarui dari profil tidak menimpa pendidikan dan pengalaman yang sudah dirapikan', () => {
+test('perbarui dari profil menggabungkan keahlian dan tidak menimpa bagian yang sudah dirapikan', () => {
   const current = strongCv();
   const refreshed = refreshSectionsFromProfile(
     current,
     {
       fullName: 'Budi Santoso', phone: '0812-3456-7890', emailForApplication: 'baru@contoh.id', city: 'Depok',
-      lastEducation: 'SMK (2024)', lastExperience: 'Kasir', skills: ['Excel'], desiredRoles: 'Data Entry',
+      lastEducation: 'SMK (2024)', lastExperience: 'Kasir', skills: ['Excel', 'vlookup'], desiredRoles: 'Data Entry',
     },
     'akun@contoh.id',
   );
   assert.equal(refreshed.contact.city, 'Depok');
   assert.equal(refreshed.contact.email, 'baru@contoh.id');
   assert.equal(refreshed.targetRole, 'Data Entry');
-  assert.deepEqual(refreshed.skills, ['Excel']);
+  assert.deepEqual(refreshed.skills, ['Excel', 'vlookup', 'Microsoft Excel', 'Input data', 'Arsip dokumen']);
   assert.deepEqual(refreshed.education, current.education);
   assert.deepEqual(refreshed.experience, current.experience);
   assert.equal(refreshed.summary, current.summary);
