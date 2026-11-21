@@ -3,7 +3,7 @@ import { getProfile } from '../../../../db/account';
 import { applicantFor, composeFor, getApplication, updateApplication } from '../../../../db/applications';
 import { getJobById } from '../../../../db/cv';
 import { logAudit } from '../../../../lib/auth';
-import { isLetterTemplate, isLetterTone } from '../../../../lib/letter';
+import { isLetterTemplate, isLetterTone, restoreCvLinkPlaceholder } from '../../../../lib/letter';
 
 export const POST: APIRoute = async ({ params, request, locals, redirect }) => {
   const user = locals.user;
@@ -19,7 +19,8 @@ export const POST: APIRoute = async ({ params, request, locals, redirect }) => {
 
   if (action === 'simpan') {
     const subject = String(form.get('subject') ?? '').trim().slice(0, 200);
-    const body = String(form.get('body') ?? '').replace(/\r\n/g, '\n').trim().slice(0, 6000);
+    const raw = String(form.get('body') ?? '').replace(/\r\n/g, '\n').trim().slice(0, 6000);
+    const body = app.channel === 'WhatsApp' ? restoreCvLinkPlaceholder(raw) : raw;
     if (!subject || !body) return redirect(`${back}?error=kosong`, 303);
     await updateApplication(user.id, app.id, { subject, body });
     await logAudit(user.id, 'lamaran.ubah', String(app.id));

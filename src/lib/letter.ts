@@ -198,3 +198,9 @@ export function gmailComposeUrl(to: string, subject: string, body: string): { ur
 export function mailtoUrl(to: string, subject: string, body: string): string {
   return `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
+
+// Saat menyimpan, tautan CV yang sudah disisipkan dikembalikan ke placeholder supaya
+// tautan baru (setelah dicabut/dibuat ulang) selalu ikut di pesan.
+export function restoreCvLinkPlaceholder(body: string): string {
+  return body.replace(/https?:\/\/[^\s/]+\/c\/[A-Za-z0-9_-]{20,64}/g, CV_LINK_PLACEHOLDER);
+}

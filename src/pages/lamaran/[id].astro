@@ -3,7 +3,7 @@ import AppLayout from '../../layouts/AppLayout.astro';
 import { getProfile } from '../../db/account';
 import { activeCvFile, activeCvLink, getApplication, parseQueue } from '../../db/applications';
 import { CHANNEL_LABELS, formatDate } from '../../lib/format';
-import { CV_LINK_PLACEHOLDER, gmailComposeUrl, mailtoUrl, TEMPLATES, TONES, waUrl } from '../../lib/letter';
+import { CV_LINK_PLACEHOLDER, gmailComposeUrl, restoreCvLinkPlaceholder, mailtoUrl, TEMPLATES, TONES, waUrl } from '../../lib/letter';
 
 const user = Astro.locals.user!;
 const id = Number(Astro.params.id);
@@ -15,7 +15,7 @@ const [cvFile, link] = await Promise.all([activeCvFile(user.id), activeCvLink(us
 const cvUrl = link ? new URL(`/c/${link.token}`, Astro.url).toString() : '';
 const isWa = app.channel === 'WhatsApp';
 const isEmail = app.channel === 'Email';
-const sendBody = isWa ? app.body.replaceAll(CV_LINK_PLACEHOLDER, cvUrl || CV_LINK_PLACEHOLDER) : app.body;
+const sendBody = isWa ? restoreCvLinkPlaceholder(app.body).replaceAll(CV_LINK_PLACEHOLDER, cvUrl || CV_LINK_PLACEHOLDER) : app.body;
 const gmail = isEmail ? gmailComposeUrl(app.target, app.subject, sendBody) : null;
 const wa = isWa && cvUrl ? waUrl(app.target, sendBody) : '';
 

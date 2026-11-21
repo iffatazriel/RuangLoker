@@ -51,7 +51,7 @@ const cvLinkUrl = cvLink ? new URL(`/c/${cvLink.token}`, Astro.url).toString() :
 
   {ok && (
     <p class="mt-3 rounded-xl border border-ink bg-surface-2 px-4 py-2.5 text-[13px] font-semibold" role="status">
-      {ok} tersimpan terenkripsi.
+      {ok === 'tautan-baru' ? 'Tautan CV dibuat.' : ok === 'tautan-dicabut' ? 'Tautan CV dicabut. Tautan lama sekarang tidak bisa dibuka.' : `${ok} tersimpan terenkripsi.`}
     </p>
   )}
 
@@ -185,8 +185,8 @@ const cvLinkUrl = cvLink ? new URL(`/c/${cvLink.token}`, Astro.url).toString() :
   )}
 
   <p class="mt-4 text-[11.5px] leading-relaxed text-muted">
-    Semua berkas dienkripsi AES-256-GCM di server. Berkas tidak pernah bisa diakses lewat URL publik —
-    unduhan melewati pemeriksaan sesi pemilik. Berkas yang tidak dipakai 90 hari akan dihapus otomatis
+    Semua berkas dienkripsi AES-256-GCM di server. Unduhan melewati pemeriksaan sesi pemilik.
+    Satu-satunya pengecualian adalah tautan CV untuk HRD di atas: hanya membuka CV aktif dan bisa kamu cabut kapan saja. Berkas yang tidak dipakai 90 hari akan dihapus otomatis
     setelah pemberitahuan.
   </p>
 </AppLayout>

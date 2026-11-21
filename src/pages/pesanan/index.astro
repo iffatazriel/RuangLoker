@@ -12,6 +12,7 @@ const hasPayInfo = !!(pay.accountNumber || pay.qrisUrl);
 const newId = Number(Astro.url.searchParams.get('baru'));
 const ok = Astro.url.searchParams.get('ok');
 const error = Astro.url.searchParams.get('error');
+const awaitingCheck = list.some((o) => o.status === 'menunggu' && o.claimedAt);
 const okText: Record<string, string> = {
   klaim: 'Terima kasih. Admin akan mengecek pembayaranmu, biasanya di hari kerja yang sama.',
   batal: 'Pesanan dibatalkan.',
@@ -28,7 +29,7 @@ const okText: Record<string, string> = {
     <a href="/paket" class="btn btn-ghost">Lihat paket</a>
   </div>
 
-  {ok && okText[ok] && <p class="mt-3 rounded-xl border border-line bg-white px-4 py-2.5 text-[13px] font-semibold" role="status">{okText[ok]}</p>}
+  {ok && okText[ok] && (ok !== 'klaim' || awaitingCheck) && <p class="mt-3 rounded-xl border border-line bg-white px-4 py-2.5 text-[13px] font-semibold" role="status">{okText[ok]}</p>}
   {error === 'terbuka' && <p class="mt-3 rounded-xl border border-ink bg-white px-4 py-2.5 text-[13px] font-semibold" role="alert">Masih ada 3 pesanan menunggu pembayaran. Selesaikan atau batalkan dulu.</p>}
 
   {list.length === 0 ? (

@@ -82,3 +82,9 @@ test('tautan Gmail dipotong di bawah batas dan ditandai', () => {
   assert.equal(long.truncated, true);
   assert.ok(long.url.length <= 2000);
 });
+
+test('tautan CV di draf dikembalikan ke placeholder saat disimpan', async () => {
+  const { restoreCvLinkPlaceholder } = await import('./letter.ts');
+  const body = 'CV saya: https://ruangloker.id/c/-Lk5Br7Q0nGShHt4A_VtBfq5vtzwnFq6\nTerima kasih. Info: https://ruangloker.id/lowongan';
+  assert.equal(restoreCvLinkPlaceholder(body), `CV saya: ${CV_LINK_PLACEHOLDER}\nTerima kasih. Info: https://ruangloker.id/lowongan`);
+});
