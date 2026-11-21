@@ -1,50 +1,53 @@
 # RuangLoker
 
-Satu ruang, semua lamaran. Profil dan berkas diisi sekali, lalu lamaran ke banyak lowongan
-terkurasi disiapkan otomatis — dan tetap dikirim dari email / WhatsApp milik pelamar sendiri.
+**Satu Ruang, Semua Lamaran.** Platform persiapan lamaran kerja untuk pencari kerja di Indonesia
+(fokus awal Jabodetabek: admin, retail, gudang, F&B, operasional).
 
-Dokumen produk lengkap ada di [`blueprint-platform-lamaran-kerja-1-klik.md`](./blueprint-platform-lamaran-kerja-1-klik.md),
-dan mockup visual di [`Wireframe Platform Lamaran Kerja 1-Klik.html`](./Wireframe%20Platform%20Lamaran%20Kerja%201-Klik.html).
+Pelamar mengisi profil dan berkas sekali, lalu melamar banyak lowongan terkurasi. RuangLoker
+menyiapkan CV, surat lamaran, subjek email, isi pesan, dan nama berkas. **Lamaran tetap dikirim
+sendiri** dari email atau WhatsApp milik pelamar; untuk WhatsApp yang dibagikan adalah tautan CV,
+bukan lampiran otomatis.
 
-## Status
+Dokumen produk: [`blueprint-platform-lamaran-kerja-1-klik.md`](./blueprint-platform-lamaran-kerja-1-klik.md) ·
+mockup awal: [`Wireframe Platform Lamaran Kerja 1-Klik.html`](./Wireframe%20Platform%20Lamaran%20Kerja%201-Klik.html) ·
+panduan deploy: [`DEPLOY.md`](./DEPLOY.md)
 
-### Slice 1 — Lowongan publik + kurasi ✅
+## Fitur
 
-- Daftar lowongan dengan pencarian, filter kota / kategori / tipe, dan **filter radius GPS** (Haversine di SQLite).
-- Detail lowongan: label kepercayaan, sumber asli, tanggal pengecekan, batas lamar, dan penjelasan jujur cara melamar.
-- Panel kurasi internal (`/kelola`) dengan antrean harian: perlu dicek, berakhir 7 hari, sudah kedaluwarsa.
-- Aksi kurasi tercatat di `curation_log` (verify / manual check / reject / deactivate / extend).
-- Penanganan 404 asli, sembunyi otomatis untuk lowongan kedaluwarsa dan yang belum lolos kurasi.
+**Untuk pelamar**
 
-### Slice 2 — Akun, consent UU PDP, profil, brankas berkas ✅
+- **Lowongan terkurasi** (`/lowongan`): cari, filter kota/kategori/tipe, filter radius GPS. Setiap lowongan
+  menyebut sumber asli dan tanggal dicek. Lowongan tayang maksimal 30 hari, lalu hilang otomatis.
+- **Akun + consent UU PDP**: izin wajib, data sensitif, dan pemasaran dicatat terpisah. Mencabut izin data
+  sensitif menghapus berkas KTP/ijazah. Lupa kata sandi lewat email.
+- **Profil sekali isi** dengan indikator kelengkapan, dan **brankas berkas** terenkripsi AES-256-GCM.
+- **CV ATS** (`/cv`) dari profil, **Skor CV 100 poin** berbasis aturan (tanpa AI), dan PDF dengan text layer asli.
+- **Siapkan lamaran**: surat/pesan otomatis per kanal (Email, WhatsApp, Google Form), tombol salin, buka
+  Gmail/WhatsApp/formulir, dan tautan CV publik bertoken (30 hari, bisa dicabut).
+- **Lamar semua**: antrean sampai 5 lowongan, dikirim satu per satu, tercatat di riwayat `/lamaran`.
+- **Kuota dan kredit**: Gratis 3 lamaran/bulan, lalu Kredit Lamaran (Rp10.000 = 10) dan jasa (`/paket`).
+  Pembayaran transfer/QRIS manual.
 
-- **Daftar / masuk / keluar** dengan hash kata sandi scrypt dan sesi server-side (cookie hanya membawa id).
-- **Consent bertingkat**: wajib (akun), terpisah (data sensitif), dan opsional (pemasaran) — masing-masing dicatat dengan versi kebijakan.
-- **Pencabutan consent data sensitif benar-benar menghapus** berkas KTP/ijazah/transkrip, bukan hanya menandai.
-- **Profil sekali isi** dengan indikator kelengkapan yang menjelaskan apa yang masih kurang.
-- **Brankas berkas** terenkripsi AES-256-GCM; unggahan baru satu jenis menggantikan yang lama (tidak menumpuk).
-- **Hapus akun** memusnahkan berkas fisik, menganonimkan email, dan mematikan sesi seketika.
+**Untuk admin** (`/kelola`, hanya email di `ADMIN_EMAILS`)
 
-### Slice 3 — CV Builder ATS + Skor CV rule-based ✅
+- Antrean kurasi: perlu dicek, berakhir 7 hari, kedaluwarsa, dan laporan pengguna dari `/laporkan`.
+- Tambah/ubah lowongan. **Impor dari tautan**: tempel satu link lowongan, form terisi dari data
+  schema.org `JobPosting` (JSON-LD atau microdata; mis. Kalibrr, SmartRecruiters). Hasil impor selalu
+  "Belum dicek" dan wajib diperiksa.
+- **Peringatan duplikat** saat menyimpan: tautan sumber sama, atau perusahaan sama dengan posisi mirip.
+- **Cek tautan mati harian** (`npm run jobs:check-links`): menandai sumber yang 404, ditutup, atau gagal
+  dibuka 3 kali, lalu mengirim email ke admin. Lowongan tidak diturunkan otomatis.
+- Konfirmasi pembayaran di `/kelola/pesanan`; kredit masuk sekali per pesanan.
 
-- **CV ATS dari profil** (`/cv`): satu kolom, judul bagian standar. Ada penanda saat profil berubah setelah CV dibuat, plus tombol perbarui.
-- **Skor CV 100 poin** (`src/lib/cv-score.ts`, aturan `v1`): fungsi murni, deterministik, tanpa AI. Setiap pengurangan punya alasan yang bisa dibaca pengguna. Riwayat skor disimpan di `cv_scores`.
-- **PDF dengan text layer asli** via `@react-pdf/renderer` (font standar Helvetica, tanpa browser). Disimpan ke brankas sebagai `kind='cv'` dengan nama `CV_Nama-Lengkap_Posisi.pdf`, menggantikan CV lama.
-
-Slice 4–5: Siapkan lamaran (surat otomatis per kanal, salin/buka Gmail/WhatsApp/form, tautan CV publik bertoken), antrean "Lamar semua" sampai 5 lowongan, riwayat lamaran, kuota Gratis 3/bulan.
-
-Slice 6: halaman Harga (`/paket`), Kredit Lamaran (Rp10.000 = 10 lamaran, dipakai setelah kuota Gratis habis), Pesanan Jasa, pembayaran transfer/QRIS manual yang dikonfirmasi admin di `/kelola/pesanan`. Panel kurasi dan admin hanya untuk email di `ADMIN_EMAILS`; info rekening/QRIS lewat `PAYMENT_*` di `.env`.
-
-Siap rilis: admin menambah/mengubah lowongan di `/kelola/lowongan/baru`, lupa kata sandi lewat email (Resend, token sekali pakai 60 menit, semua sesi lama dikeluarkan), batas percobaan masuk/daftar/reset/laporan, formulir `/laporkan` aktif, email notifikasi pesanan ke admin dan pembeli, halaman `/privasi` dan `/syarat`, skrip `db:backup`.
-
-Belum dibangun: payment gateway otomatis, paket Pro/Gmail OAuth, CV kreatif, dashboard perusahaan.
+**Belum dibangun:** payment gateway otomatis, paket Pro/Gmail OAuth, CV kreatif, dashboard perusahaan,
+penarik lowongan otomatis dari API resmi ATS.
 
 ## Stack
 
 | Bagian | Pilihan | Alasan |
 | --- | --- | --- |
 | Framework | Astro 7 (`output: server`, adapter Node) | Halaman lowongan harus terindeks Google — kanal akuisisi nyata |
-| Styling | Tailwind 4 (`@theme`) | Token monokrom dari wireframe, tanpa build tambahan |
+| Styling | Tailwind 4 (`@theme`), font Figtree, aksen biru `#1C7CF4` | Token desain di `src/styles/global.css`, tanpa build tambahan |
 | Database | SQLite via libSQL | Nol setup, ramah Windows; migrasi ke Postgres saat pilot lulus |
 | ORM | Drizzle | Query type-safe, skema sebagai satu-satunya sumber kebenaran |
 | PDF CV | `@react-pdf/renderer` | Text layer asli tanpa memasang Chrome; PDF hasil screenshot tidak terbaca ATS |
@@ -97,7 +100,7 @@ Variabel wajib di `.env` produksi:
 
 Nilai yang mengandung spasi harus diberi tanda kutip, mis. `MAIL_FROM="RuangLoker <noreply@ruangloker.id>"`.
 
-Lowongan sungguhan dimasukkan admin lewat `/kelola/lowongan/baru` (bisa diubah dari panel kurasi). Laporan pengguna dari `/laporkan` muncul di `/kelola` dan dikirim ke `ADMIN_EMAILS`.
+Lowongan sungguhan dimasukkan admin lewat `/kelola/lowongan/baru`, diketik manual atau diimpor dari tautan. Laporan pengguna dari `/laporkan` muncul di `/kelola` dan dikirim ke `ADMIN_EMAILS`.
 
 ### Backup
 
@@ -105,6 +108,7 @@ Lowongan sungguhan dimasukkan admin lewat `/kelola/lowongan/baru` (bisa diubah d
 
 ```cron
 0 2 * * * cd /srv/ruangloker && npm run db:backup && rclone sync backups remote:ruangloker-backup
+0 6 * * * cd /srv/ruangloker && npm run jobs:check-links
 ```
 
 Backup yang hanya ada di server yang sama tidak menolong kalau server hilang.
@@ -119,24 +123,26 @@ Jalankan di belakang HTTPS (Caddy/Nginx). Jangan jalankan `db:seed` di produksi.
 | `npm run dev` | Server pengembangan |
 | `npm run build` | Build produksi (SSR) |
 | `npm run check` | Typecheck Astro + TypeScript |
-| `npm test` | Unit test (`node:test`): Skor CV, surat lamaran, harga, form lowongan, batas percobaan, email |
+| `npm test` | Unit test (`node:test`): Skor CV, surat lamaran, harga, form lowongan, impor/duplikat/cek tautan, batas percobaan, email |
 | `npm run db:generate` | Buat migrasi dari `src/db/schema.ts` |
 | `npm run db:migrate` | Terapkan migrasi |
 | `npm run db:seed` | Isi/perbarui 15 lowongan contoh (upsert per slug, ID tetap) |
 | `npm run db:reset` | Hapus database lokal |
 | `npm run db:backup` | Cadangkan database + brankas |
 | `npm run jobs:check-links` | Cek tautan sumber lowongan aktif (harian), email admin bila ada yang bermasalah |
+| `npm start` | Cek `.env` lalu jalankan server produksi |
 
 ## Aturan produk yang sudah dikunci di kode
 
 1. **Lowongan yang belum lolos kurasi tidak tampil publik.** Hanya `verified` dan `manual_checked`
-   yang muncul, dan hanya selama belum kedaluwarsa.
+   yang muncul, dan hanya selama belum kedaluwarsa (batas tayang maksimal 30 hari). Hasil impor
+   selalu masuk sebagai `pending`.
 2. **Setiap kartu menyebut sumber asli dan tanggal pengecekan.** Bukan hiasan — ini pembeda dari
    agregator tautan.
 3. **Tidak ada klaim lampiran otomatis** untuk email maupun WhatsApp. Lampiran selalu diunggah
    manual oleh pelamar; halaman detail mengatakannya terbuka.
-4. **Persentase kecocokan tidak ditampilkan sebelum ada definisi skornya.** Halaman detail
-   menyebut hal ini secara eksplisit alih-alih menampilkan angka yang tidak bisa dipertanggungjawabkan.
+4. **Tidak ada persentase kecocokan.** Yang ditampilkan hanya Skor CV berbasis aturan yang alasannya
+   bisa dibaca pengguna.
 5. **Panel kurasi tidak diindeks** (`robots.txt` + `noindex`).
 6. **Consent diperiksa di server, bukan hanya disembunyikan di tampilan.** Unggah KTP tanpa izin
    ditolak walaupun tombolnya diakali.
@@ -149,10 +155,11 @@ Jalankan di belakang HTTPS (Caddy/Nginx). Jangan jalankan `db:seed` di produksi.
 10. **Lamaran tidak pernah terkirim otomatis.** RuangLoker hanya membuka Gmail, WhatsApp, atau formulir
     dengan isi terisi; pelamar sendiri yang menekan kirim lalu menandai terkirim.
 11. **Kredit hanya bertambah lewat konfirmasi admin**, sekali per pesanan (indeks unik di `credit_ledger`).
+12. **Server hanya mengambil halaman publik.** Impor dan cek tautan menolak alamat lokal/internal,
+    dibatasi waktu dan ukuran, dan hanya satu tautan per impor (bukan merayapi situs).
 
 ## Keputusan yang masih terbuka
 
 - Definisi terukur "lowongan valid" (KPI 90% di blueprint butuh definisi ini).
 - Kebijakan refund kredit saat lowongan kedaluwarsa setelah dipilih (sekarang: kuota/kredit tidak kembali saat lamaran dibatalkan).
 - Payment gateway (Midtrans/Xendit) menggantikan konfirmasi manual.
-- Alur consent UU PDP untuk KTP (wajib, harus terpisah dari consent pemasaran).
