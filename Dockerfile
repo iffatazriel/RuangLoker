@@ -16,6 +16,8 @@ RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=build /app/dist ./dist
 COPY drizzle ./drizzle
 COPY scripts ./scripts
+COPY src/lib ./src/lib
+COPY src/db/schema.ts ./src/db/schema.ts
 RUN mkdir -p /app/data /app/backups && chown -R node:node /app/data /app/backups
 USER node
 EXPOSE 4321

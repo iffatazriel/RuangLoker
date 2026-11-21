@@ -125,6 +125,7 @@ Jalankan di belakang HTTPS (Caddy/Nginx). Jangan jalankan `db:seed` di produksi.
 | `npm run db:seed` | Isi/perbarui 15 lowongan contoh (upsert per slug, ID tetap) |
 | `npm run db:reset` | Hapus database lokal |
 | `npm run db:backup` | Cadangkan database + brankas |
+| `npm run jobs:check-links` | Cek tautan sumber lowongan aktif (harian), email admin bila ada yang bermasalah |
 
 ## Aturan produk yang sudah dikunci di kode
 

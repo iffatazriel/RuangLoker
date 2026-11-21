@@ -17,6 +17,7 @@
     "db:seed": "node scripts/seed.mjs",
     "db:reset": "node scripts/reset.mjs",
     "db:backup": "node scripts/backup.mjs",
+    "jobs:check-links": "node scripts/check-links.mjs",
     "start": "node scripts/check-env.mjs && node dist/server/entry.mjs",
     "check:env": "node scripts/check-env.mjs"
   },

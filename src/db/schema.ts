@@ -40,6 +40,9 @@ export const jobs = sqliteTable(
     verifiedAt: integer('verified_at', { mode: 'timestamp' }),
     expiresAt: integer('expires_at', { mode: 'timestamp' }),
     lastSeenAt: integer('last_seen_at', { mode: 'timestamp' }),
+    sourceStatus: text('source_status'),
+    sourceCheckedAt: integer('source_checked_at', { mode: 'timestamp' }),
+    sourceFailCount: integer('source_fail_count').notNull().default(0),
 
     isDirectEmployer: integer('is_direct_employer', { mode: 'boolean' }).notNull().default(false),
     isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),

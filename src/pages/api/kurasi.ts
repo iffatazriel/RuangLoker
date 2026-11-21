@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '../../db';
 import { jobs, curationLog } from '../../db/schema';
 
-const ACTIONS = new Set(['verify', 'manual_check', 'reject', 'deactivate', 'reactivate', 'extend']);
+const ACTIONS = new Set(['verify', 'manual_check', 'reject', 'deactivate', 'reactivate', 'extend', 'source_ok']);
 
 export const POST: APIRoute = async ({ request, redirect, locals }) => {
   const form = await request.formData();
@@ -44,6 +44,12 @@ export const POST: APIRoute = async ({ request, redirect, locals }) => {
       break;
     case 'reactivate':
       patch.isActive = true;
+      break;
+    case 'source_ok':
+      patch.sourceStatus = 'ok';
+      patch.sourceFailCount = 0;
+      patch.sourceCheckedAt = now;
+      patch.lastSeenAt = now;
       break;
     case 'extend':
       patch.expiresAt = new Date(now.getTime() + 30 * 86_400_000);

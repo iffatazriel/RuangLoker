@@ -63,6 +63,8 @@ Backup di server yang sama tidak cukup. Contoh cron (`crontab -e`), memakai [rcl
 
 ```cron
 0 2 * * * cd /srv/ruangloker && docker compose exec -T app node scripts/backup.mjs && rclone sync backups remote:ruangloker-backup
+# Cek tautan sumber lowongan tiap hari jam 06.00 WIB
+0 6 * * * cd /srv/ruangloker && docker compose exec -T app npm run jobs:check-links
 ```
 
 Restore: hentikan app (`docker compose stop app`), salin `ruangloker.db` dan folder `vault/` dari satu folder backup

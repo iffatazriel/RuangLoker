@@ -2,24 +2,60 @@
 import Base from '../../../layouts/Base.astro';
 import JobForm from '../../../components/JobForm.astro';
 import { emptyJobForm, readJobForm, validateJobForm, type JobFormValues } from '../../../lib/job-form';
-import { createJob } from '../../../db/admin-jobs';
+import { importJobFromUrl, type ImportedJob } from '../../../lib/job-import';
+import { createJob, findSimilarJobs } from '../../../db/admin-jobs';
 import { logAudit } from '../../../lib/auth';
 
-let values: JobFormValues = emptyJobForm(new Date());
+const fieldLabel: Partial<Record<keyof JobFormValues, string>> = {
+  title: 'posisi', company: 'perusahaan', category: 'kategori', employmentType: 'jenis kerja', city: 'kota',
+  district: 'kecamatan/alamat', lat: 'koordinat', lng: '', salaryMin: 'gaji min.', salaryMax: 'gaji maks.',
+  description: 'deskripsi', requirements: 'persyaratan', applyChannel: 'jalur lamar', applyTarget: 'tujuan lamaran',
+  expiresAt: 'batas tayang',
+};
+
+const now = new Date();
+let values: JobFormValues = emptyJobForm(now);
 let errors: Partial<Record<keyof JobFormValues, string>> = {};
+let importUrl = '';
+let importError = '';
+let imported: ImportedJob | null = null;
+let duplicates: Awaited<ReturnType<typeof findSimilarJobs>> = [];
+let needConfirm = false;
 
 if (Astro.request.method === 'POST') {
-  values = readJobForm(await Astro.request.formData());
-  const result = validateJobForm(values, new Date());
-  if (result.ok) {
-    const user = Astro.locals.user!;
-    const job = await createJob(result.record, user.email);
-    await logAudit(user.id, 'admin.lowongan.buat', job.slug);
-    return Astro.redirect(`/kelola?ok=create`, 303);
+  const form = await Astro.request.formData();
+  const user = Astro.locals.user!;
+  if (form.get('intent') === 'import') {
+    importUrl = String(form.get('importUrl') ?? '').trim();
+    const result = await importJobFromUrl(importUrl, now);
+    if (result.ok) {
+      imported = result.job;
+      values = { ...values, ...result.job.values };
+      duplicates = await findSimilarJobs(values);
+      await logAudit(user.id, 'admin.lowongan.impor', importUrl.slice(0, 200));
+    } else {
+      importError = result.error;
+      Astro.response.status = 422;
+    }
+  } else {
+    values = readJobForm(form);
+    const result = validateJobForm(values, now);
+    if (result.ok) {
+      duplicates = await findSimilarJobs(result.record);
+      if (duplicates.length === 0 || form.get('confirmDuplicate') === 'on') {
+        const job = await createJob(result.record, user.email);
+        await logAudit(user.id, 'admin.lowongan.buat', job.slug);
+        return Astro.redirect(`/kelola?ok=create`, 303);
+      }
+      needConfirm = true;
+    } else {
+      errors = result.errors;
+    }
+    Astro.response.status = 422;
   }
-  errors = result.errors;
-  Astro.response.status = 422;
 }
+
+const filledText = imported?.filled.map((k) => fieldLabel[k]).filter(Boolean).join(', ');
 ---
 
 <Base title="Tambah Lowongan — Panel Kurasi" noindex>
@@ -29,6 +65,51 @@ if (Astro.request.method === 'POST') {
     <p class="m-0 mt-1.5 text-[13px] text-muted">
       Pastikan lowongan benar-benar dibuka perusahaan dan tidak meminta biaya. Sumber wajib dicantumkan.
     </p>
-    <JobForm values={values} errors={errors} submitLabel="Simpan lowongan" />
+
+    <form method="POST" class="card mt-4 p-5" novalidate>
+      <input type="hidden" name="intent" value="import" />
+      <label for="importUrl" class="block text-[13px] font-bold">Impor dari tautan lowongan</label>
+      <div class="mt-2 flex flex-col gap-2 sm:flex-row">
+        <input id="importUrl" class="field flex-1" type="url" name="importUrl" value={importUrl} required placeholder="https://karier.perusahaan.co.id/lowongan/…" />
+        <button class="btn shrink-0" type="submit">Isi otomatis</button>
+      </div>
+      <p class="m-0 mt-2 text-[12px] leading-relaxed text-muted">
+        Kami membaca data lowongan di halaman itu (format JobPosting yang juga dibaca Google). Hasilnya masuk sebagai
+        "Belum dicek"; periksa semua isian sebelum menyimpan.
+      </p>
+      {importError && <p class="m-0 mt-2 text-[12.5px] font-semibold" role="alert">{importError}</p>}
+    </form>
+
+    {imported && (
+      <div class="mt-4 rounded-2xl border border-accent/30 bg-accent-soft px-4 py-3 text-[13px] leading-relaxed" role="status">
+        <p class="m-0 font-semibold">
+          {imported.filled.length > 0 ? `Terisi otomatis: ${filledText}.` : 'Tidak ada isian yang bisa diambil.'} Periksa lagi sebelum menyimpan.
+        </p>
+        {imported.notes.map((n) => <p class="m-0 mt-1 text-ink-2">{n}</p>)}
+      </div>
+    )}
+
+    {duplicates.length > 0 && (
+      <div class="mt-4 rounded-2xl border border-ink bg-surface-2 px-4 py-3 text-[13px] leading-relaxed" role="alert">
+        <p class="m-0 font-semibold">Mungkin sudah ada di RuangLoker:</p>
+        <ul class="m-0 mt-1 pl-5">
+          {duplicates.map(({ job, reason }) => (
+            <li>
+              <a href={`/kelola/lowongan/${job.id}`} class="text-ink underline">{job.title} — {job.company}</a>
+              <span class="text-muted"> · {reason === 'tautan' ? 'tautan sumber sama' : 'perusahaan sama, posisi mirip'}{job.isActive ? '' : ' · nonaktif'}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
+
+    <JobForm values={values} errors={errors} submitLabel="Simpan lowongan">
+      {duplicates.length > 0 && (
+        <label class="flex items-start gap-2 text-[13px]">
+          <input type="checkbox" name="confirmDuplicate" class="mt-0.5 size-4" />
+          <span>Saya sudah cek, ini bukan lowongan yang sama.{needConfirm && <strong> Centang ini untuk tetap menyimpan.</strong>}</span>
+        </label>
+      )}
+    </JobForm>
   </section>
 </Base>

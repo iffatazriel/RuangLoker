@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 import { db } from './index';
 import { curationLog, jobs, type Job } from './schema';
 import { jobSlug, type JobRecord } from '../lib/job-form';
+import { findDuplicates, type DedupeCandidate } from '../lib/job-dedupe';
 
 const verifiedFields = (status: string, now: Date, prev?: Job) =>
   status === 'verified' || status === 'manual_checked'
@@ -40,4 +41,11 @@ export async function updateJob(prev: Job, record: JobRecord, curator: string): 
     .set({ ...record, updatedAt: now, lastSeenAt: now, ...verifiedFields(record.verificationStatus, now, prev) })
     .where(eq(jobs.id, prev.id));
   await db.insert(curationLog).values({ jobId: prev.id, action: 'edit', curator, createdAt: now });
+}
+
+export async function findSimilarJobs(candidate: DedupeCandidate, excludeId?: number) {
+  const rows = await db
+    .select({ id: jobs.id, title: jobs.title, company: jobs.company, sourceUrl: jobs.sourceUrl, isActive: jobs.isActive })
+    .from(jobs);
+  return findDuplicates(candidate, rows, excludeId);
 }
