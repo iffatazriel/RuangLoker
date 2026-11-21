@@ -2,6 +2,9 @@ import { and, eq, isNull, sql } from 'drizzle-orm';
 import { db } from './index';
 import { files, profiles, consents, users } from './schema';
 import type { Profile, VaultFile } from './schema';
+import { FILE_KINDS, purgeFile, sealFile, storedNameFor } from '../lib/vault';
+
+export const FREE_QUOTA_BYTES = 50 * 1024 * 1024;
 
 export type ProfileFieldKey =
   | 'fullName'
@@ -123,4 +126,52 @@ export async function emailTaken(email: string, exceptUserId: number): Promise<b
     .limit(1);
 
   return rows.length > 0 && rows[0].id !== exceptUserId;
+}
+
+export type StoreFileResult = { ok: true; file: VaultFile } | { ok: false; reason: 'kuota' };
+
+// Satu slot per jenis berkas: unggahan baru menggantikan yang lama,
+// bukan menumpuk. Tanpa ini brankas bisa berisi lima versi CV.
+export async function storeFileReplacingKind(
+  userId: number,
+  input: { kind: string; originalName: string; mimeType: string; extension: string; data: Buffer },
+): Promise<StoreFileResult> {
+  const meta = FILE_KINDS[input.kind];
+  const existing = await listFiles(userId);
+  const usedAfterReplace = storageUsed(existing.filter((f) => f.kind !== input.kind));
+
+  if (usedAfterReplace + input.data.length > FREE_QUOTA_BYTES) {
+    return { ok: false, reason: 'kuota' };
+  }
+
+  const storedName = storedNameFor(input.extension);
+  const sealed = await sealFile(userId, storedName, input.data);
+
+  for (const old of existing.filter((f) => f.kind === input.kind)) {
+    await purgeFile(userId, old.storedName);
+    await db
+      .update(files)
+      .set({ deletedAt: new Date() })
+      .where(and(eq(files.id, old.id), eq(files.userId, userId)));
+  }
+
+  const [file] = await db
+    .insert(files)
+    .values({
+      userId,
+      kind: input.kind,
+      label: meta.label,
+      originalName: input.originalName.slice(0, 200),
+      storedName,
+      mimeType: input.mimeType,
+      sizeBytes: sealed.sizeBytes,
+      iv: sealed.iv,
+      authTag: sealed.authTag,
+      sha256: sealed.sha256,
+      isSensitive: meta.sensitive,
+      isPrimary: true,
+    })
+    .returning();
+
+  return { ok: true, file };
 }

@@ -1,5 +1,6 @@
 import { sqliteTable, text, integer, real, index, uniqueIndex } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
+import type { CvScoreCategory, CvSections } from '../lib/cv-score';
 
 export const jobs = sqliteTable(
   'jobs',
@@ -173,6 +174,40 @@ export const auditLog = sqliteTable(
   (t) => [index('audit_user_idx').on(t.userId)],
 );
 
+export const cvs = sqliteTable(
+  'cvs',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    // 'ats' | 'creative' — creative belum dibangun.
+    kind: text('kind').notNull().default('ats'),
+    sourceProfileUpdatedAt: integer('source_profile_updated_at', { mode: 'timestamp' }),
+    sections: text('sections', { mode: 'json' }).$type<CvSections>().notNull(),
+    targetJobId: integer('target_job_id').references(() => jobs.id, { onDelete: 'set null' }),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+    updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+    deletedAt: integer('deleted_at', { mode: 'timestamp' }),
+  },
+  (t) => [index('cvs_user_idx').on(t.userId)],
+);
+
+export const cvScores = sqliteTable(
+  'cv_scores',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    cvId: integer('cv_id')
+      .notNull()
+      .references(() => cvs.id, { onDelete: 'cascade' }),
+    score: integer('score').notNull(),
+    breakdown: text('breakdown', { mode: 'json' }).$type<CvScoreCategory[]>().notNull(),
+    rulesVersion: text('rules_version').notNull(),
+    computedAt: integer('computed_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+  },
+  (t) => [index('cv_scores_cv_idx').on(t.cvId)],
+);
+
 export type Job = typeof jobs.$inferSelect;
 export type NewJob = typeof jobs.$inferInsert;
 export type CurationEntry = typeof curationLog.$inferSelect;
@@ -180,3 +215,5 @@ export type User = typeof users.$inferSelect;
 export type Profile = typeof profiles.$inferSelect;
 export type VaultFile = typeof files.$inferSelect;
 export type Consent = typeof consents.$inferSelect;
+export type Cv = typeof cvs.$inferSelect;
+export type CvScore = typeof cvScores.$inferSelect;

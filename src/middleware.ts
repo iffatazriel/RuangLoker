@@ -1,7 +1,7 @@
 import { defineMiddleware } from 'astro:middleware';
 import { findUserById } from './lib/auth';
 
-const PRIVATE_PREFIXES = ['/app', '/profil', '/brankas', '/akun'];
+const PRIVATE_PREFIXES = ['/app', '/profil', '/cv', '/brankas', '/akun'];
 const AUTH_PAGES = new Set(['/masuk', '/daftar']);
 
 export const onRequest = defineMiddleware(async (context, next) => {

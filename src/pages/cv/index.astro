@@ -1,0 +1,108 @@
+---
+import AppLayout from '../../layouts/AppLayout.astro';
+import { getProfile, profileCompleteness } from '../../db/account';
+import { listCvs } from '../../db/cv';
+import { scoreVerdict } from '../../lib/cv-score';
+
+const user = Astro.locals.user!;
+const profile = await getProfile(user.id);
+const completeness = profileCompleteness(profile);
+const list = await listCvs(user.id);
+
+const params = Astro.url.searchParams;
+const ok = params.get('ok');
+const hapus = params.get('hapus');
+const error = params.get('error');
+
+const profileTime = profile?.updatedAt?.getTime() ?? 0;
+const isStale = (source: Date | null) => profileTime > (source?.getTime() ?? 0);
+
+const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+---
+
+<AppLayout title="CV" active="cv" userName={profile?.fullName || user.email}>
+  <div class="flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <p class="label-mono m-0">CV saya</p>
+      <h1 class="m-0 mt-1 text-2xl font-extrabold tracking-tight">CV ATS dari profilmu</h1>
+      <p class="m-0 mt-1 max-w-xl text-[13px] leading-relaxed text-muted">
+        CV ATS satu kolom, tanpa tabel, ikon, atau foto, supaya bisa dibaca sistem penyaring HR. Isinya
+        diambil dari profil; ringkasan dan uraian pengalaman kamu tulis sendiri di halaman CV.
+      </p>
+    </div>
+    <form method="POST" action="/api/cv">
+      <button class="btn" type="submit">+ Buat CV ATS dari profil</button>
+    </form>
+  </div>
+
+  {ok && (
+    <p class="mt-4 rounded-xl border border-ink bg-surface-2 px-4 py-2.5 text-[13px] font-semibold" role="status">
+      ✓ CV diperbarui dari profil terbaru.
+    </p>
+  )}
+  {hapus && (
+    <p class="mt-4 rounded-xl border border-ink bg-surface-2 px-4 py-2.5 text-[13px] font-semibold" role="status">
+      ✓ CV dihapus. Berkas PDF yang sudah tersimpan di brankas tidak ikut terhapus.
+    </p>
+  )}
+  {error && (
+    <p class="mt-4 rounded-xl border border-ink bg-surface-2 px-4 py-2.5 text-[13px] font-semibold" role="alert">
+      CV tidak ditemukan.
+    </p>
+  )}
+
+  {completeness.percent < 100 && (
+    <div class="mt-4 rounded-xl border border-dashed border-line bg-white p-4">
+      <p class="m-0 text-[13px] font-bold">Profil baru {completeness.percent}% lengkap</p>
+      <p class="m-0 mt-1 text-[12.5px] leading-relaxed text-muted">
+        CV tetap bisa dibuat, tetapi bagian yang kosong di profil juga akan kosong di CV dan menurunkan skor.
+        <a href="/profil" class="font-semibold text-ink">Lengkapi profil</a>
+      </p>
+    </div>
+  )}
+
+  {list.length === 0 ? (
+    <div class="card mt-4 p-6 text-center">
+      <p class="m-0 text-[14px] font-bold">Belum ada CV</p>
+      <p class="m-0 mt-1 text-[13px] text-muted">Tekan "Buat CV ATS dari profil" untuk membuat CV pertama.</p>
+    </div>
+  ) : (
+    <ul class="m-0 mt-4 grid list-none gap-3 p-0">
+      {list.map((cv) => {
+        const stale = isStale(cv.sourceProfileUpdatedAt);
+        return (
+          <li class="card flex flex-wrap items-center gap-4 p-4">
+            <div class="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-ink text-lg font-extrabold" aria-label={`Skor ${cv.latestScore?.score ?? 0} dari 100`}>
+              {cv.latestScore?.score ?? '–'}
+            </div>
+            <div class="min-w-0 flex-1">
+              <p class="m-0 text-[15px] font-bold">
+                CV ATS{cv.sections.targetRole ? ` — ${cv.sections.targetRole}` : ''}
+              </p>
+              <p class="m-0 mt-0.5 text-[12.5px] text-muted">
+                Diubah {dateFmt.format(cv.updatedAt)}
+                {cv.latestScore && <> · {scoreVerdict(cv.latestScore.score)}</>}
+              </p>
+              {stale && (
+                <p class="m-0 mt-1.5 inline-flex items-center gap-1.5 rounded-full border border-ink px-2.5 py-0.5 text-[12px] font-semibold">
+                  Profil berubah setelah CV ini dibuat
+                </p>
+              )}
+            </div>
+            <div class="flex flex-wrap gap-2">
+              {stale && (
+                <form method="POST" action={`/api/cv/${cv.id}/perbarui`}>
+                  <input type="hidden" name="back" value="list" />
+                  <button class="btn btn-ghost btn-sm" type="submit">Perbarui dari profil</button>
+                </form>
+              )}
+              <a class="btn btn-sm" href={`/cv/${cv.id}`}>Buka</a>
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+  )}
+
+  <p class="m-0 mt-4 text-[12px] text-muted">CV kreatif belum tersedia di versi ini.</p>
+</AppLayout>

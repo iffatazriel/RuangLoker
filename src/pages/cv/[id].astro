@@ -1,0 +1,313 @@
+---
+import AppLayout from '../../layouts/AppLayout.astro';
+import { getProfile } from '../../db/account';
+import { currentScore, getCv, getJobById, recordScore, scoreHistory, updateCv } from '../../db/cv';
+import { findJobs } from '../../db/queries';
+import { logAudit } from '../../lib/auth';
+import { cvFileName } from '../../lib/cv-build';
+import { contactLine, periodText } from '../../lib/cv-pdf';
+import {
+  RULES_VERSION,
+  SKILLS_MAX,
+  SUMMARY_MAX_CHARS,
+  SUMMARY_MIN_CHARS,
+  scoreVerdict,
+  type CvEducation,
+  type CvExperience,
+  type CvScoreCategory,
+  type CvSections,
+} from '../../lib/cv-score';
+
+const user = Astro.locals.user!;
+const id = Number(Astro.params.id);
+let cv = Number.isInteger(id) && id > 0 ? await getCv(user.id, id) : null;
+if (!cv) return Astro.redirect('/cv?error=tidak-ada');
+
+const EXPERIENCE_SLOTS = 3;
+const EDUCATION_SLOTS = 2;
+let saved = false;
+
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData();
+  const text = (name: string, max = 200) => String(form.get(name) ?? '').trim().slice(0, max);
+
+  const experience: CvExperience[] = [];
+  for (let i = 0; i < EXPERIENCE_SLOTS; i++) {
+    const entry = {
+      role: text(`exp${i}.role`),
+      company: text(`exp${i}.company`),
+      startYear: text(`exp${i}.startYear`, 20),
+      endYear: text(`exp${i}.endYear`, 20),
+      bullets: text(`exp${i}.bullets`, 1500).split('\n').map((b) => b.trim()).filter(Boolean).slice(0, 6),
+    };
+    if (entry.role || entry.company || entry.bullets.length) experience.push(entry);
+  }
+
+  const education: CvEducation[] = [];
+  for (let i = 0; i < EDUCATION_SLOTS; i++) {
+    const entry = {
+      institution: text(`edu${i}.institution`),
+      major: text(`edu${i}.major`),
+      graduationYear: text(`edu${i}.graduationYear`, 20),
+    };
+    if (entry.institution || entry.major) education.push(entry);
+  }
+
+  const sections: CvSections = {
+    ...cv.sections,
+    targetRole: text('targetRole', 100),
+    summary: text('summary', 1000),
+    experience,
+    education,
+    skills: text('skills', 1000).split(',').map((s) => s.trim()).filter(Boolean).slice(0, 30),
+  };
+
+  const jobId = Number(form.get('targetJobId'));
+  const updated = await updateCv(user.id, cv.id, {
+    sections,
+    targetJobId: Number.isInteger(jobId) && jobId > 0 && (await getJobById(jobId)) ? jobId : null,
+  });
+
+  if (updated) {
+    cv = updated;
+    const score = await recordScore(updated);
+    await logAudit(user.id, 'cv.update', String(cv.id), `skor ${score.score}`);
+    saved = true;
+  }
+}
+
+const profile = await getProfile(user.id);
+const stale = (profile?.updatedAt?.getTime() ?? 0) > (cv.sourceProfileUpdatedAt?.getTime() ?? 0);
+const score = await currentScore(cv);
+const history = await scoreHistory(cv.id);
+const previous = history.find((h) => h.id !== score.id);
+const targetJob = await getJobById(cv.targetJobId);
+const jobOptions = await findJobs({ limit: 100 });
+if (targetJob && !jobOptions.some((j) => j.id === targetJob.id)) jobOptions.unshift({ ...targetJob, distanceKm: null });
+
+const s = cv.sections;
+const fileName = cvFileName(s.contact.fullName, targetJob?.title || s.targetRole);
+const categories: CvScoreCategory[] = score.breakdown;
+const rules = categories.flatMap((c) => c.rules.map((r) => ({ ...r, category: c.label })));
+const passed = rules.filter((r) => r.earned === r.max);
+const toFix = rules.filter((r) => r.earned < r.max).sort((a, b) => b.max - b.earned - (a.max - a.earned));
+
+const experienceSlots = Array.from({ length: EXPERIENCE_SLOTS }, (_, i) => s.experience[i] ?? { role: '', company: '', startYear: '', endYear: '', bullets: [] });
+const educationSlots = Array.from({ length: EDUCATION_SLOTS }, (_, i) => s.education[i] ?? { institution: '', major: '', graduationYear: '' });
+
+const RADIUS = 52;
+const CIRC = 2 * Math.PI * RADIUS;
+
+const params = Astro.url.searchParams;
+const okParam = params.get('ok');
+const error = params.get('error');
+const okText: Record<string, string> = { dibuat: 'CV dibuat dari profil.', diperbarui: 'CV diperbarui dari profil terbaru.' };
+---
+
+<AppLayout title="CV ATS" active="cv" userName={profile?.fullName || user.email}>
+  <div class="flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <a href="/cv" class="text-[12.5px] font-semibold text-muted">← Semua CV</a>
+      <h1 class="m-0 mt-1 text-2xl font-extrabold tracking-tight">CV ATS{s.targetRole ? ` — ${s.targetRole}` : ''}</h1>
+      <p class="m-0 mt-1 text-[12.5px] text-muted">Nama berkas: <span class="font-mono">{fileName}</span></p>
+    </div>
+    <form method="POST" action={`/api/cv/${cv.id}/pdf`}>
+      <button class="btn" type="submit">Unduh PDF</button>
+      <p class="m-0 mt-1 max-w-[220px] text-[11.5px] leading-snug text-muted">PDF juga disimpan ke brankas sebagai CV, menggantikan CV lama di sana.</p>
+    </form>
+  </div>
+
+  {(saved || okParam) && (
+    <p class="mt-4 rounded-xl border border-ink bg-surface-2 px-4 py-2.5 text-[13px] font-semibold" role="status">
+      ✓ {saved ? 'Perubahan disimpan, skor dihitung ulang.' : okText[okParam!] ?? 'Tersimpan.'}
+    </p>
+  )}
+  {error === 'kuota' && (
+    <p class="mt-4 rounded-xl border border-ink bg-surface-2 px-4 py-2.5 text-[13px] font-semibold" role="alert">
+      Penyimpanan brankas penuh (50 MB). Hapus berkas lain dulu di <a href="/brankas">Brankas</a>.
+    </p>
+  )}
+  {stale && (
+    <div class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-ink bg-white p-4">
+      <p class="m-0 text-[13px]"><strong>Profil berubah setelah CV ini dibuat.</strong> Kontak, posisi, dan keahlian bisa diambil ulang; ringkasan, pengalaman, dan pendidikan yang sudah kamu rapikan tidak ditimpa.</p>
+      <form method="POST" action={`/api/cv/${cv.id}/perbarui`}>
+        <button class="btn btn-ghost btn-sm" type="submit">Perbarui dari profil</button>
+      </form>
+    </div>
+  )}
+
+  <div class="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+    <div class="grid gap-4">
+      <article class="card p-6 sm:p-8" aria-label="Pratinjau CV">
+        <p class="label-mono m-0 mb-3">Pratinjau · satu kolom</p>
+        <h2 class="m-0 text-xl font-extrabold uppercase tracking-tight">{s.contact.fullName || 'Nama belum diisi'}</h2>
+        <p class="m-0 mt-1 text-[13px] text-muted">{contactLine(s) || 'Kontak belum diisi'}</p>
+
+        {s.summary && (
+          <section class="mt-5">
+            <h3 class="m-0 border-b border-ink pb-1 text-[13px] font-extrabold">Ringkasan</h3>
+            <p class="m-0 mt-2 text-[13.5px] leading-relaxed">{s.summary}</p>
+          </section>
+        )}
+        {s.experience.length > 0 && (
+          <section class="mt-5">
+            <h3 class="m-0 border-b border-ink pb-1 text-[13px] font-extrabold">Pengalaman</h3>
+            {s.experience.map((e) => (
+              <div class="mt-2">
+                <p class="m-0 text-[13.5px] font-bold">
+                  {[e.role, e.company].filter(Boolean).join(' — ')}
+                  {periodText(e.startYear, e.endYear) && <span class="font-normal text-muted"> ({periodText(e.startYear, e.endYear)})</span>}
+                </p>
+                {e.bullets.length > 0 && (
+                  <ul class="m-0 mt-1 pl-5 text-[13.5px] leading-relaxed">{e.bullets.map((b) => <li>{b}</li>)}</ul>
+                )}
+              </div>
+            ))}
+          </section>
+        )}
+        {s.skills.length > 0 && (
+          <section class="mt-5">
+            <h3 class="m-0 border-b border-ink pb-1 text-[13px] font-extrabold">Keahlian</h3>
+            <p class="m-0 mt-2 text-[13.5px]">{s.skills.join(' · ')}</p>
+          </section>
+        )}
+        {s.education.length > 0 && (
+          <section class="mt-5">
+            <h3 class="m-0 border-b border-ink pb-1 text-[13px] font-extrabold">Pendidikan</h3>
+            {s.education.map((e) => (
+              <p class="m-0 mt-2 text-[13.5px]">
+                {[e.institution, e.major].filter(Boolean).join(' — ')}
+                {e.graduationYear && <span class="text-muted"> ({e.graduationYear})</span>}
+              </p>
+            ))}
+          </section>
+        )}
+      </article>
+
+      <details class="card p-5" open={saved || s.summary === '' ? true : undefined}>
+        <summary class="cursor-pointer text-[14px] font-bold">Ubah isi CV</summary>
+        <p class="m-0 mt-2 text-[12.5px] text-muted">
+          Nama, email, telepon, dan kota diambil dari <a href="/profil">profil</a>. Ubah di sana, lalu perbarui CV.
+        </p>
+        <form method="POST" class="mt-4 grid gap-4">
+          <div class="grid gap-3 sm:grid-cols-2">
+            <label class="grid gap-1 text-[13px] font-semibold">
+              Posisi yang dituju
+              <input class="field" name="targetRole" value={s.targetRole} maxlength="100" placeholder="Staff Admin" />
+            </label>
+            <label class="grid gap-1 text-[13px] font-semibold">
+              Lowongan target (opsional)
+              <select class="field" name="targetJobId">
+                <option value="">— Tanpa lowongan target —</option>
+                {jobOptions.map((j) => (
+                  <option value={j.id} selected={j.id === cv.targetJobId}>{j.title} · {j.company}</option>
+                ))}
+              </select>
+              <span class="text-[11.5px] font-normal text-muted">Dipakai untuk mencocokkan kata kunci keahlian.</span>
+            </label>
+          </div>
+
+          <label class="grid gap-1 text-[13px] font-semibold">
+            Ringkasan
+            <textarea class="field min-h-[96px]" name="summary" maxlength="1000" placeholder="Lulusan SMK Administrasi Perkantoran yang melamar sebagai Staff Admin, ...">{s.summary}</textarea>
+            <span class="text-[11.5px] font-normal text-muted">Ideal {SUMMARY_MIN_CHARS}–{SUMMARY_MAX_CHARS} karakter dan menyebut posisi yang dituju.</span>
+          </label>
+
+          <fieldset class="grid gap-3 rounded-xl border border-line p-3">
+            <legend class="px-1 text-[13px] font-bold">Pengalaman (terbaru di atas)</legend>
+            {experienceSlots.map((e, i) => (
+              <div class="grid gap-2 border-b border-line pb-3 last:border-b-0 last:pb-0">
+                <div class="grid gap-2 sm:grid-cols-2">
+                  <input class="field" name={`exp${i}.role`} value={e.role} placeholder="Posisi, mis. Magang Admin" aria-label={`Posisi pengalaman ${i + 1}`} />
+                  <input class="field" name={`exp${i}.company`} value={e.company} placeholder="Perusahaan / organisasi" aria-label={`Perusahaan pengalaman ${i + 1}`} />
+                  <input class="field" name={`exp${i}.startYear`} value={e.startYear} placeholder="Tahun mulai, mis. 2025" aria-label={`Tahun mulai pengalaman ${i + 1}`} />
+                  <input class="field" name={`exp${i}.endYear`} value={e.endYear} placeholder="Tahun selesai atau 'sekarang'" aria-label={`Tahun selesai pengalaman ${i + 1}`} />
+                </div>
+                <textarea class="field min-h-[72px]" name={`exp${i}.bullets`} placeholder="Satu poin per baris, mulai dengan kata kerja dan angka. Mis.: Menginput 300+ data pengiriman per hari" aria-label={`Uraian pengalaman ${i + 1}`}>{e.bullets.join('\n')}</textarea>
+              </div>
+            ))}
+          </fieldset>
+
+          <fieldset class="grid gap-3 rounded-xl border border-line p-3">
+            <legend class="px-1 text-[13px] font-bold">Pendidikan</legend>
+            {educationSlots.map((e, i) => (
+              <div class="grid gap-2 sm:grid-cols-[2fr_2fr_1fr]">
+                <input class="field" name={`edu${i}.institution`} value={e.institution} placeholder="Sekolah / kampus" aria-label={`Institusi ${i + 1}`} />
+                <input class="field" name={`edu${i}.major`} value={e.major} placeholder="Jurusan" aria-label={`Jurusan ${i + 1}`} />
+                <input class="field" name={`edu${i}.graduationYear`} value={e.graduationYear} placeholder="Lulus" aria-label={`Tahun lulus ${i + 1}`} />
+              </div>
+            ))}
+          </fieldset>
+
+          <label class="grid gap-1 text-[13px] font-semibold">
+            Keahlian
+            <input class="field" name="skills" value={s.skills.join(', ')} placeholder="Microsoft Excel, Input data, Arsip dokumen" />
+            <span class="text-[11.5px] font-normal text-muted">Pisahkan dengan koma. Ideal 3–{SKILLS_MAX} keahlian.</span>
+          </label>
+
+          <div><button class="btn" type="submit">Simpan & hitung ulang skor</button></div>
+        </form>
+      </details>
+
+      <form method="POST" action={`/api/cv/${cv.id}/hapus`} onsubmit="return confirm('Hapus CV ini?')">
+        <button class="btn btn-ghost btn-sm" type="submit">Hapus CV ini</button>
+      </form>
+    </div>
+
+    <aside class="grid content-start gap-4">
+      <section class="card p-5" aria-label="Skor CV">
+        <div class="flex items-center gap-4">
+          <svg class="shrink-0" width="120" height="120" viewBox="0 0 120 120" role="img" aria-label={`Skor ${score.score} dari 100`}>
+            <circle cx="60" cy="60" r={RADIUS} fill="none" stroke="var(--color-surface-3, #e5e5e5)" stroke-width="10" />
+            <circle cx="60" cy="60" r={RADIUS} fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round"
+              stroke-dasharray={CIRC.toFixed(2)} stroke-dashoffset={(CIRC * (1 - score.score / 100)).toFixed(2)} transform="rotate(-90 60 60)" />
+            <text x="60" y="58" text-anchor="middle" font-size="30" font-weight="800" fill="currentColor">{score.score}</text>
+            <text x="60" y="78" text-anchor="middle" font-size="11" fill="currentColor" opacity="0.6">dari 100</text>
+          </svg>
+          <div>
+            <p class="m-0 text-[15px] font-bold">{scoreVerdict(score.score)}</p>
+            {previous && previous.score !== score.score && (
+              <p class="m-0 mt-1 text-[12.5px] text-muted">
+                {score.score > previous.score ? `Naik ${score.score - previous.score}` : `Turun ${previous.score - score.score}`} poin dari penilaian sebelumnya ({previous.score}).
+              </p>
+            )}
+          </div>
+        </div>
+        <p class="m-0 mt-3 text-[12.5px] leading-relaxed text-muted">
+          Skor ini dihitung dari aturan yang kami tulis terbuka, bukan tebakan AI. Aturan versi {RULES_VERSION}.
+        </p>
+        <ul class="m-0 mt-3 grid list-none gap-1 p-0 text-[12.5px]">
+          {categories.map((c) => (
+            <li class="flex justify-between gap-2"><span>{c.label}</span><span class="font-mono font-semibold">{c.earned}/{c.max}</span></li>
+          ))}
+        </ul>
+      </section>
+
+      {toFix.length > 0 && (
+        <section class="card p-5">
+          <h2 class="m-0 text-[14px] font-bold">Perlu diperbaiki</h2>
+          <ul class="m-0 mt-2 grid list-none gap-2.5 p-0">
+            {toFix.map((r) => (
+              <li class="text-[12.5px] leading-relaxed">
+                <span class="font-semibold">{r.label}</span>
+                <span class="font-mono text-muted"> −{r.max - r.earned}</span>
+                <span class="block text-muted">{r.message}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {passed.length > 0 && (
+        <section class="card p-5">
+          <h2 class="m-0 text-[14px] font-bold">Sudah oke</h2>
+          <ul class="m-0 mt-2 grid list-none gap-2 p-0">
+            {passed.map((r) => (
+              <li class="text-[12.5px] leading-relaxed">✓ <span class="font-semibold">{r.label}</span><span class="block text-muted">{r.message}</span></li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </aside>
+  </div>
+</AppLayout>

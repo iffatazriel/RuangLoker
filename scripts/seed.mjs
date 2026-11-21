@@ -1,6 +1,8 @@
 import { createClient } from '@libsql/client';
 import { drizzle } from 'drizzle-orm/libsql';
 import { jobs } from '../src/db/schema.ts';
+import { buildSectionsFromProfile } from '../src/lib/cv-build.ts';
+import { scoreCv } from '../src/lib/cv-score.ts';
 
 const url = process.env.DATABASE_URL ?? 'file:./data/ruangloker.db';
 const client = createClient({ url });
@@ -492,4 +494,30 @@ await db.delete(jobs);
 await db.insert(jobs).values(rows).onConflictDoNothing();
 
 console.log(`Seed selesai: ${rows.length} lowongan contoh dimasukkan.`);
+
+// Contoh skor: CV yang langsung dibuat dari profil fresh graduate (belum menulis ringkasan
+// atau uraian), dinilai terhadap lowongan Staff Admin. Tidak ada akun yang dibuat.
+const sampleProfile = {
+  fullName: 'Budi Santoso',
+  phone: '0812-3456-7890',
+  emailForApplication: 'budi.santoso@contoh.id',
+  city: 'Jakarta Selatan',
+  lastEducation: 'SMK Administrasi Perkantoran (2024)',
+  lastExperience: 'Magang Admin di CV Sinar Logistik — 8 bulan',
+  skills: ['Microsoft Excel', 'Input data', 'Komunikasi'],
+  desiredRoles: 'Staff Admin',
+};
+const sampleJob = rows.find((r) => r.slug === 'staff-admin-pt-maju-bersama');
+const sample = scoreCv({
+  kind: 'ats',
+  sections: buildSectionsFromProfile(sampleProfile, sampleProfile.emailForApplication),
+  targetJob: { title: sampleJob.title, requirements: sampleJob.requirements, description: sampleJob.description },
+});
+console.log(`Contoh Skor CV (${sampleProfile.fullName} → ${sampleJob.title}): ${sample.score}/100 [aturan ${sample.rulesVersion}]`);
+for (const c of sample.categories) {
+  console.log(`  ${c.label}: ${c.earned}/${c.max}`);
+  for (const r of c.rules.filter((r) => r.earned < r.max)) {
+    console.log(`    −${r.max - r.earned} ${r.label}: ${r.message}`);
+  }
+}
 client.close();

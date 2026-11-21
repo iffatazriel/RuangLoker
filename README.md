@@ -25,7 +25,13 @@ dan mockup visual di [`Wireframe Platform Lamaran Kerja 1-Klik.html`](./Wirefram
 - **Brankas berkas** terenkripsi AES-256-GCM; unggahan baru satu jenis menggantikan yang lama (tidak menumpuk).
 - **Hapus akun** memusnahkan berkas fisik, menganonimkan email, dan mematikan sesi seketika.
 
-Belum dibangun: CV builder, Skor CV, antrean kirim lamaran, pembayaran, dashboard perusahaan.
+### Slice 3 — CV Builder ATS + Skor CV rule-based ✅
+
+- **CV ATS dari profil** (`/cv`): satu kolom, judul bagian standar. Ada penanda saat profil berubah setelah CV dibuat, plus tombol perbarui.
+- **Skor CV 100 poin** (`src/lib/cv-score.ts`, aturan `v1`): fungsi murni, deterministik, tanpa AI. Setiap pengurangan punya alasan yang bisa dibaca pengguna. Riwayat skor disimpan di `cv_scores`.
+- **PDF dengan text layer asli** via `@react-pdf/renderer` (font standar Helvetica, tanpa browser). Disimpan ke brankas sebagai `kind='cv'` dengan nama `CV_Nama-Lengkap_Posisi.pdf`, menggantikan CV lama.
+
+Belum dibangun: CV kreatif, antrean kirim lamaran, pembayaran, dashboard perusahaan.
 
 ## Stack
 
@@ -35,7 +41,7 @@ Belum dibangun: CV builder, Skor CV, antrean kirim lamaran, pembayaran, dashboar
 | Styling | Tailwind 4 (`@theme`) | Token monokrom dari wireframe, tanpa build tambahan |
 | Database | SQLite via libSQL | Nol setup, ramah Windows; migrasi ke Postgres saat pilot lulus |
 | ORM | Drizzle | Query type-safe, skema sebagai satu-satunya sumber kebenaran |
-| PDF CV (rencana) | Headless Chrome | Wajib punya text layer — PDF hasil screenshot tidak terbaca ATS |
+| PDF CV | `@react-pdf/renderer` | Text layer asli tanpa memasang Chrome; PDF hasil screenshot tidak terbaca ATS |
 
 ## Menjalankan
 
@@ -64,6 +70,7 @@ Buka `http://localhost:4321`. Panel kurasi: `/kelola`. Aplikasi pelamar: `/app`.
 | `npm run dev` | Server pengembangan |
 | `npm run build` | Build produksi (SSR) |
 | `npm run check` | Typecheck Astro + TypeScript |
+| `npm test` | Unit test (`node:test`) untuk rubrik Skor CV |
 | `npm run db:generate` | Buat migrasi dari `src/db/schema.ts` |
 | `npm run db:migrate` | Terapkan migrasi |
 | `npm run db:seed` | Isi 15 lowongan contoh |
@@ -91,6 +98,5 @@ Buka `http://localhost:4321`. Panel kurasi: `/kelola`. Aplikasi pelamar: `/app`.
 ## Keputusan yang masih terbuka
 
 - Definisi terukur "lowongan valid" (KPI 90% di blueprint butuh definisi ini).
-- Aturan Skor CV rule-based — belum ada satu pun aturan yang ditulis.
 - Kebijakan refund kredit saat lowongan kedaluwarsa setelah dipilih.
 - Alur consent UU PDP untuk KTP (wajib, harus terpisah dari consent pemasaran).
