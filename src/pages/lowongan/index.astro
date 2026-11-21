@@ -1,0 +1,193 @@
+---
+import Base from '../../layouts/Base.astro';
+import JobCard from '../../components/JobCard.astro';
+import { findJobs, getFacets, countActiveJobs } from '../../db/queries';
+import { CATEGORY_LABELS } from '../../lib/format';
+
+const params = Astro.url.searchParams;
+
+const q = params.get('q')?.trim() || undefined;
+const city = params.get('kota') || undefined;
+const category = params.get('kategori') || undefined;
+const employmentType = params.get('tipe') || undefined;
+const channel = params.get('kanal') || undefined;
+
+const latRaw = params.get('lat');
+const lngRaw = params.get('lng');
+const radiusRaw = params.get('radius');
+
+const hasGeo = latRaw !== null && lngRaw !== null;
+const lat = hasGeo ? Number(latRaw) : undefined;
+const lng = hasGeo ? Number(lngRaw) : undefined;
+const radiusKm = radiusRaw ? Number(radiusRaw) : 10;
+
+const [jobs, facets, total] = await Promise.all([
+  findJobs({ q, city, category, employmentType, channel, lat, lng, radiusKm: hasGeo ? radiusKm : undefined }),
+  getFacets(),
+  countActiveJobs(),
+]);
+
+const activeFilters = [q, city, category, employmentType, channel].filter(Boolean).length + (hasGeo ? 1 : 0);
+
+const queryFor = (overrides: Record<string, string | null>) => {
+  const next = new URLSearchParams(params);
+  for (const [key, value] of Object.entries(overrides)) {
+    if (value === null) next.delete(key);
+    else next.set(key, value);
+  }
+  const s = next.toString();
+  return s ? `/lowongan?${s}` : '/lowongan';
+};
+
+const title = city
+  ? `Lowongan ${category ? CATEGORY_LABELS[category] ?? category : 'Kerja'} di ${city} — RuangLoker`
+  : 'Cari Lowongan Kerja Terkurasi Jabodetabek — RuangLoker';
+
+const description = `${jobs.length} lowongan valid${city ? ` di ${city}` : ' di Jabodetabek'} dari ${total} lowongan aktif. Dikurasi manual, ada sumber asli dan tanggal pengecekan.`;
+---
+
+<Base title={title} description={description}>
+  <section class="mx-auto max-w-6xl px-4 pt-6">
+    <div class="flex flex-wrap items-end justify-between gap-3">
+      <div>
+        <p class="label-mono m-0">Pilot Jabodetabek · Admin &amp; Retail</p>
+        <h1 class="m-0 mt-1 text-[26px] leading-tight font-extrabold tracking-tight">
+          Cari Lowongan
+        </h1>
+        <p class="m-0 mt-1.5 max-w-xl text-[13px] text-muted">
+          {total} lowongan aktif dan terverifikasi. Setiap kartu menyebut sumber asli dan kapan
+          terakhir dicek kurator — bukan tautan yang menumpuk tanpa dicek.
+        </p>
+      </div>
+      <a href="/kelola" class="btn btn-ghost btn-sm">Panel kurasi →</a>
+    </div>
+
+    <form method="GET" action="/lowongan" class="card mt-4 p-3" data-filter-form>
+      <div class="flex flex-wrap gap-2">
+        <input
+          class="field flex-[2] min-w-[180px]"
+          type="search"
+          name="q"
+          value={q ?? ''}
+          placeholder="Cari posisi atau perusahaan…"
+          aria-label="Kata kunci lowongan"
+        />
+
+        <select class="field flex-1 min-w-[150px]" name="kota" aria-label="Kota">
+          <option value="">Semua kota</option>
+          {facets.cities.map((c) => (
+            <option value={c} selected={c === city}>{c}</option>
+          ))}
+        </select>
+
+        <select class="field flex-1 min-w-[150px]" name="kategori" aria-label="Kategori">
+          <option value="">Semua kategori</option>
+          {facets.categories.map((c) => (
+            <option value={c} selected={c === category}>{CATEGORY_LABELS[c] ?? c}</option>
+          ))}
+        </select>
+
+        <select class="field flex-1 min-w-[140px]" name="tipe" aria-label="Tipe kerja">
+          <option value="">Semua tipe</option>
+          {facets.employmentTypes.map((t) => (
+            <option value={t} selected={t === employmentType}>{t}</option>
+          ))}
+        </select>
+
+        <button class="btn" type="submit">Terapkan</button>
+      </div>
+
+      <div class="mt-2.5 flex flex-wrap items-center gap-2">
+        <button class="btn btn-ghost btn-sm" type="button" id="gps-btn" aria-describedby="gps-hint">
+          📍 Pakai GPS saya
+        </button>
+        <span id="gps-hint" class="text-[11.5px] text-muted">
+          Izin lokasi hanya diminta setelah kamu menekan tombol ini.
+        </span>
+
+        {hasGeo && (
+          <span class="pill pill-solid ml-auto">
+            Radius {radiusKm} km aktif
+            <a href={queryFor({ lat: null, lng: null, radius: null })} class="text-white/80 no-underline">✕</a>
+          </span>
+        )}
+
+        <input type="hidden" name="lat" value={latRaw ?? ''} data-geo="lat" />
+        <input type="hidden" name="lng" value={lngRaw ?? ''} data-geo="lng" />
+        <input type="hidden" name="radius" value={radiusRaw ?? '10'} data-geo="radius" />
+      </div>
+
+      {activeFilters > 0 && (
+        <div class="mt-2.5 flex flex-wrap items-center gap-2 border-t border-line-2 pt-2.5">
+          <span class="label-mono">{activeFilters} filter aktif</span>
+          <a href="/lowongan" class="btn btn-ghost btn-sm">Hapus semua</a>
+        </div>
+      )}
+    </form>
+  </section>
+
+  <section class="mx-auto max-w-6xl px-4 pt-4 pb-10">
+    <div class="flex items-baseline justify-between gap-3">
+      <h2 class="m-0 text-[15px] font-bold">
+        {jobs.length} lowongan ditemukan
+        {hasGeo && <span class="font-normal text-muted"> · urut dari yang terdekat</span>}
+      </h2>
+      {hasGeo && <span class="label-mono">Radius {radiusKm} km</span>}
+    </div>
+
+    {jobs.length === 0 ? (
+      <div class="card mt-3 p-8 text-center">
+        <p class="m-0 text-[15px] font-bold">Tidak ada lowongan yang cocok dengan filter ini.</p>
+        <p class="m-0 mx-auto mt-1.5 max-w-md text-[13px] text-muted">
+          Coba longgarkan kota, kategori, atau hapus filter radius. Kami sengaja tidak menampilkan
+          lowongan yang belum lolos kurasi hanya demi mengisi halaman ini.
+        </p>
+        <a href="/lowongan" class="btn mt-4">Hapus semua filter</a>
+      </div>
+    ) : (
+      <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {jobs.map((job) => <JobCard job={job} />)}
+      </div>
+    )}
+  </section>
+</Base>
+
+<script>
+  const btn = document.getElementById('gps-btn') as HTMLButtonElement | null;
+  const form = document.querySelector('[data-filter-form]') as HTMLFormElement | null;
+  const hint = document.getElementById('gps-hint');
+
+  btn?.addEventListener('click', () => {
+    if (!navigator.geolocation) {
+      if (hint) hint.textContent = 'Peramban ini tidak mendukung GPS. Pilih kota secara manual.';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = '📍 Meminta izin…';
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        if (!form) return;
+        const lat = form.querySelector('[data-geo="lat"]') as HTMLInputElement;
+        const lng = form.querySelector('[data-geo="lng"]') as HTMLInputElement;
+        const radius = form.querySelector('[data-geo="radius"]') as HTMLInputElement;
+
+        lat.value = pos.coords.latitude.toFixed(6);
+        lng.value = pos.coords.longitude.toFixed(6);
+        if (!radius.value) radius.value = '10';
+
+        const city = form.querySelector('select[name="kota"]') as HTMLSelectElement;
+        if (city) city.value = '';
+
+        form.submit();
+      },
+      () => {
+        btn.disabled = false;
+        btn.textContent = '📍 Pakai GPS saya';
+        if (hint) hint.textContent = 'Izin lokasi ditolak. Pilih kota secara manual di atas.';
+      },
+      { enableHighAccuracy: false, timeout: 10_000, maximumAge: 600_000 },
+    );
+  });
+</script>

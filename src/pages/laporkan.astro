@@ -1,0 +1,30 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="Laporkan Lowongan — RuangLoker" noindex>
+  <section class="mx-auto max-w-2xl px-4 py-14">
+    <h1 class="m-0 text-[26px] font-extrabold tracking-tight">Laporkan lowongan</h1>
+    <p class="m-0 mt-2 text-[13.5px] leading-relaxed text-ink-2">
+      Laporkan jika lowongan meminta biaya pendaftaran, transfer uang, data sensitif yang tidak wajar,
+      atau ternyata sudah tidak aktif. Kami akan memverifikasi ulang dan menurunkannya bila terbukti.
+    </p>
+
+    <form class="card mt-4 flex flex-col gap-3 p-5">
+      <label class="f">
+        <span class="block text-[12px] font-bold">Tautan lowongan atau nama perusahaan</span>
+        <input class="field mt-1.5" type="text" name="target" placeholder="ruangloker.id/lowongan/…" />
+      </label>
+      <label class="f">
+        <span class="block text-[12px] font-bold">Apa yang salah?</span>
+        <textarea class="field mt-1.5 min-h-24" name="reason" rows="4" placeholder="Jelaskan singkat…"></textarea>
+      </label>
+      <button class="btn self-start" type="button" disabled>Kirim laporan (belum aktif)</button>
+    </form>
+
+    <p class="m-0 mt-3 text-[12px] text-muted">
+      Formulir ini masih tampilan. Endpoint laporan akan dibangun bersama antrean kurasi versi
+      produksi.
+    </p>
+  </section>
+</Base>

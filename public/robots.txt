@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /kelola
+Disallow: /api/
+
+Sitemap: https://ruangloker.id/sitemap.xml

@@ -1,0 +1,187 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getJobBySlug } from '../../db/queries';
+import {
+  CATEGORY_LABELS,
+  CHANNEL_LABELS,
+  formatDate,
+  relativeTime,
+  salaryRange,
+  totalDaysLeft,
+  trustLabels,
+} from '../../lib/format';
+
+const { slug } = Astro.params;
+const job = await getJobBySlug(slug ?? '');
+
+if (!job || !job.isActive) {
+  Astro.response.status = 404;
+  return Astro.rewrite('/404');
+}
+
+const labels = trustLabels(job);
+const daysLeft = totalDaysLeft(job);
+
+const channelCopy: Record<string, string> = {
+  Email:
+    'Lamaran dikirim lewat email. Gmail kamu yang akan terbuka — subjek dan isi surat sudah terisi dari profil. CV tetap kamu lampirkan sendiri, karena tautan email tidak bisa membawa berkas.',
+  WhatsApp:
+    'Lamaran dikirim lewat WhatsApp ke nomor HRD. Pesan sudah terisi otomatis, dan tautan CV kamu disertakan di dalamnya. WhatsApp tidak mengizinkan lampiran PDF lewat tautan, jadi pelamar melampirkan dari brankas bila diminta.',
+  'Google Form':
+    'Perusahaan meminta lamaran lewat Google Form. Platform menyiapkan ringkasan profil dan nama berkas yang rapi, lalu kamu mengisi formulirnya.',
+  'Portal Eksternal':
+    'Lamaran dikirim lewat portal milik perusahaan. Platform menyiapkan berkas dan ringkasan, lalu kamu mengunggahnya di portal tersebut.',
+};
+
+const title = `${job.title} — ${job.company} | RuangLoker`;
+const description = `${job.title} di ${job.company} (${job.city}). ${salaryRange(job.salaryMin, job.salaryMax)}. Lowongan terkurasi, sumber ${job.sourceName}.`;
+---
+
+<Base title={title} description={description}>
+  <section class="mx-auto max-w-6xl px-4 pt-6">
+    <nav class="flex flex-wrap items-center gap-1.5 text-[12px] text-muted" aria-label="Remah roti">
+      <a href="/" class="text-muted no-underline hover:text-ink">Beranda</a>
+      <span aria-hidden="true">/</span>
+      <a href="/lowongan" class="text-muted no-underline hover:text-ink">Lowongan</a>
+      <span aria-hidden="true">/</span>
+      <span class="text-ink">{job.title}</span>
+    </nav>
+
+    <div class="card mt-3 p-5">
+      <div class="flex flex-wrap items-start gap-4">
+        <div
+          class="grid size-14 shrink-0 place-items-center rounded-2xl bg-ink text-[16px] font-extrabold text-white"
+          aria-hidden="true"
+        >
+          {job.companyInitials}
+        </div>
+
+        <div class="min-w-0 flex-1">
+          <h1 class="m-0 text-[24px] leading-tight font-extrabold tracking-tight">{job.title}</h1>
+          <p class="m-0 mt-1 text-[13px] text-muted">
+            {job.company} · {job.district ? `${job.district}, ` : ''}{job.city}, {job.province}
+          </p>
+
+          <div class="mt-2.5 flex flex-wrap gap-1.5">
+            {labels.map((label) => (
+              <span class:list={['pill', label.tone === 'warn' && 'border-[#d4d4d4] bg-[#f0f0f0] text-[#525252]']}>
+                {label.tone === 'ok' ? '✓' : label.tone === 'warn' ? '!' : '★'} {label.text}
+              </span>
+            ))}
+            <span class="pill">{CATEGORY_LABELS[job.category] ?? job.category}</span>
+            <span class="pill">{job.employmentType}</span>
+            <span class="pill">{salaryRange(job.salaryMin, job.salaryMax)}</span>
+          </div>
+        </div>
+      </div>
+
+      {daysLeft !== null && daysLeft <= 7 && (
+        <p class="m-0 mt-4 rounded-xl border border-line bg-surface-2 px-3.5 py-2.5 text-[12.5px] text-ink-2">
+          <strong>{daysLeft <= 0 ? 'Lowongan ini sudah lewat batas waktu.' : `Lowongan ini ditutup dalam ${daysLeft} hari.`}</strong>
+          {' '}Kurator akan memverifikasi ulang sebelum tanggal tersebut.
+        </p>
+      )}
+    </div>
+
+    <div class="mt-3 grid gap-3 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <div class="flex flex-col gap-3">
+        <section class="card p-5">
+          <h2 class="label-mono m-0">Deskripsi pekerjaan</h2>
+          <p class="m-0 mt-2 text-[13.5px] leading-relaxed text-ink-2">{job.description}</p>
+
+          <h2 class="label-mono m-0 mt-5">Kualifikasi</h2>
+          <ul class="m-0 mt-2 flex list-none flex-col gap-2 p-0">
+            {job.requirements.map((req) => (
+              <li class="flex items-start gap-2 text-[13.5px] leading-relaxed text-ink-2">
+                <span class="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-surface-3 text-[10px] font-extrabold" aria-hidden="true">
+                  ✓
+                </span>
+                {req}
+              </li>
+            ))}
+          </ul>
+
+          <p class="m-0 mt-4 text-[11.5px] text-muted">
+            Kecocokan dengan profilmu akan dihitung setelah kamu membuat profil — kami tidak
+            menampilkan persentase yang tidak bisa dijelaskan asalnya.
+          </p>
+        </section>
+
+        <section class="card p-5">
+          <h2 class="label-mono m-0">Cara melamar di lowongan ini</h2>
+          <p class="m-0 mt-2 text-[13.5px] leading-relaxed text-ink-2">
+            {channelCopy[job.applyChannel] ?? 'Alur lamaran mengikuti instruksi perusahaan.'}
+          </p>
+
+          <div class="mt-3 flex flex-wrap gap-2">
+            <a href="/masuk" class="btn">Masuk untuk melamar</a>
+            <a href="/lowongan" class="btn btn-ghost">Cari lowongan lain</a>
+          </div>
+        </section>
+      </div>
+
+      <aside class="flex flex-col gap-3">
+        <div class="card p-4">
+          <h2 class="label-mono m-0">Ringkasan</h2>
+          <dl class="m-0 mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 text-[12.5px]">
+            <dt class="text-muted">Kanal lamar</dt>
+            <dd class="m-0 text-right font-semibold">{CHANNEL_LABELS[job.applyChannel] ?? job.applyChannel}</dd>
+
+            <dt class="text-muted">Tipe kerja</dt>
+            <dd class="m-0 text-right font-semibold">{job.employmentType}</dd>
+
+            <dt class="text-muted">Gaji</dt>
+            <dd class="m-0 text-right font-semibold">{salaryRange(job.salaryMin, job.salaryMax)}</dd>
+
+            <dt class="text-muted">Lokasi</dt>
+            <dd class="m-0 text-right font-semibold">{job.city}</dd>
+
+            <dt class="text-muted">Batas lamar</dt>
+            <dd class="m-0 text-right font-semibold">{formatDate(job.expiresAt)}</dd>
+          </dl>
+        </div>
+
+        <div class="card p-4">
+          <h2 class="label-mono m-0">Sumber &amp; kurasi</h2>
+          <dl class="m-0 mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 text-[12.5px]">
+            <dt class="text-muted">Sumber asli</dt>
+            <dd class="m-0 text-right font-semibold">{job.sourceName}</dd>
+
+            <dt class="text-muted">Terakhir dicek</dt>
+            <dd class="m-0 text-right font-semibold">{formatDate(job.verifiedAt)}</dd>
+
+            <dt class="text-muted">Terakhir dilihat</dt>
+            <dd class="m-0 text-right font-semibold">{relativeTime(job.lastSeenAt)}</dd>
+          </dl>
+
+          {job.sourceUrl && (
+            <a
+              href={job.sourceUrl}
+              rel="nofollow noopener noreferrer"
+              target="_blank"
+              class="mt-3 inline-block text-[12px] text-ink underline"
+            >
+              Buka sumber asli →
+            </a>
+          )}
+
+          <p class="m-0 mt-3 border-t border-line-2 pt-2.5 text-[11.5px] leading-relaxed text-muted">
+            Kami tidak menyalin seluruh isi lowongan. Sumber asli selalu dicantumkan agar perusahaan
+            pemilik lowongan dapat meminta penurunan kapan saja.
+          </p>
+          <a href="/laporkan" class="mt-1.5 inline-block text-[11.5px] text-ink underline">
+            Laporkan lowongan mencurigakan
+          </a>
+        </div>
+
+        <div class="card border-dashed p-4">
+          <h2 class="label-mono m-0">Aman dari penipuan</h2>
+          <p class="m-0 mt-2 text-[12px] leading-relaxed text-ink-2">
+            Lowongan yang meminta biaya pendaftaran, transfer uang, atau data sensitif yang tidak
+            wajar sudah disaring sebelum terbit. Kalau kamu menemukan yang lolos, laporkan.
+          </p>
+        </div>
+      </aside>
+    </div>
+  </section>
+</Base>

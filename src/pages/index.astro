@@ -1,0 +1,127 @@
+---
+import Base from '../layouts/Base.astro';
+import JobCard from '../components/JobCard.astro';
+import { findJobs, countActiveJobs } from '../db/queries';
+
+const [jobs, total] = await Promise.all([findJobs({ limit: 6 }), countActiveJobs()]);
+---
+
+<Base title="RuangLoker — Profil Sekali Isi, Lamaran Rapi ke Banyak Lowongan">
+  <section class="mx-auto max-w-4xl px-4 pt-10 text-center">
+    <span class="pill">● {total} lowongan terverifikasi · Pilot Jabodetabek</span>
+
+    <h1 class="m-0 mt-4 text-[34px] leading-[1.15] font-extrabold tracking-tight sm:text-[42px]">
+      Isi profil sekali,<br />
+      lamar banyak lowongan dengan <span class="text-muted">rapi.</span>
+    </h1>
+
+    <p class="mx-auto mt-4 max-w-xl text-[14.5px] leading-relaxed text-ink-2">
+      Profil dan berkas diisi sekali. Setiap lamaran berikutnya tinggal ditinjau sebentar lalu
+      dikirim — sudah rapi, sudah sesuai format perusahaan, dan CV-nya sudah dinilai sebelum
+      berangkat. Lamaran tetap terkirim dari email atau WhatsApp kamu sendiri.
+    </p>
+
+    <form method="GET" action="/lowongan" class="card mx-auto mt-6 flex max-w-2xl flex-wrap gap-2 p-2 text-left">
+      <input
+        class="field flex-[2] min-w-[160px] border-0"
+        type="search"
+        name="q"
+        placeholder="Posisi, mis. Staff Admin, Kasir…"
+        aria-label="Posisi yang dicari"
+      />
+      <input
+        class="field flex-1 min-w-[140px] border-0"
+        type="search"
+        name="kota"
+        placeholder="Kota, mis. Jakarta Selatan"
+        aria-label="Kota"
+      />
+      <button class="btn" type="submit">Cari Lowongan</button>
+    </form>
+
+    <p class="mt-3 text-[12.5px] text-muted">
+      Gratis: 3 lamaran / bulan · Skor CV 1× / bulan · Tanpa kartu kredit
+    </p>
+  </section>
+
+  <section class="mx-auto max-w-6xl px-4 pt-10">
+    <div class="flex flex-wrap items-end justify-between gap-2">
+      <div>
+        <p class="label-mono m-0">Lowongan terbaru</p>
+        <h2 class="m-0 mt-1 text-[22px] font-extrabold tracking-tight">Yang baru masuk kurasi</h2>
+      </div>
+      <a href="/lowongan" class="btn btn-ghost btn-sm">Lihat semua ({total}) →</a>
+    </div>
+
+    <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {jobs.map((job) => <JobCard job={job} />)}
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-6xl px-4 pt-10">
+    <p class="label-mono m-0">Cara kerja</p>
+    <h2 class="m-0 mt-1 text-[22px] font-extrabold tracking-tight">
+      Tiga langkah, dan kamu tidak mengetik ulang
+    </h2>
+
+    <div class="mt-3 grid gap-3 sm:grid-cols-3">
+      <div class="card p-4">
+        <p class="m-0 text-[19px] font-extrabold text-muted">01</p>
+        <p class="m-0 mt-1.5 text-[14.5px] font-bold">Siapkan sekali</p>
+        <p class="m-0 mt-1 text-[12.5px] leading-relaxed text-ink-2">
+          Isi profil, unggah CV, ijazah, dan KTP ke brankas berkas. Sekali saja, dipakai untuk semua
+          lamaran berikutnya.
+        </p>
+      </div>
+      <div class="card p-4">
+        <p class="m-0 text-[19px] font-extrabold text-muted">02</p>
+        <p class="m-0 mt-1.5 text-[14.5px] font-bold">Pilih yang benar-benar cocok</p>
+        <p class="m-0 mt-1 text-[12.5px] leading-relaxed text-ink-2">
+          Filter kota atau pakai GPS. Setiap kartu menunjukkan kanal lamar dan sumber aslinya sebelum
+          kamu memutuskan.
+        </p>
+      </div>
+      <div class="card p-4">
+        <p class="m-0 text-[19px] font-extrabold text-muted">03</p>
+        <p class="m-0 mt-1.5 text-[14.5px] font-bold">Kirim dari akunmu sendiri</p>
+        <p class="m-0 mt-1 text-[12.5px] leading-relaxed text-ink-2">
+          Subjek, isi surat, dan nama berkas disiapkan otomatis. Kamu melampirkan CV lalu menekan
+          Send — balasan HRD masuk langsung ke kamu.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-6xl px-4 py-10">
+    <div class="card p-5">
+      <p class="label-mono m-0">Batas janji</p>
+      <h2 class="m-0 mt-1 text-[20px] font-extrabold tracking-tight">
+        Yang kami janjikan, dan yang tidak
+      </h2>
+
+      <div class="mt-3 grid gap-2 sm:grid-cols-2">
+        <div class="rounded-xl border border-line-2 p-3.5">
+          <p class="m-0 text-[12.5px] font-bold">✓ Yang kami janjikan</p>
+          <ul class="m-0 mt-1.5 list-none space-y-1.5 p-0 text-[12.5px] leading-relaxed text-ink-2">
+            <li>Profil sekali isi — tidak mengetik data yang sama dua kali.</li>
+            <li>Setiap lamaran rapi dan konsisten formatnya.</li>
+            <li>Setiap lowongan mencantumkan sumber asli dan tanggal pengecekan.</li>
+          </ul>
+        </div>
+        <div class="rounded-xl border border-dashed border-line p-3.5">
+          <p class="m-0 text-[12.5px] font-bold">✕ Yang tidak kami janjikan</p>
+          <ul class="m-0 mt-1.5 list-none space-y-1.5 p-0 text-[12.5px] leading-relaxed text-muted">
+            <li>Terkirim otomatis tanpa kamu menekan Send.</li>
+            <li>Lampiran CV terpasang otomatis lewat tautan email atau WhatsApp.</li>
+            <li>20 detik per lamaran — angka sebenarnya kami ukur dan laporkan.</li>
+          </ul>
+        </div>
+      </div>
+
+      <p class="m-0 mt-3 text-[11.5px] leading-relaxed text-muted">
+        Pengiriman otomatis penuh dengan lampiran hanya mungkin lewat koneksi Gmail resmi — itu fitur
+        Pro yang akan datang, bukan janji MVP.
+      </p>
+    </div>
+  </section>
+</Base>

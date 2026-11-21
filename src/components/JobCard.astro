@@ -1,0 +1,102 @@
+---
+import type { JobWithDistance } from '../db/queries';
+import {
+  CHANNEL_LABELS,
+  relativeTime,
+  salaryRange,
+  trustLabels,
+  totalDaysLeft,
+} from '../lib/format';
+
+interface Props {
+  job: JobWithDistance;
+  compact?: boolean;
+}
+
+const { job, compact = false } = Astro.props;
+
+const labels = trustLabels(job);
+const daysLeft = totalDaysLeft(job);
+const isExpiringSoon = daysLeft !== null && daysLeft <= 7;
+
+const channelClass =
+  job.applyChannel === 'Email'
+    ? 'pill'
+    : job.applyChannel === 'WhatsApp'
+      ? 'pill'
+      : 'pill border-dashed text-muted';
+---
+
+<article
+  class="card flex flex-col gap-3 p-4 transition-shadow hover:shadow-md"
+  data-job-card
+>
+  <div class="flex items-start gap-3">
+    <div
+      class="grid size-11 shrink-0 place-items-center rounded-xl bg-ink text-[12px] font-extrabold text-white"
+      aria-hidden="true"
+    >
+      {job.companyInitials}
+    </div>
+
+    <div class="min-w-0 flex-1">
+      <h3 class="m-0 text-[15.5px] leading-snug font-bold tracking-tight text-ink">
+        <a
+          href={`/lowongan/${job.slug}`}
+          class="text-ink no-underline hover:underline"
+        >
+          {job.title}
+        </a>
+      </h3>
+      <p class="m-0 mt-0.5 text-[12.5px] text-muted">
+        {job.company} · {job.district ?? job.city}
+      </p>
+    </div>
+  </div>
+
+  <div class="flex flex-wrap gap-1.5">
+    {job.distanceKm !== null && (
+      <span class="pill">📍 {job.distanceKm.toFixed(1).replace('.', ',')} km</span>
+    )}
+    <span class="pill">{salaryRange(job.salaryMin, job.salaryMax)}</span>
+    <span class="pill">{job.employmentType}</span>
+    <span class={`${channelClass} ${job.applyChannel === 'Email' ? 'pill-solid' : ''}`}>
+      {job.applyChannel === 'Email' ? '✉' : job.applyChannel === 'WhatsApp' ? '💬' : '🔗'}
+      {CHANNEL_LABELS[job.applyChannel] ?? job.applyChannel}
+    </span>
+  </div>
+
+  {!compact && (
+    <div class="flex flex-wrap items-center gap-1.5">
+      {labels.map((label) => (
+        <span
+          class:list={[
+            'pill',
+            label.tone === 'warn' && 'border-[#d4d4d4] bg-[#f0f0f0] text-[#525252]',
+          ]}
+        >
+          {label.tone === 'ok' ? '✓' : label.tone === 'warn' ? '!' : '★'} {label.text}
+        </span>
+      ))}
+    </div>
+  )}
+
+  <div
+    class="mt-auto flex flex-wrap items-center gap-2 border-t border-line-2 pt-3 text-[11.5px] text-muted"
+  >
+    <span class="label-mono">Sumber: {job.sourceName}</span>
+    <span aria-hidden="true">·</span>
+    <span>Dilihat {relativeTime(job.lastSeenAt)}</span>
+    {isExpiringSoon && (
+      <span class="ml-auto font-semibold text-ink">
+        {daysLeft! <= 0 ? 'Kedaluwarsa' : `Sisa ${daysLeft} hari`}
+      </span>
+    )}
+  </div>
+
+  <div class="flex gap-2">
+    <a href={`/lowongan/${job.slug}`} class="btn btn-ghost btn-sm flex-1">
+      Lihat detail
+    </a>
+  </div>
+</article>

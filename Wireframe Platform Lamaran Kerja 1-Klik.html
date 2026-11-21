@@ -1,0 +1,1224 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light" />
+<link rel="icon" href="data:," />
+<title>Wireframe Platform Lamaran Kerja 1-Klik</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    color-scheme: light;
+    --bg1:#E9E9E9; --bg2:#F2F2F2; --bg3:#FAFAFA;
+    --surface:#FFFFFF; --surface2:#F5F5F5; --surface3:#ECECEC;
+    --ink:#111111; --ink2:#3D3D3D; --muted:#737373;
+    --line:#E2E2E2; --line2:#EEEEEE; --dashed:#BDBDBD;
+    --navy:#111111; --navy2:#2B2B2B;
+    --accent:#111111; --accent2:#3A3A3A; --accent-ink:#FFFFFF; --accent-soft:#F0F0F0;
+    --green:#111111; --green-soft:#EDEDED;
+    --amber:#525252; --amber-soft:#F0F0F0;
+    --red:#262626; --red-soft:#EFEFEF;
+    --blue:#404040; --blue-soft:#EDEDED;
+    --shadow:0 18px 45px rgba(0,0,0,.10);
+    --shadow-sm:0 8px 24px rgba(0,0,0,.07);
+    --radius:22px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;color:var(--ink);font-family:"Plus Jakarta Sans",system-ui,sans-serif;-webkit-font-smoothing:antialiased;
+    background:linear-gradient(155deg,var(--bg1) 0%,var(--bg2) 42%,var(--bg3) 100%);background-attachment:fixed;min-height:100vh}
+  button,[role="button"],select,input,summary,a.btn{min-height:40px}
+  button{font-family:inherit;cursor:pointer}
+  .mono{font-family:"IBM Plex Mono",monospace}
+  a{color:var(--accent)}
+
+  /* ---------- TOP BAR : floating pill nav, like reference ---------- */
+  .topbar{position:sticky;top:14px;z-index:50;padding:0 18px}
+  .topbar-in{max-width:1320px;margin:0 auto;padding:10px 12px 10px 18px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;
+    background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.9);border-radius:999px;box-shadow:var(--shadow-sm)}
+  .brand{display:flex;align-items:center;gap:12px;min-width:0}
+  .brand-mark{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;display:grid;place-items:center;font-weight:800;font-size:15px;flex:none;box-shadow:0 6px 14px rgba(0,0,0,.22)}
+  .brand h1{font-size:15.5px;margin:0;line-height:1.15;letter-spacing:-.02em}
+  .brand p{margin:2px 0 0;font-size:11.5px;color:var(--muted)}
+  .top-actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .chip-toggle{display:flex;background:var(--surface3);border:1px solid var(--line);border-radius:999px;padding:3px}
+  .chip-toggle button{border:0;background:transparent;border-radius:999px;padding:6px 13px;font-size:12.5px;font-weight:700;color:var(--ink2);min-height:34px}
+  .chip-toggle button.on{background:var(--navy);color:#fff;box-shadow:0 4px 10px rgba(0,0,0,.22)}
+  .tag{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;background:var(--accent-soft);color:var(--accent);border:1px solid var(--line);padding:6px 11px;border-radius:999px;font-weight:600}
+
+  /* ---------- FLOW STRIP ---------- */
+  .flowwrap{padding:16px 18px 0}
+  .flow{max-width:1320px;margin:0 auto;padding:6px;display:flex;gap:4px;align-items:center;overflow-x:auto;scrollbar-width:none;background:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.8);border-radius:999px}
+  @media (max-width:760px){.flow{flex-wrap:wrap;overflow-x:visible;border-radius:20px}.flow-arrow{display:none}}
+  .flow::-webkit-scrollbar{display:none}
+  .flow-step{flex:none;display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:var(--ink2);background:transparent;padding:7px 12px;border-radius:999px;white-space:nowrap}
+  .flow-step b{width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;display:grid;place-items:center;font-size:11px;flex:none}
+  .flow-arrow{flex:none;color:var(--muted);font-size:13px}
+
+  /* ---------- LAYOUT ---------- */
+  .layout{max-width:1320px;margin:0 auto;display:grid;grid-template-columns:244px minmax(0,1fr) 296px;gap:18px;padding:18px;align-items:start}
+  @media (max-width:1180px){.layout{grid-template-columns:216px minmax(0,1fr)}.anno{grid-column:1/-1;position:static !important}}
+  @media (max-width:760px){.layout{grid-template-columns:1fr;padding:12px;gap:12px}}
+
+  /* ---------- SIDE NAV ---------- */
+  .sidenav{position:sticky;top:96px;background:rgba(255,255,255,.92);border:1px solid rgba(255,255,255,.9);border-radius:24px;padding:12px;box-shadow:var(--shadow-sm)}
+  @media (max-width:760px){.sidenav{position:static}}
+  .sidenav h2{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:6px 10px 8px;font-family:"IBM Plex Mono",monospace;font-weight:600}
+  .navlist{display:flex;flex-direction:column;gap:3px}
+  @media (max-width:760px){.navlist{flex-direction:row;flex-wrap:wrap;padding-bottom:4px}}
+  .navbtn{display:flex;align-items:center;gap:10px;text-align:left;border:1px solid transparent;background:transparent;border-radius:999px;padding:8px 12px 8px 8px;font-size:13.5px;font-weight:600;color:var(--ink2);width:100%}
+  @media (max-width:760px){.navbtn{flex:none;width:auto;white-space:nowrap}}
+  .navbtn .num{font-family:"IBM Plex Mono",monospace;font-size:11px;width:26px;height:26px;flex:none;border-radius:50%;display:grid;place-items:center;color:var(--muted);background:var(--surface3)}
+  .navbtn:hover{background:var(--surface2)}
+  .navbtn.on{background:var(--navy);color:#fff}
+  .navbtn.on .num{background:rgba(255,255,255,.18);color:#fff}
+  .navbtn .MVP{margin-left:auto;font-size:9.5px;font-family:"IBM Plex Mono",monospace;background:var(--surface3);padding:2px 7px;border-radius:99px;color:var(--muted)}
+  .navbtn.on .MVP{background:rgba(255,255,255,.18);color:#fff}
+  @media (max-width:760px){.navbtn .MVP{display:none}}
+  .sidenav .legend{margin:12px 8px 4px;padding-top:12px;border-top:1px solid var(--line2);font-size:11.5px;color:var(--muted);line-height:1.6}
+  .legend i{display:inline-block;width:14px;height:10px;vertical-align:middle;margin-right:6px;border-radius:3px}
+
+  /* ---------- BROWSER FRAME ---------- */
+  .stage{min-width:0}
+  .browser{background:#FDFDFF;border:1px solid rgba(255,255,255,.95);border-radius:30px;box-shadow:var(--shadow);overflow:hidden}
+  .browser-bar{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line2);background:#fff}
+  .dots{display:flex;gap:6px;flex:none}
+  .dots span{width:11px;height:11px;border-radius:50%;display:block}
+  .dots span:nth-child(1){background:#111}.dots span:nth-child(2){background:#8A8A8A}.dots span:nth-child(3){background:#D4D4D4}
+  .urlbar{flex:1;min-width:0;background:var(--surface2);border:1px solid var(--line2);border-radius:999px;font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted);padding:7px 14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .device-note{font-size:11px;font-family:"IBM Plex Mono",monospace;color:var(--muted);flex:none}
+  @media (max-width:560px){.device-note{display:none}}
+  .canvas{padding:14px;background:linear-gradient(170deg,#EFEFEF 0%,#F7F7F7 100%);min-height:560px}
+  @media (max-width:560px){.canvas{padding:8px}}
+  body.phone .canvas{max-width:400px;margin:0 auto}
+  body.phone .browser{max-width:440px;margin:0 auto}
+
+  .screen{display:none}
+  .screen.on{display:block;animation:fade .25s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion: reduce){.screen.on{animation:none}}
+
+  /* ---------- PRIMITIVES : soft cards ---------- */
+  .wf{background:var(--surface);border:1px solid var(--line2);border-radius:20px;box-shadow:var(--shadow-sm)}
+  .wf-dash{border:1px solid var(--line);background:var(--surface2);box-shadow:none}
+  .wf-label{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);font-weight:600}
+  .skl{height:9px;border-radius:99px;background:var(--surface3)}
+  .skl.w40{width:40%}.skl.w60{width:60%}.skl.w80{width:80%}
+  .imgbox{border-radius:18px;background:linear-gradient(150deg,#EDEDED,#F7F7F7);display:grid;place-items:center;color:var(--muted);font-family:"IBM Plex Mono",monospace;font-size:11px;text-align:center;padding:14px;border:1px solid #fff}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border-radius:999px;border:1.5px solid var(--navy);background:var(--navy);color:#fff;font-weight:700;font-size:13.5px;padding:10px 20px;text-decoration:none;cursor:pointer;box-shadow:0 8px 18px rgba(0,0,0,.16)}
+  .btn.acc{background:linear-gradient(135deg,var(--accent),var(--accent2));border-color:transparent;color:#fff;box-shadow:0 8px 18px rgba(0,0,0,.18)}
+  .btn.ghost{background:#fff;color:var(--ink);border-color:var(--line);box-shadow:var(--shadow-sm)}
+  .btn.sm{padding:7px 15px;font-size:12.5px;min-height:36px}
+  .btn:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+  .pill{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;border:1px solid var(--line);background:#fff;padding:5px 11px;border-radius:999px;color:var(--ink2)}
+  button.pill{cursor:pointer}
+  .pill.green{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .pill.amber{background:var(--amber-soft);color:var(--amber);border-color:#D4D4D4}
+  .pill.blue{background:var(--blue-soft);color:var(--blue);border-color:#D4D4D4}
+  .job-meta .pill.green,.job .pill.green{background:var(--green-soft);color:var(--green);border-color:#D4D4D4}
+  #catChips .pill.green{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .input{width:100%;border:1.5px solid var(--line);border-radius:999px;background:#fff;padding:11px 16px;font-size:13.5px;color:var(--ink);font-family:inherit}
+  .input::placeholder{color:var(--muted)}
+  select.input{appearance:none;border-radius:14px}
+  textarea.input{border-radius:16px}
+  label.f{display:block}
+  label.f span{display:block;font-size:12px;font-weight:700;margin-bottom:6px}
+  label.f small{display:block;font-size:11.5px;color:var(--muted);margin-top:5px;line-height:1.5}
+  label.f .input{border-radius:14px}
+
+  /* app chrome inside mockup */
+  .appnav{display:flex;align-items:center;gap:12px;padding:10px 12px 10px 18px;margin:12px 12px 0;background:#fff;border:1px solid var(--line2);border-radius:999px;box-shadow:var(--shadow-sm);flex-wrap:wrap}
+  .appnav .logo{font-weight:800;letter-spacing:-.02em;font-size:15.5px;display:flex;align-items:center;gap:8px}
+  .appnav .logo::before{content:"";width:24px;height:24px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:inline-block}
+  .appnav .logo em{font-style:normal;color:var(--accent)}
+  .appnav nav{display:flex;gap:2px;flex-wrap:wrap}
+  .appnav nav span{font-size:12.5px;font-weight:600;color:var(--muted);padding:6px 11px;border-radius:999px}
+  .appnav nav span.cur{color:#fff;background:var(--navy)}
+  .avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;font-weight:800;font-size:12px;color:#fff;flex:none}
+  .appbody{padding:22px}
+  @media (max-width:560px){.appbody{padding:15px}.appnav nav{display:none}.appnav{border-radius:20px}}
+
+  h3.st{font-size:21px;margin:0 0 4px;letter-spacing:-.02em}
+  .sub{font-size:13px;color:var(--muted);margin:0;line-height:1.6}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  @media (max-width:700px){.grid2,.grid3{grid-template-columns:1fr}}
+  body.phone .grid2,body.phone .grid3{grid-template-columns:1fr}
+
+  /* ---------- HERO (landing, reference-style) ---------- */
+  .hero{text-align:center;padding:30px 18px 6px;max-width:640px;margin:0 auto}
+  .hero h3{font-size:36px;line-height:1.14;margin:14px 0 10px;letter-spacing:-.03em;font-weight:800}
+  .hero h3 em{font-style:normal;color:var(--accent)}
+  @media (max-width:560px){.hero h3{font-size:27px}}
+  .hero-search{display:flex;gap:8px;margin:20px auto 0;max-width:560px;background:#fff;border:1px solid var(--line2);border-radius:999px;padding:6px;box-shadow:var(--shadow-sm);flex-wrap:wrap}
+  .hero-search .input{border:0;flex:1;min-width:140px;box-shadow:none}
+  .hero-stage{position:relative;max-width:680px;margin:30px auto 8px;padding:0 8px}
+  .hero-card{position:relative;z-index:2;background:#fff;border-radius:24px;box-shadow:var(--shadow);padding:20px;text-align:left;max-width:400px;margin:0 auto}
+  .float-card{position:absolute;z-index:3;background:#fff;border-radius:16px;box-shadow:var(--shadow);padding:12px 15px;text-align:left}
+  .float-card b{font-size:17px;letter-spacing:-.02em;display:block}
+  .float-card span{font-size:11px;color:var(--muted);font-weight:600}
+  .fc1{top:-16px;left:0;transform:rotate(-6deg)}
+  .fc2{top:38px;right:0;transform:rotate(5deg)}
+  .fc3{bottom:34px;left:-6px;transform:rotate(4deg)}
+  .fc4{bottom:-14px;right:8px;transform:rotate(-4deg)}
+  @media (max-width:700px){.float-card{display:none}}
+  body.phone .float-card{display:none}
+  .partners{text-align:center;padding:26px 16px 4px}
+  .partners .row{display:flex;gap:26px;justify-content:center;flex-wrap:wrap;margin-top:12px;font-weight:800;color:#8A8A8A;font-size:14.5px;letter-spacing:-.01em}
+  .faqrow{display:flex;justify-content:space-between;gap:12px;padding:14px 4px;border-bottom:1px solid var(--line2);font-size:13.5px;font-weight:600;text-align:left}
+  .cta-band{margin:22px;border-radius:24px;background:linear-gradient(140deg,var(--navy),var(--navy2));color:#fff;text-align:center;padding:32px 20px 0;overflow:hidden}
+  .cta-band h4{font-size:24px;margin:0 0 6px;letter-spacing:-.02em}
+  .cta-band p{color:#CFCFCF;font-size:13px;margin:0}
+  .cta-preview{background:#fff;border-radius:16px 16px 0 0;margin:22px auto 0;max-width:480px;padding:14px 16px;color:var(--ink);text-align:left;box-shadow:0 -8px 30px rgba(0,0,0,.2)}
+
+  /* job cards */
+  .job{padding:17px;display:flex;flex-direction:column;gap:10px}
+  .job-top{display:flex;gap:12px;align-items:flex-start}
+  .job-logo{width:46px;height:46px;flex:none;border-radius:14px;display:grid;place-items:center;font-weight:800;font-size:13px;color:#fff;background:linear-gradient(135deg,#2B2B2B,#6B6B6B)}
+  .job:nth-child(2n) .job-logo{background:linear-gradient(135deg,var(--accent),var(--accent2))}
+  .job h4{margin:0;font-size:15.5px;letter-spacing:-.01em}
+  .job .co{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .job-meta{display:flex;flex-wrap:wrap;gap:6px}
+  .job-foot{display:flex;gap:8px;align-items:center;margin-top:auto;flex-wrap:wrap}
+  .pickbtn{margin-left:auto}
+  .pickbtn.picked{background:linear-gradient(135deg,var(--accent),var(--accent2));border-color:transparent;color:#fff}
+  .match{font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;color:var(--accent)}
+  .matchbar{height:6px;border-radius:99px;background:var(--surface3);overflow:hidden}
+  .matchbar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+
+  .selectbar{position:sticky;bottom:12px;margin-top:14px;background:var(--navy);color:#fff;border-radius:18px;padding:13px 17px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;box-shadow:var(--shadow);z-index:5}
+  .selectbar .btn{background:#fff;color:var(--navy);border-color:#fff;box-shadow:none}
+  .selectbar small{opacity:.72}
+
+  /* queue */
+  .qitem{padding:17px;display:flex;flex-direction:column;gap:10px}
+  .qitem.done{border-color:#D4D4D4;background:var(--green-soft)}
+  .qhead{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .qnum{width:32px;height:32px;border-radius:50%;background:var(--navy);color:#fff;display:grid;place-items:center;font-weight:800;font-size:13px;flex:none}
+  .qitem.done .qnum{background:var(--green)}
+  .status{font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;padding:4px 10px;border-radius:99px;border:1px solid var(--line);color:var(--muted);margin-left:auto;background:#fff}
+  .status.sent{background:var(--green);color:#fff;border-color:var(--green)}
+  .mailprev{background:var(--surface2);border:1px solid var(--line2);border-radius:14px;padding:12px 14px;font-size:12.5px;line-height:1.65;color:var(--ink2)}
+  .mailprev b{color:var(--ink)}
+  .progress{height:10px;border-radius:99px;background:var(--surface3);overflow:hidden}
+  .progress i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%;transition:width .4s ease}
+
+  /* score ring */
+  .ringwrap{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+  .ring{position:relative;width:124px;height:124px;flex:none}
+  .ring svg{transform:rotate(-90deg)}
+  .ring .val{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+  .ring .val b{font-size:30px;letter-spacing:-.03em;display:block;line-height:1}
+  .ring .val span{font-size:10.5px;color:var(--muted);font-family:"IBM Plex Mono",monospace}
+  .checklist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
+  .checklist li{display:flex;gap:10px;font-size:13px;line-height:1.55;align-items:flex-start}
+  .ic{width:22px;height:22px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:800}
+  .ic.ok{color:var(--green);background:var(--green-soft)}
+  .ic.warn{color:var(--amber);background:var(--amber-soft)}
+  .ic.bad{color:var(--red);background:var(--red-soft)}
+
+  /* files */
+  .file{display:flex;align-items:center;gap:12px;padding:13px 15px;flex-wrap:wrap}
+  .fileic{width:40px;height:40px;flex:none;border-radius:12px;display:grid;place-items:center;font-family:"IBM Plex Mono",monospace;font-size:10px;font-weight:700}
+  .meter{height:12px;border-radius:99px;background:var(--surface3);overflow:hidden}
+  .meter i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:64%}
+
+  /* pricing */
+  .price{padding:22px;display:flex;flex-direction:column;gap:12px;position:relative}
+  .price.pop{border:2px solid #111;box-shadow:0 18px 40px rgba(0,0,0,.12)}
+  .price .amt{font-size:31px;font-weight:800;letter-spacing:-.03em}
+  .price .amt small{font-size:13px;font-weight:600;color:var(--muted);letter-spacing:0}
+  .price ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--ink2)}
+  .price ul li{display:flex;gap:8px;line-height:1.5}
+  .price ul li::before{content:"✓";color:var(--green);font-weight:800;flex:none}
+  .price ul li.no::before{content:"—";color:var(--muted)}
+  .price ul li.no{color:var(--muted)}
+
+  /* CV preview */
+  .cvprev{padding:22px;font-size:12.5px;line-height:1.7;color:var(--ink2)}
+  .cvprev h5{font-size:17px;margin:0;color:var(--ink);letter-spacing:-.01em}
+  .cvprev h6{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:14px 0 4px;font-family:"IBM Plex Mono",monospace}
+  .cvprev.creative{background:linear-gradient(150deg,#fff 55%,var(--accent-soft))}
+  .cvprev.creative h5{font-size:20px}
+  .letter{padding:24px;font-size:13.5px;line-height:1.85;color:var(--ink2)}
+  .letter b{color:var(--ink)}
+  .hl{background:var(--amber-soft);border-bottom:2px solid var(--amber);padding:0 3px;border-radius:3px;color:var(--ink);font-weight:600}
+
+  /* ---------- ANNOTATION PANEL ---------- */
+  .anno{position:sticky;top:96px;background:rgba(255,255,255,.94);border:1px solid rgba(255,255,255,.9);border-radius:24px;padding:19px;box-shadow:var(--shadow-sm)}
+  .anno .wf-label{color:var(--accent)}
+  .anno h3{margin:6px 0 8px;font-size:16.5px;letter-spacing:-.01em}
+  .anno p,.anno li{font-size:13px;line-height:1.65;color:var(--ink2)}
+  .anno ul{margin:6px 0 0;padding-left:17px;display:flex;flex-direction:column;gap:5px}
+  .anno section{margin-top:16px}
+  .anno section:first-of-type{margin-top:4px}
+  .anno h4{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-family:"IBM Plex Mono",monospace;color:var(--muted);margin:0 0 4px}
+  .anno .devnote{background:var(--amber-soft);border-radius:14px;padding:11px 13px;font-size:12.5px;line-height:1.6;color:var(--ink2)}
+  .anno .devnote b{color:var(--ink)}
+
+  footer{max-width:1320px;margin:0 auto;padding:6px 18px 34px;color:#5C5C5C;font-size:12.5px;line-height:1.7}
+  .kbd{font-family:"IBM Plex Mono",monospace;font-size:11px;background:#fff;border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:1px 6px}
+
+  /* ---------- MARQUEE + TICKER (monokrom) ---------- */
+  .marquee{overflow:hidden;position:relative;-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+  .marquee-track{display:flex;gap:44px;width:max-content;align-items:center;animation:marqueeMove 34s linear infinite;padding:4px 0}
+  .marquee:hover .marquee-track,.marquee:focus-within .marquee-track{animation-play-state:paused}
+  .marquee-track span{font-weight:800;font-size:15px;letter-spacing:-.01em;color:#8f8f8f;white-space:nowrap}
+  .marquee-track i{width:5px;height:5px;border-radius:50%;background:#C9C9C9;flex:none}
+  @keyframes marqueeMove{to{transform:translateX(-50%)}}
+  .ticker{background:#111;color:#fff;border-radius:14px;overflow:hidden;margin:18px 22px 0}
+  .ticker-in{display:flex;align-items:center;gap:0}
+  .ticker-label{flex:none;background:#fff;color:#111;font-family:"IBM Plex Mono",monospace;font-size:10px;font-weight:700;letter-spacing:.08em;padding:9px 12px;border-right:1px solid #2b2b2b;text-transform:uppercase}
+  .ticker-view{overflow:hidden;flex:1}
+  .ticker-track{display:flex;gap:0;width:max-content;animation:marqueeMove 38s linear infinite}
+  .ticker:hover .ticker-track{animation-play-state:paused}
+  .ticker-track span{font-size:12.5px;font-weight:600;white-space:nowrap;padding:9px 18px;color:#EDEDED}
+  .ticker-track span b{color:#fff}
+  .ticker-track span em{font-style:normal;color:#9a9a9a}
+  @media (prefers-reduced-motion: reduce){.marquee-track,.ticker-track{animation:none;flex-wrap:wrap;width:auto}}
+  /* ---------- STICKY FILTERS + MOBILE CAROUSEL ---------- */
+  .sticky-filters{position:sticky;top:0;z-index:6;background:#fff;padding:12px 0 10px;border-bottom:1px solid var(--line2)}
+  .swipe-hint{display:none;font-size:11.5px;color:var(--muted);font-weight:600;margin-top:6px}
+  @media (max-width:760px){
+    .swipe-hint{display:block}
+    #dash-jobs{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:12px;padding:4px 2px 10px;scrollbar-width:none}
+    #dash-jobs::-webkit-scrollbar{display:none}
+    #dash-jobs .job{min-width:84%;flex:0 0 auto;scroll-snap-align:start}
+    .mobile-carousel{display:flex !important;overflow-x:auto;scroll-snap-type:x mandatory;gap:12px;padding:4px 2px 10px;scrollbar-width:none}
+    .mobile-carousel::-webkit-scrollbar{display:none}
+    .mobile-carousel>*{min-width:84%;flex:0 0 auto;scroll-snap-align:start}
+    #jobGrid{grid-template-columns:1fr !important}
+    #jobGrid .job{padding:13px}
+    .selectbar{bottom:8px;border-radius:999px;padding:10px 12px 10px 16px}
+    .ticker{margin:14px 12px 0}
+    .ticker-label{display:none}
+  }
+  body.phone .swipe-hint{display:block}
+  body.phone #dash-jobs{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:12px;padding:4px 2px 10px;scrollbar-width:none}
+  body.phone #dash-jobs .job{min-width:84%;flex:0 0 auto;scroll-snap-align:start}
+  body.phone .mobile-carousel{display:flex !important;overflow-x:auto;scroll-snap-type:x mandatory;gap:12px;padding:4px 2px 10px}
+  body.phone .mobile-carousel>*{min-width:84%;flex:0 0 auto;scroll-snap-align:start}
+  body.phone #jobGrid{grid-template-columns:1fr !important}
+  body.phone .ticker-label{display:none}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <div class="brand">
+      <div class="brand-mark">R</div>
+      <div>
+        <h1>RuangLoker — Mockup Platform Lamaran Kerja 1-Klik</h1>
+        <p><b>Satu Ruang, Semua Lamaran</b> · Pilot <b>Jabodetabek — Admin &amp; Retail</b> · Nama final: RuangLoker</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <span class="tag">Mockup v3 · Monokrom · RuangLoker</span>
+      <div class="chip-toggle" role="group" aria-label="Ukuran tampilan">
+        <button id="btnDesktop" class="on" type="button">Desktop</button>
+        <button id="btnPhone" type="button">Mobile</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="flowwrap">
+  <div class="flow" aria-label="Alur utama">
+    <span class="flow-step"><b>1</b> Daftar</span><span class="flow-arrow">→</span>
+    <span class="flow-step"><b>2</b> Isi profil sekali</span><span class="flow-arrow">→</span>
+    <span class="flow-step"><b>3</b> Upload berkas sekali</span><span class="flow-arrow">→</span>
+    <span class="flow-step"><b>4</b> Pilih lowongan (GPS / kota)</span><span class="flow-arrow">→</span>
+    <span class="flow-step"><b>5</b> Lamar Semua</span><span class="flow-arrow">→</span>
+    <span class="flow-step"><b>6</b> Antrian kirim dari email / WA sendiri</span><span class="flow-arrow">→</span>
+    <span class="flow-step"><b>7</b> Terkirim ✓</span>
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- ============ SIDE NAV ============ -->
+  <aside class="sidenav">
+    <h2>Layar Wireframe — 10</h2>
+    <div class="navlist" id="navlist">
+      <button class="navbtn on" data-go="landing" type="button"><span class="num">01</span> Landing Page <span class="MVP">MVP</span></button>
+      <button class="navbtn" data-go="dashboard" type="button"><span class="num">02</span> Dashboard <span class="MVP">MVP</span></button>
+      <button class="navbtn" data-go="lowongan" type="button"><span class="num">03</span> Cari Lowongan <span class="MVP">MVP</span></button>
+      <button class="navbtn" data-go="detail" type="button"><span class="num">04</span> Detail Lowongan <span class="MVP">MVP</span></button>
+      <button class="navbtn" data-go="profil" type="button"><span class="num">05</span> Profil Sekali Isi <span class="MVP">MVP</span></button>
+      <button class="navbtn" data-go="brankas" type="button"><span class="num">06</span> Brankas Berkas <span class="MVP">MVP</span></button>
+      <button class="navbtn" data-go="cv" type="button"><span class="num">07</span> CV Builder + Skor <span class="MVP">MVP</span></button>
+      <button class="navbtn" data-go="surat" type="button"><span class="num">08</span> Surat Lamaran <span class="MVP">MVP</span></button>
+      <button class="navbtn" data-go="lamar" type="button"><span class="num">09</span> Lamar Massal <span class="MVP">INTI</span></button>
+      <button class="navbtn" data-go="pricing" type="button"><span class="num">10</span> Pricing <span class="MVP">MVP</span></button>
+    </div>
+    <div class="legend">
+      <b style="color:var(--ink)">Cara baca wireframe:</b><br>
+      <i style="border:1.5px dashed var(--dashed);background:var(--surface3)"></i> Kotak putus-putus = gambar / area media<br>
+      <i style="background:var(--surface3);border:1px solid var(--line2)"></i> Batang abu = teks / konten<br>
+      <i style="background:var(--accent)"></i> Hitam = aksi utama (CTA)<br><br>
+      Klik tombol <b>“Pilih”</b> di layar 03, lalu buka layar 09 — pilihanmu ikut kebawa. Itu simulasi alur aslinya.
+    </div>
+  </aside>
+
+  <!-- ============ STAGE ============ -->
+  <main class="stage">
+    <div class="browser">
+      <div class="browser-bar">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <div class="urlbar" id="urlbar">ruangloker.id/</div>
+        <div class="device-note" id="devnote">1440 × 900</div>
+      </div>
+      <div class="canvas">
+
+        <!-- ================= 01 LANDING ================= -->
+        <section class="screen on" id="scr-landing">
+          <div class="wf" style="border-radius:24px;overflow:hidden;box-shadow:none;border:0">
+            <div class="appnav">
+              <span class="logo">Ruang<em>Loker</em></span>
+              <nav><span class="cur">Lowongan</span><span>CV Builder</span><span>Skor CV</span><span>Harga</span><span>Untuk Perusahaan</span></nav>
+              <span style="margin-left:auto;display:flex;gap:8px;align-items:center"><button class="btn ghost sm" data-go="dashboard" type="button">Masuk</button><button class="btn acc sm" data-go="profil" type="button">Daftar Gratis</button></span>
+            </div>
+
+            <div class="hero">
+              <span class="pill" style="background:var(--green-soft);color:var(--green);border-color:#D4D4D4">● 128 lowongan terverifikasi · Jabodetabek</span>
+              <h3>Isi profil sekali, lamar banyak kerjaan dengan <em>presisi satu klik.</em></h3>
+              <p class="sub" style="font-size:14.5px;max-width:520px;margin:0 auto">Satu Ruang, Semua Lamaran. Upload CV &amp; berkas sekali, pilih lowongan yang cocok di dekat rumahmu, dan kirim semuanya dari email / WhatsApp kamu sendiri — format rapi otomatis dari kami.</p>
+              <div class="hero-search">
+                <input class="input" placeholder="Posisi, mis. Staff Admin, Kasir…">
+                <input class="input" placeholder="Kota / pakai GPS saya">
+                <button class="btn acc" data-go="lowongan" type="button">Cari Lowongan</button>
+              </div>
+              <p class="sub" style="margin-top:12px;font-size:12.5px"><b style="color:var(--ink)">3 lamaran gratis</b> / bulan &nbsp;·&nbsp; <b style="color:var(--ink)">Skor CV</b> gratis 1× &nbsp;·&nbsp; <b style="color:var(--ink)">Tanpa kartu</b> kredit</p>
+            </div>
+
+            <div class="hero-stage">
+              <div class="float-card fc1"><b>92%</b><span>Kecocokan — Staff Admin</span></div>
+              <div class="float-card fc2"><b>±20 dtk</b><span>per lamaran terkirim</span></div>
+              <div class="float-card fc3"><b>7 terkirim</b><span>2 dibalas HRD minggu ini</span></div>
+              <div class="float-card fc4"><b>Skor CV 72</b><span>naik 9 poin bulan ini</span></div>
+              <div class="hero-card">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <span class="avatar">BS</span>
+                  <div style="flex:1;min-width:0"><b style="font-size:13.5px">Lamaran siap kirim</b><p class="sub" style="font-size:11.5px">Budi Santoso · Staff Admin</p></div>
+                  <span class="pill" style="background:var(--green-soft);color:var(--green);border-color:#D4D4D4">Siap</span>
+                </div>
+                <div class="mailprev" style="margin-top:13px"><b>Subject:</b> [Lamaran] Staff Admin — Budi Santoso — Jakarta Selatan<br><b>Lampiran:</b> CV_Budi_Staff-Admin.pdf · Surat Lamaran · Ijazah</div>
+                <div style="display:flex;gap:6px;margin-top:13px;flex-wrap:wrap">
+                  <span class="pill">PT Maju Bersama ✓</span><span class="pill">Toserba Berkah ✓</span><span class="pill">+1 lowongan</span>
+                </div>
+                <button class="btn acc" style="width:100%;margin-top:14px" data-go="lamar" type="button">Lamar 3 Lowongan Sekaligus</button>
+              </div>
+            </div>
+
+            <div class="ticker" aria-label="Lowongan terbaru">
+              <div class="ticker-in">
+                <span class="ticker-label">Terbaru</span>
+                <div class="ticker-view"><div class="ticker-track">
+                  <span><b>Staff Admin</b> — Jakarta Selatan <em>• Rp4,5–5,5 jt • Baru 2 jam lalu</em></span><span><b>Kasir Retail</b> — Jakarta Selatan <em>• Rp4,2–4,8 jt • Baru 3 jam lalu</em></span><span><b>Staff Gudang</b> — Jakarta Timur <em>• Rp4,6–5,2 jt • Baru 5 jam lalu</em></span><span><b>Barista &amp; Kasir</b> — Depok <em>• Rp3,8–4,5 jt • Kemarin</em></span><span><b>Admin Marketplace</b> — Tangerang <em>• Rp4,8–5,8 jt • Kemarin</em></span>
+                  <span><b>Staff Admin</b> — Jakarta Selatan <em>• Rp4,5–5,5 jt • Baru 2 jam lalu</em></span><span><b>Kasir Retail</b> — Jakarta Selatan <em>• Rp4,2–4,8 jt • Baru 3 jam lalu</em></span><span><b>Staff Gudang</b> — Jakarta Timur <em>• Rp4,6–5,2 jt • Baru 5 jam lalu</em></span><span><b>Barista &amp; Kasir</b> — Depok <em>• Rp3,8–4,5 jt • Kemarin</em></span><span><b>Admin Marketplace</b> — Tangerang <em>• Rp4,8–5,8 jt • Kemarin</em></span>
+                </div></div>
+              </div>
+            </div>
+
+            <div class="partners">
+              <span class="wf-label" style="color:var(--muted)">Perusahaan yang lowongannya dikurasi di RuangLoker</span>
+              <div class="marquee" style="margin-top:12px" aria-label="Daftar perusahaan">
+                <div class="marquee-track">
+                  <span>PT Maju Bersama</span><i></i><span>Toserba Berkah Jaya</span><i></i><span>PT Kilat Logistik</span><i></i><span>Kopi Senja</span><i></i><span>CV Aneka Makmur</span><i></i><span>PT Bersama Sejahtera</span><i></i><span>CV Sinar Logistik</span><i></i>
+                  <span>PT Maju Bersama</span><i></i><span>Toserba Berkah Jaya</span><i></i><span>PT Kilat Logistik</span><i></i><span>Kopi Senja</span><i></i><span>CV Aneka Makmur</span><i></i><span>PT Bersama Sejahtera</span><i></i><span>CV Sinar Logistik</span><i></i>
+                </div>
+              </div>
+              <p class="sub" style="font-size:11.5px;margin-top:6px">Berjalan pelan · berhenti saat disentuh / di-hover · logo tampil grayscale (monokrom)</p>
+            </div>
+
+            <div class="appbody">
+              <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap">
+                <div><span class="wf-label">Cara kerja</span><h3 style="font-size:24px;margin:6px 0 0;letter-spacing:-.025em;max-width:420px">Kenapa pelamar suka alur 1-klik ini</h3></div>
+                <button class="btn" data-go="lowongan" type="button">Mulai Cari Lowongan</button>
+              </div>
+              <div class="grid3" style="margin-top:16px">
+                <div class="wf" style="padding:18px"><b style="font-size:19px;color:var(--accent)">1</b><p style="margin:8px 0 4px;font-weight:700;font-size:14.5px">Siapkan sekali</p><p class="sub">Isi profil, upload CV, ijazah, KTP ke brankas berkas. Sekali saja, dipakai selamanya.</p></div>
+                <div class="wf" style="padding:18px"><b style="font-size:19px;color:var(--accent)">2</b><p style="margin:8px 0 4px;font-weight:700;font-size:14.5px">Pilih yang cocok</p><p class="sub">Filter pakai GPS / kota. Centang 3–5 lowongan yang sesuai kualifikasimu.</p><button class="btn ghost sm" style="margin-top:10px" data-go="lowongan" type="button">Jelajahi lowongan</button></div>
+                <div class="wf" style="padding:18px"><b style="font-size:19px;color:var(--accent)">3</b><p style="margin:8px 0 4px;font-weight:700;font-size:14.5px">Kirim berurutan</p><p class="sub">Subject, isi email &amp; surat lamaran sudah rapi. Kamu tinggal tekan Send dari akunmu sendiri.</p><button class="btn ghost sm" style="margin-top:10px" data-go="lamar" type="button">Lihat antrian kirim</button></div>
+              </div>
+
+              <div class="grid3" style="margin-top:14px">
+                <div class="wf" style="padding:18px"><p style="margin:0 0 5px;font-weight:700;font-size:14.5px">Skor CV + Saran Perbaikan</p><p class="sub">CV ATS &amp; kreatif dinilai otomatis: apa yang kurang, apa yang harus ditambah.</p><p style="margin:12px 0 0"><b style="font-size:22px">72</b><span class="sub"> /100 — contoh skor Budi</span></p><button class="btn ghost sm" style="margin-top:8px" data-go="cv" type="button">Lihat contoh skor</button></div>
+                <div class="wf" style="padding:18px"><p style="margin:0 0 5px;font-weight:700;font-size:14.5px">Surat Lamaran Otomatis</p><p class="sub">Template formal / fresh graduate / retail, terisi dari CV + lowongan yang dipilih.</p><button class="btn ghost sm" style="margin-top:10px" data-go="surat" type="button">Lihat generator</button></div>
+                <div class="wf" style="padding:18px"><p style="margin:0 0 5px;font-weight:700;font-size:14.5px">Lowongan Terverifikasi</p><p class="sub">Dikurasi manual dari sumber publik, dicek ulang berkala, ada label tanggal cek terakhir.</p><button class="btn ghost sm" style="margin-top:10px" data-go="detail" type="button">Lihat contoh detail</button></div>
+              </div>
+
+              <div style="text-align:center;margin-top:30px">
+                <span class="wf-label" style="color:var(--muted)">Testimoni — contoh untuk mockup</span>
+                <h3 style="font-size:23px;margin:6px 0 0;letter-spacing:-.025em">Apa kata pelamar</h3>
+              </div>
+              <p class="swipe-hint" style="text-align:center">Geser untuk lihat testimoni lainnya →</p>
+              <div class="grid3 mobile-carousel" style="margin-top:14px">
+                <div class="wf" style="padding:18px"><p class="sub" style="color:var(--ink2)">“Dulu satu lamaran bisa 10 menit isi form. Sekarang pilih tiga lowongan, kirimnya nggak sampai semenit.”</p><div style="display:flex;gap:9px;align-items:center;margin-top:13px"><span class="avatar">RN</span><div><b style="font-size:13px">Rina</b><p class="sub" style="font-size:11.5px">Kasir · Depok</p></div></div></div>
+                <div class="wf" style="padding:18px;background:var(--surface2)"><p class="sub" style="color:var(--ink2)">“Skor CV-nya ngebantu banget. Ternyata CV saya kurang kata kunci yang dicari HRD.”</p><div style="display:flex;gap:9px;align-items:center;margin-top:13px"><span class="avatar">AD</span><div><b style="font-size:13px">Andi</b><p class="sub" style="font-size:11.5px">Staff Admin · Jakarta</p></div></div></div>
+                <div class="wf" style="padding:18px"><p class="sub" style="color:var(--ink2)">“Enaknya berkas disimpan sekali. Nggak bolak-balik scan ijazah tiap mau melamar.”</p><div style="display:flex;gap:9px;align-items:center;margin-top:13px"><span class="avatar">SR</span><div><b style="font-size:13px">Sari</b><p class="sub" style="font-size:11.5px">Staff Gudang · Bekasi</p></div></div></div>
+              </div>
+
+              <div class="grid2" style="margin-top:26px;align-items:start">
+                <div class="wf" style="padding:18px">
+                  <span class="wf-label" style="color:var(--muted)">Pratinjau dashboard</span>
+                  <div style="display:flex;justify-content:space-between;margin-top:12px;gap:8px;flex-wrap:wrap"><span style="font-size:13px"><b>Lamaran terkirim</b></span><b>7</b></div>
+                  <div style="display:flex;justify-content:space-between;margin-top:8px;gap:8px;flex-wrap:wrap"><span style="font-size:13px"><b>Skor CV</b></span><b>72/100</b></div>
+                  <div style="display:flex;justify-content:space-between;margin-top:8px;gap:8px;flex-wrap:wrap"><span style="font-size:13px"><b>Brankas</b></span><b>32/50 MB</b></div>
+                  <div class="meter" style="margin-top:12px"><i></i></div>
+                  <button class="btn ghost sm" style="margin-top:12px" data-go="dashboard" type="button">Buka Dashboard</button>
+                </div>
+                <div style="padding:4px 6px">
+                  <span class="wf-label" style="color:var(--muted)">FAQ</span>
+                  <h3 style="font-size:20px;margin:6px 0 8px;letter-spacing:-.02em">Sering ditanyakan</h3>
+                  <div class="faqrow"><span>Lamaran terkirim dari email siapa?</span><span>+</span></div>
+                  <div class="faqrow"><span>Kenapa tidak terkirim otomatis sekaligus?</span><span>+</span></div>
+                  <div class="faqrow"><span>Apakah berkas saya aman?</span><span>+</span></div>
+                  <div class="faqrow" style="border-bottom:0"><span>Apakah ada paket gratisnya?</span><span>+</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="cta-band">
+              <h4>Lamar kerja berikutnya mulai dari sini.</h4>
+              <p>Daftar gratis, isi profil sekali, dan kirim lamaran pertamamu hari ini.</p>
+              <button class="btn acc" style="margin-top:16px;background:#fff;color:var(--navy);box-shadow:none" data-go="profil" type="button">Daftar Gratis Sekarang</button>
+              <div class="cta-preview">
+                <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><b style="font-size:13px">Dashboard Budi</b><span class="pill" style="background:var(--green-soft);color:var(--green);border-color:#D4D4D4">Profil 80% lengkap</span></div>
+                <div class="grid3" style="margin-top:12px;gap:10px">
+                  <div><span class="wf-label" style="color:var(--muted)">Terkirim</span><p style="margin:3px 0 0"><b style="font-size:19px">7</b></p></div>
+                  <div><span class="wf-label" style="color:var(--muted)">Skor CV</span><p style="margin:3px 0 0"><b style="font-size:19px">72</b></p></div>
+                  <div><span class="wf-label" style="color:var(--muted)">Kecocokan baru</span><p style="margin:3px 0 0"><b style="font-size:19px">92%</b></p></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= 02 DASHBOARD ================= -->
+        <section class="screen" id="scr-dashboard">
+          <div class="wf" style="border-radius:12px;overflow:hidden">
+            <div class="appnav">
+              <span class="logo">Ruang<em>Loker</em></span>
+              <nav><span class="cur">Dashboard</span><span>Lowongan</span><span>CV Saya</span><span>Brankas</span><span>Lamaran Saya</span></nav>
+              <span style="margin-left:auto;display:flex;gap:10px;align-items:center"><span class="pill amber">Kuota: 2 / 3 gratis</span><span class="avatar">BS</span></span>
+            </div>
+            <div class="appbody">
+              <h3 class="st">Halo, Budi 👋</h3>
+              <p class="sub">Contoh tampilan user <b>Budi Santoso</b> — Staff Admin, Jakarta Selatan. Semua angka di layar ini contoh data wireframe.</p>
+
+              <div class="wf" style="padding:16px;margin-top:16px;border-color:var(--amber)">
+                <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center">
+                  <div><b style="font-size:14.5px">Profilmu 80% lengkap</b><p class="sub">Tambahkan <b>foto formal</b> dan <b>NPWP</b> biar bisa lamar ke semua lowongan.</p></div>
+                  <button class="btn sm" data-go="profil" type="button">Lengkapi Profil →</button>
+                </div>
+                <div class="progress" style="margin-top:12px"><i style="width:80%"></i></div>
+              </div>
+
+              <div class="grid3" style="margin-top:14px">
+                <div class="wf" style="padding:16px"><span class="wf-label">Lamaran terkirim</span><p style="font-size:28px;font-weight:800;margin:6px 0 2px">7</p><p class="sub">2 dibalas HRD minggu ini 🎉</p></div>
+                <div class="wf" style="padding:16px"><span class="wf-label">Skor CV terakhir</span><p style="font-size:28px;font-weight:800;margin:6px 0 2px">72<span style="font-size:15px;color:var(--muted)">/100</span></p><p class="sub">Naik 9 poin dari bulan lalu</p><button class="btn ghost sm" style="margin-top:8px" data-go="cv" type="button">Perbaiki CV →</button></div>
+                <div class="wf" style="padding:16px"><span class="wf-label">Penyimpanan brankas</span><p style="font-size:28px;font-weight:800;margin:6px 0 2px">32<span style="font-size:15px;color:var(--muted)">/50 MB</span></p><div class="meter" style="margin-top:8px"><i></i></div><button class="btn ghost sm" style="margin-top:10px" data-go="brankas" type="button">Kelola berkas →</button></div>
+              </div>
+
+              <div style="margin-top:20px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+                <span class="wf-label">Rekomendasi buat kamu — dekat Jakarta Selatan</span>
+                <button class="btn ghost sm" data-go="lowongan" type="button">Lihat semua →</button>
+              </div>
+              <p class="swipe-hint">Geser ke samping untuk lihat rekomendasi lainnya →</p>
+              <div class="grid2" style="margin-top:10px" id="dash-jobs"></div>
+
+              <div class="wf wf-dash" style="padding:16px;margin-top:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+                <div style="flex:1;min-width:220px"><b style="font-size:14px">Kuota gratis habis?</b><p class="sub">Upgrade Pro Rp29.000/bln untuk lamaran tanpa batas, atau beli paket kredit Rp10.000 = 10 lamaran.</p></div>
+                <button class="btn acc" data-go="pricing" type="button">Lihat Harga</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= 03 LOWONGAN ================= -->
+        <section class="screen" id="scr-lowongan">
+          <div class="wf" style="border-radius:12px;overflow:hidden">
+            <div class="appnav">
+              <span class="logo">Ruang<em>Loker</em></span>
+              <nav><span>Dashboard</span><span class="cur">Lowongan</span><span>CV Saya</span><span>Brankas</span><span>Lamaran Saya</span></nav>
+              <span style="margin-left:auto"><span class="avatar">BS</span></span>
+            </div>
+            <div class="appbody">
+              <h3 class="st">Cari Lowongan</h3>
+              <p class="sub">128 lowongan terverifikasi di Jabodetabek · dikurasi dari sumber publik &amp; dicek ulang manual.</p>
+
+              <div class="sticky-filters">
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <input class="input" id="jobSearch" style="flex:2;min-width:180px" placeholder="🔍 Cari posisi / perusahaan…">
+                <select class="input" id="cityFilter" style="flex:1;min-width:150px">
+                  <option value="">Semua kota</option><option>Jakarta Selatan</option><option>Jakarta Timur</option><option>Depok</option><option>Bekasi</option><option>Tangerang</option><option>Bogor</option>
+                </select>
+                <button class="btn ghost" id="gpsBtn" type="button">📍 Pakai GPS Saya</button>
+              </div>
+              <p class="sub" id="gpsNote" style="margin-top:8px;display:none">✅ Lokasi aktif: <b>Kebayoran Baru, Jakarta Selatan</b> — menampilkan lowongan radius <b>10 km</b> dari kamu, terdekat dulu.</p>
+
+              <div style="display:flex;gap:7px;margin-top:12px;flex-wrap:wrap" id="catChips">
+                <button class="pill green" type="button" data-cat="">Semua</button>
+                <button class="pill" type="button" data-cat="Admin">Admin</button>
+                <button class="pill" type="button" data-cat="Retail">Retail &amp; Kasir</button>
+                <button class="pill" type="button" data-cat="Gudang">Gudang</button>
+                <button class="pill" type="button" data-cat="F&B">F&amp;B</button>
+                <button class="pill" type="button" data-cat="Operasional">Operasional</button>
+              </div>
+
+              </div>
+              <p class="sub" style="margin-top:8px;font-size:11.5px">Di mobile: filter ini menempel di atas (sticky) · daftar lowongan tetap list vertikal compact biar gampang di-scan.</p>
+              <div class="grid2" style="margin-top:10px" id="jobGrid"></div>
+              <p class="sub" id="noJob" style="display:none;text-align:center;padding:22px 0">Tidak ada lowongan yang cocok dengan filter ini. Coba longgarkan kota / kategorinya.</p>
+
+              <div class="selectbar">
+                <div><b id="selCount">0 lowongan dipilih</b><br><small>Sticky di bawah layar · Kuota gratis tersisa: 3 lamaran bulan ini</small></div>
+                <button class="btn" id="applyAllBtn" data-go="lamar" type="button" disabled>Lamar Semua →</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= 04 DETAIL ================= -->
+        <section class="screen" id="scr-detail">
+          <div class="wf" style="border-radius:12px;overflow:hidden">
+            <div class="appnav">
+              <span class="logo">Ruang<em>Loker</em></span>
+              <nav><span>Dashboard</span><span class="cur">Lowongan</span><span>CV Saya</span><span>Brankas</span></nav>
+              <span style="margin-left:auto"><span class="avatar">BS</span></span>
+            </div>
+            <div class="appbody">
+              <button class="btn ghost sm" data-go="lowongan" type="button">← Kembali ke daftar</button>
+              <div style="display:flex;gap:14px;margin-top:16px;align-items:flex-start;flex-wrap:wrap">
+                <div class="job-logo" style="width:60px;height:60px;font-size:16px">MB</div>
+                <div style="flex:1;min-width:220px">
+                  <h3 class="st">Staff Admin</h3>
+                  <p class="sub">PT Maju Bersama · Jakarta Selatan · 2,4 km dari lokasimu</p>
+                  <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+                    <span class="pill green">✓ Terverifikasi · dicek 20 Nov 2026</span>
+                    <span class="pill blue">Via Email</span>
+                    <span class="pill">Full-time</span>
+                    <span class="pill">Rp 4,5 – 5,5 jt</span>
+                  </div>
+                </div>
+                <div style="text-align:right">
+                  <span class="match">KECOCOKAN 92%</span>
+                  <div class="matchbar" style="width:130px;margin-top:6px"><i style="width:92%"></i></div>
+                </div>
+              </div>
+
+              <div class="grid2" style="margin-top:18px;align-items:start">
+                <div>
+                  <span class="wf-label">Deskripsi pekerjaan</span>
+                  <div style="display:flex;flex-direction:column;gap:7px;margin-top:10px"><div class="skl w80"></div><div class="skl"></div><div class="skl w60"></div><div class="skl"></div><div class="skl w40"></div></div>
+                  <p class="sub" style="margin-top:10px">[ Teks asli lowongan ditampilkan utuh di versi live, lengkap dengan sumber &amp; tanggal posting aslinya. ]</p>
+                  <span class="wf-label" style="display:block;margin-top:18px">Kualifikasi</span>
+                  <ul class="checklist" style="margin-top:10px">
+                    <li><span class="ic ok">✓</span> Min. SMA/SMK — <b>&nbsp;kamu memenuhi</b></li>
+                    <li><span class="ic ok">✓</span> Bisa Microsoft Excel dasar — <b>&nbsp;ada di CV kamu</b></li>
+                    <li><span class="ic ok">✓</span> Domisili Jakarta Selatan / sekitarnya</li>
+                    <li><span class="ic warn">!</span> Pengalaman admin 1 tahun — <b>&nbsp;kamu: 8 bulan magang</b> (tetap bisa lamar)</li>
+                  </ul>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:14px">
+                  <div class="wf" style="padding:16px">
+                    <span class="wf-label">Berkas yang diminta</span>
+                    <ul class="checklist" style="margin-top:10px">
+                      <li><span class="ic ok">✓</span> CV ATS — sudah ada di brankas</li>
+                      <li><span class="ic ok">✓</span> Surat lamaran — dibuat otomatis</li>
+                      <li><span class="ic ok">✓</span> Ijazah terakhir — sudah ada</li>
+                      <li><span class="ic warn">!</span> Foto formal — belum upload</li>
+                    </ul>
+                    <button class="btn ghost sm" style="margin-top:12px" data-go="brankas" type="button">Upload foto →</button>
+                  </div>
+                  <div class="wf" style="padding:16px">
+                    <span class="wf-label">Cara melamar di lowongan ini</span>
+                    <p class="sub" style="margin-top:8px">Kirim via <b>email HRD</b>. Nanti Gmail kamu yang terbuka — subject, isi &amp; lampiran sudah terisi dari profilmu. Kamu tinggal tekan <b>Send</b>.</p>
+                    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+                      <button class="btn acc" data-go="lamar" type="button">Lamar Lowongan Ini</button>
+                      <button class="btn ghost" data-go="lowongan" type="button">+ Pilih Bareng yang Lain</button>
+                    </div>
+                  </div>
+                  <div class="wf wf-dash" style="padding:13px 16px"><p class="sub" style="margin:0">Sumber: situs karir perusahaan · Terakhir dicek kurator: <b>20 Nov 2026</b> · Laporkan lowongan mencurigakan</p></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= 05 PROFIL ================= -->
+        <section class="screen" id="scr-profil">
+          <div class="wf" style="border-radius:12px;overflow:hidden">
+            <div class="appnav">
+              <span class="logo">Ruang<em>Loker</em></span>
+              <nav><span>Dashboard</span><span>Lowongan</span><span class="cur">Profil</span><span>Brankas</span></nav>
+              <span style="margin-left:auto"><span class="avatar">BS</span></span>
+            </div>
+            <div class="appbody">
+              <h3 class="st">Profil Sekali Isi</h3>
+              <p class="sub">Data ini yang dipakai untuk auto-isi semua lamaran, CV, dan surat lamaran. Isi sekali — dipakai selamanya.</p>
+              <div style="display:flex;align-items:center;gap:12px;margin-top:14px">
+                <div class="progress" style="flex:1"><i style="width:80%"></i></div><b style="font-size:13px">80% lengkap</b>
+              </div>
+
+              <div class="grid2" style="margin-top:18px;align-items:start">
+                <div style="display:flex;flex-direction:column;gap:14px">
+                  <div class="wf" style="padding:16px">
+                    <span class="wf-label">Data diri</span>
+                    <div style="display:flex;flex-direction:column;gap:12px;margin-top:12px">
+                      <label class="f"><span>Nama lengkap</span><input class="input" value="Budi Santoso"></label>
+                      <label class="f"><span>Email (pengirim lamaran)</span><input class="input" value="budi.santoso@gmail.com"><small>Lamaran terkirim dari email ini — balasan HRD masuk ke kamu langsung.</small></label>
+                      <label class="f"><span>No. WhatsApp</span><input class="input" value="0812-3456-7890"></label>
+                      <div class="grid2">
+                        <label class="f"><span>Kota domisili</span><select class="input"><option>Jakarta Selatan</option><option>Depok</option><option>Bekasi</option></select></label>
+                        <label class="f"><span>Radius kerja maks.</span><select class="input"><option>10 km</option><option>5 km</option><option>25 km</option></select></label>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="wf" style="padding:16px">
+                    <span class="wf-label">Pendidikan &amp; pengalaman</span>
+                    <div style="display:flex;flex-direction:column;gap:12px;margin-top:12px">
+                      <label class="f"><span>Pendidikan terakhir</span><input class="input" value="SMK — Administrasi Perkantoran (2024)"></label>
+                      <label class="f"><span>Pengalaman terakhir</span><input class="input" value="Magang Admin — CV Sinar Logistik (8 bulan)"></label>
+                      <label class="f"><span>Keahlian (pisahkan koma)</span><input class="input" value="Excel, Google Sheets, input data, arsip dokumen"></label>
+                    </div>
+                  </div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:14px">
+                  <div class="wf" style="padding:16px">
+                    <span class="wf-label">Preferensi kerja</span>
+                    <div style="display:flex;flex-direction:column;gap:12px;margin-top:12px">
+                      <label class="f"><span>Posisi yang dicari</span><input class="input" value="Staff Admin, Data Entry"></label>
+                      <label class="f"><span>Gaji harapan</span><select class="input"><option>Rp 4 – 5 juta</option><option>Rp 5 – 6 juta</option><option>Di atas Rp 6 juta</option></select></label>
+                      <label class="f"><span>Ketersediaan</span><select class="input"><option>Bisa mulai segera</option><option>2 minggu lagi</option><option>1 bulan lagi</option></select></label>
+                    </div>
+                  </div>
+                  <div class="wf wf-dash" style="padding:16px;text-align:center">
+                    <div class="imgbox" style="width:96px;height:120px;margin:0 auto">FOTO<br>FORMAL<br>3 × 4</div>
+                    <p class="sub" style="margin-top:10px">Foto formal belum diupload — dibutuhkan 4 dari 10 lowongan rekomendasimu.</p>
+                    <button class="btn sm" style="margin-top:8px" type="button">Upload Foto</button>
+                  </div>
+                  <div class="wf" style="padding:16px;background:var(--accent-soft);border-color:var(--accent)">
+                    <b style="font-size:13.5px">🔒 Privasi data (UU PDP)</b>
+                    <p class="sub" style="margin-top:5px">Berkas terenkripsi. Berkas yang tidak dipakai 90 hari terhapus otomatis. Kamu bisa hapus akun &amp; semua data kapan saja.</p>
+                  </div>
+                  <button class="btn acc" data-go="cv" type="button" style="width:100%">Simpan &amp; Buat CV Saya →</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= 06 BRANKAS ================= -->
+        <section class="screen" id="scr-brankas">
+          <div class="wf" style="border-radius:12px;overflow:hidden">
+            <div class="appnav">
+              <span class="logo">Ruang<em>Loker</em></span>
+              <nav><span>Dashboard</span><span>Lowongan</span><span>CV Saya</span><span class="cur">Brankas</span></nav>
+              <span style="margin-left:auto;display:flex;gap:10px;align-items:center"><span class="pill">Paket Gratis</span><span class="avatar">BS</span></span>
+            </div>
+            <div class="appbody">
+              <h3 class="st">Brankas Berkas</h3>
+              <p class="sub">Upload sekali, lampirkan ke lamaran mana pun tanpa upload ulang.</p>
+
+              <div class="wf" style="padding:16px;margin-top:16px">
+                <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><b style="font-size:14px">Penyimpanan terpakai</b><span class="mono" style="font-size:12.5px;color:var(--muted)">32 MB / 50 MB (Gratis)</span></div>
+                <div class="meter" style="margin-top:10px"><i></i></div>
+                <p class="sub" style="margin-top:8px">Butuh lebih lega? Pro dapat <b>500 MB</b>. <a href="#" data-go="pricing">Lihat harga →</a></p>
+              </div>
+
+              <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
+                <div class="wf file"><span class="fileic" style="color:var(--red);border-color:var(--red);background:var(--red-soft)">PDF</span><div style="flex:1;min-width:150px"><b style="font-size:14px">CV_Budi_Staff-Admin.pdf</b><p class="sub">CV ATS · dibuat dari CV Builder · 412 KB · diperbarui hari ini</p></div><span class="pill green">Utama</span><button class="btn ghost sm" type="button">Pratinjau</button></div>
+                <div class="wf file"><span class="fileic" style="color:var(--blue);border-color:var(--blue);background:var(--blue-soft)">PDF</span><div style="flex:1;min-width:150px"><b style="font-size:14px">Ijazah_SMK_Budi.pdf</b><p class="sub">Ijazah terakhir · 1,8 MB · diupload 12 Nov 2026</p></div><button class="btn ghost sm" type="button">Pratinjau</button></div>
+                <div class="wf file"><span class="fileic" style="color:var(--blue);border-color:var(--blue);background:var(--blue-soft)">JPG</span><div style="flex:1;min-width:150px"><b style="font-size:14px">KTP_Budi.jpg</b><p class="sub">Identitas · 940 KB · 🔒 terenkripsi, hanya kamu yang bisa buka</p></div><button class="btn ghost sm" type="button">Pratinjau</button></div>
+                <div class="wf file"><span class="fileic" style="color:var(--amber);border-color:var(--amber);background:var(--amber-soft)">PDF</span><div style="flex:1;min-width:150px"><b style="font-size:14px">SKCK_Budi.pdf</b><p class="sub">Berlaku s.d. Maret 2027 · 1,1 MB</p></div><span class="pill amber">Kedaluwarsa &lt; 6 bln</span><button class="btn ghost sm" type="button">Pratinjau</button></div>
+                <div class="wf file" style="border-color:var(--amber);border-style:dashed"><span class="fileic" style="color:var(--muted);border-color:var(--dashed)">—</span><div style="flex:1;min-width:150px"><b style="font-size:14px">Foto formal — belum ada</b><p class="sub">Diminta oleh 4 lowongan rekomendasimu</p></div><button class="btn sm" type="button">Upload</button></div>
+              </div>
+
+              <div class="imgbox" style="margin-top:14px;min-height:110px">TARIK &amp; LEPAS FILE DI SINI — atau klik untuk memilih<br><span style="font-size:10.5px">PDF / JPG / PNG · maks. 5 MB per file · nama file dirapikan otomatis, mis. CV_Nama_Posisi.pdf</span></div>
+              <p class="sub" style="margin-top:10px">🗑️ Aturan retensi: berkas yang tidak terpakai selama <b>90 hari</b> dihapus otomatis (ada pengingat 7 hari sebelumnya).</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= 07 CV BUILDER ================= -->
+        <section class="screen" id="scr-cv">
+          <div class="wf" style="border-radius:12px;overflow:hidden">
+            <div class="appnav">
+              <span class="logo">Ruang<em>Loker</em></span>
+              <nav><span>Dashboard</span><span>Lowongan</span><span class="cur">CV Saya</span><span>Brankas</span></nav>
+              <span style="margin-left:auto;display:flex;gap:8px;align-items:center"><button class="btn ghost sm" type="button">⬇ Unduh PDF</button><button class="btn acc sm" data-go="surat" type="button">Lanjut: Surat Lamaran →</button></span>
+            </div>
+            <div class="appbody">
+              <h3 class="st">CV Builder + Skor CV</h3>
+              <p class="sub">Satu data profil, dua keluaran: <b>CV ATS</b> untuk portal &amp; email, <b>CV Kreatif</b> untuk kirim langsung / portofolio.</p>
+
+              <div class="chip-toggle" style="margin-top:14px;width:fit-content">
+                <button class="on" id="tabAts" type="button">CV ATS — aman mesin sortir</button>
+                <button id="tabKre" type="button">CV Kreatif — tampil beda</button>
+              </div>
+
+              <div class="grid2" style="margin-top:14px;align-items:start">
+                <div class="wf cvprev" id="cvPreview">
+                  <h5>BUDI SANTOSO</h5>
+                  <p style="margin:2px 0">Staff Admin · Jakarta Selatan · budi.santoso@gmail.com · 0812-3456-7890</p>
+                  <h6>Ringkasan</h6>
+                  <p style="margin:0">Lulusan SMK Administrasi Perkantoran dengan pengalaman magang admin 8 bulan. Terbiasa input data 300+ dokumen/hari dan arsip digital.</p>
+                  <h6>Pengalaman</h6>
+                  <p style="margin:0"><b style="color:var(--ink)">Magang Admin — CV Sinar Logistik</b> (2025–2026)<br>• Input &amp; verifikasi data pengiriman<br>• Mengarsipkan dokumen secara digital</p>
+                  <h6>Keahlian</h6>
+                  <p style="margin:0">Microsoft Excel · Google Sheets · Input Data · Arsip Dokumen</p>
+                  <h6>Pendidikan</h6>
+                  <p style="margin:0">SMK Negeri — Administrasi Perkantoran (2024)</p>
+                </div>
+
+                <div style="display:flex;flex-direction:column;gap:14px">
+                  <div class="wf" style="padding:18px">
+                    <span class="wf-label">Skor CV kamu</span>
+                    <div class="ringwrap" style="margin-top:12px">
+                      <div class="ring">
+                        <svg width="124" height="124"><circle cx="62" cy="62" r="54" fill="none" stroke="var(--surface3)" stroke-width="11"/><circle cx="62" cy="62" r="54" fill="none" stroke="var(--accent)" stroke-width="11" stroke-linecap="round" stroke-dasharray="339.3" stroke-dashoffset="95"/></svg>
+                        <div class="val"><div><b>72</b><span>DARI 100</span></div></div>
+                      </div>
+                      <div style="flex:1;min-width:170px">
+                        <b style="font-size:15px">Cukup bagus — sedikit lagi tembus sortir ATS.</b>
+                        <p class="sub" style="margin-top:5px">Dibandingkan lowongan <b>Staff Admin</b>. Skor dihitung dari kelengkapan, kata kunci, dan pencapaian terukur.</p>
+                        <span class="pill amber">Skor gratis bulan ini: 1× terpakai</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="wf" style="padding:18px">
+                    <span class="wf-label">Yang sudah oke ✓</span>
+                    <ul class="checklist" style="margin-top:10px">
+                      <li><span class="ic ok">✓</span> Format ATS aman: satu kolom, tanpa tabel / gambar</li>
+                      <li><span class="ic ok">✓</span> Kontak &amp; kota domisili lengkap</li>
+                    </ul>
+                    <span class="wf-label" style="display:block;margin-top:16px">Yang perlu ditambah</span>
+                    <ul class="checklist" style="margin-top:10px">
+                      <li><span class="ic bad">✕</span><span><b>Kata kunci hilang:</b> “VLOOKUP” &amp; “data entry” dicari lowongan ini tapi belum ada di CV. <a href="#">Tambahkan →</a></span></li>
+                      <li><span class="ic warn">!</span><span><b>Pencapaian belum pakai angka:</b> ubah “menginput data” jadi “menginput 300+ data/hari”. <a href="#">Perbaiki otomatis →</a></span></li>
+                      <li><span class="ic warn">!</span><span><b>Ringkasan terlalu umum:</b> sebutkan posisi yang dituju + 1 keahlian utama.</span></li>
+                    </ul>
+                    <button class="btn acc" style="width:100%;margin-top:14px" type="button">Terapkan Semua Perbaikan (+ perkiraan skor 86)</button>
+                    <p class="sub" style="text-align:center;margin-top:8px">Skor &amp; saran tanpa batas di paket <a href="#" data-go="pricing">Pro</a> · Mau dicek manusia? Review CV Rp49.000</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= 08 SURAT LAMARAN ================= -->
+        <section class="screen" id="scr-surat">
+          <div class="wf" style="border-radius:12px;overflow:hidden">
+            <div class="appnav">
+              <span class="logo">Ruang<em>Loker</em></span>
+              <nav><span>Dashboard</span><span>Lowongan</span><span>CV Saya</span><span class="cur">Surat Lamaran</span></nav>
+              <span style="margin-left:auto"><span class="avatar">BS</span></span>
+            </div>
+            <div class="appbody">
+              <h3 class="st">Generator Surat Lamaran</h3>
+              <p class="sub">Pilih template — isi surat terisi otomatis dari profil + lowongan tujuan. Yang <span class="hl">disorot kuning</span> = hasil auto-isi.</p>
+
+              <div class="grid2" style="margin-top:16px;align-items:start">
+                <div style="display:flex;flex-direction:column;gap:14px">
+                  <div class="wf" style="padding:16px">
+                    <span class="wf-label">1 · Pilih template</span>
+                    <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+                      <button class="btn ghost tpl on-tpl" type="button" data-tpl="Formal (umum)" style="justify-content:flex-start">📄 Formal — untuk perusahaan &amp; instansi</button>
+                      <button class="btn ghost tpl" type="button" data-tpl="Fresh Graduate" style="justify-content:flex-start">🎓 Fresh Graduate — tonjolkan magang &amp; organisasi</button>
+                      <button class="btn ghost tpl" type="button" data-tpl="Retail / Operasional" style="justify-content:flex-start">🏪 Retail / Operasional — singkat &amp; langsung</button>
+                    </div>
+                    <span class="wf-label" style="display:block;margin-top:18px">2 · Lowongan tujuan</span>
+                    <select class="input" style="margin-top:10px"><option>Staff Admin — PT Maju Bersama</option><option>Kasir — Toserba Berkah Jaya</option><option>Staff Gudang — PT Kilat Logistik</option></select>
+                    <span class="wf-label" style="display:block;margin-top:18px">3 · Nada bahasa</span>
+                    <div class="chip-toggle" style="margin-top:10px"><button class="on" type="button">Formal</button><button type="button">Semi-formal</button></div>
+                  </div>
+                  <div class="wf" style="padding:16px">
+                    <span class="wf-label">Keluaran</span>
+                    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+                      <button class="btn sm" type="button">⬇ Unduh PDF</button>
+                      <button class="btn ghost sm" type="button">📋 Salin Teks</button>
+                      <button class="btn acc sm" data-go="lamar" type="button">Pakai di Lamaran →</button>
+                    </div>
+                    <p class="sub" style="margin-top:10px">Nama file otomatis: <span class="mono" style="font-size:11.5px">Surat-Lamaran_Budi_Staff-Admin.pdf</span></p>
+                  </div>
+                </div>
+
+                <div class="wf letter">
+                  <p style="margin:0;text-align:right">Jakarta, <span class="hl">21 November 2026</span></p>
+                  <p>Kepada Yth.<br><b>HRD <span class="hl">PT Maju Bersama</span></b><br>di Jakarta Selatan</p>
+                  <p>Dengan hormat,</p>
+                  <p>Berdasarkan informasi lowongan yang saya terima, saya bermaksud melamar posisi <span class="hl">Staff Admin</span> di perusahaan Bapak/Ibu. Saya, <span class="hl">Budi Santoso</span>, lulusan <span class="hl">SMK Administrasi Perkantoran</span> dengan pengalaman <span class="hl">magang admin selama 8 bulan</span>, terbiasa melakukan input data dan pengarsipan dokumen secara digital menggunakan <span class="hl">Microsoft Excel dan Google Sheets</span>.</p>
+                  <p>Sebagai bahan pertimbangan, saya lampirkan CV, ijazah terakhir, dan dokumen pendukung lainnya. Besar harapan saya untuk dapat mengikuti tahap seleksi berikutnya.</p>
+                  <p>Hormat saya,<br><br><b><span class="hl">Budi Santoso</span></b><br><span class="hl">0812-3456-7890</span> · <span class="hl">budi.santoso@gmail.com</span></p>
+                  <p class="sub" style="border-top:1px dashed var(--line);padding-top:10px;margin-bottom:0">Template aktif: <b id="tplName">Formal (umum)</b> · Teks bisa diedit langsung sebelum diunduh / dikirim.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= 09 LAMAR MASSAL ================= -->
+        <section class="screen" id="scr-lamar">
+          <div class="wf" style="border-radius:12px;overflow:hidden">
+            <div class="appnav">
+              <span class="logo">Ruang<em>Loker</em></span>
+              <nav><span>Dashboard</span><span>Lowongan</span><span class="cur">Lamar Massal</span><span>Lamaran Saya</span></nav>
+              <span style="margin-left:auto"><span class="pill amber">Kuota gratis: 3</span></span>
+            </div>
+            <div class="appbody">
+              <h3 class="st">Antrian Kirim Lamaran</h3>
+              <p class="sub" style="max-width:640px">Pengirimnya tetap <b>email / WhatsApp kamu sendiri</b> — format, subject, isi, dan nama berkasnya kami yang siapkan. Klik kirim satu per satu, tiap lowongan ±20 detik.</p>
+
+              <div class="wf" style="padding:16px;margin-top:16px">
+                <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><b style="font-size:14px">Kemajuan pengiriman</b><span class="mono" style="font-size:12.5px" id="qProgressText">0 dari 3 terkirim</span></div>
+                <div class="progress" style="margin-top:10px"><i id="qProgressBar"></i></div>
+                <p class="sub" style="margin-top:9px">💡 Kenapa tidak terkirim otomatis sekaligus? Gmail / WA tidak mengizinkan pengiriman massal dari akunmu tanpa koneksi resmi — itu fitur <b>Pro</b> (hubungkan Gmail). Cara antrian ini yang paling aman dari spam &amp; blokir.</p>
+              </div>
+
+              <div style="display:flex;flex-direction:column;gap:12px;margin-top:14px" id="queueList"></div>
+
+              <div class="wf wf-dash" style="padding:14px 16px;margin-top:14px">
+                <p class="sub" style="margin:0">📌 <b>Catatan WhatsApp:</b> link WA tidak bisa melampirkan PDF otomatis. Di pesan WA, kami sisipkan <b>tautan CV kamu</b> (<span class="mono" style="font-size:11.5px">ruangloker.id/cv/budi-santoso</span>) — atau lampirkan manual dari Brankas Berkas. Untuk email, lampiran terisi otomatis.</p>
+              </div>
+
+              <div id="qDone" class="wf" style="padding:18px;margin-top:14px;border-color:var(--accent);background:var(--accent-soft);display:none;text-align:center">
+                <b style="font-size:16px">🎉 Semua lamaran terkirim!</b>
+                <p class="sub" style="margin-top:5px">Balasan HRD akan masuk ke email / WA kamu langsung. Pantau statusnya di menu <b>Lamaran Saya</b>.</p>
+                <button class="btn acc" style="margin-top:10px" data-go="dashboard" type="button">Kembali ke Dashboard</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= 10 PRICING ================= -->
+        <section class="screen" id="scr-pricing">
+          <div class="wf" style="border-radius:12px;overflow:hidden">
+            <div class="appnav">
+              <span class="logo">Ruang<em>Loker</em></span>
+              <nav><span>Lowongan</span><span>CV Builder</span><span class="cur">Harga</span><span>Untuk Perusahaan</span></nav>
+              <span style="margin-left:auto"><button class="btn acc sm" data-go="dashboard" type="button">Mulai Gratis</button></span>
+            </div>
+            <div class="appbody">
+              <h3 class="st" style="text-align:center">Harga yang masuk akal buat pencari kerja</h3>
+              <p class="sub" style="text-align:center;max-width:520px;margin:4px auto 0">Mulai gratis. Upgrade hanya kalau kamu lagi gencar-gencarnya melamar.</p>
+              <div style="display:flex;justify-content:center;margin-top:16px">
+                <div class="chip-toggle"><button class="on" id="billM" type="button">Bulanan</button><button id="billY" type="button">Tahunan — hemat 43%</button></div>
+              </div>
+
+              <div class="grid3" style="margin-top:16px;align-items:stretch">
+                <div class="wf price">
+                  <span class="wf-label">Gratis</span>
+                  <div class="amt">Rp0</div>
+                  <p class="sub">Buat coba-coba &amp; lamar secukupnya.</p>
+                  <ul>
+                    <li>3 lamaran 1-klik / bulan</li>
+                    <li>1 CV ATS + 1 CV kreatif</li>
+                    <li>Skor CV 1× / bulan</li>
+                    <li>1 template surat lamaran</li>
+                    <li>Penyimpanan 50 MB</li>
+                    <li>Filter kota + radius GPS</li>
+                  </ul>
+                  <button class="btn ghost" style="margin-top:auto" data-go="profil" type="button">Daftar Gratis</button>
+                </div>
+                <div class="wf price pop">
+                  <span class="pill green" style="position:absolute;top:-13px;right:16px">PALING LARIS</span>
+                  <span class="wf-label" style="color:var(--accent)">Pro — Pencari Kerja</span>
+                  <div class="amt" id="proAmt">Rp29.000<small> /bulan</small></div>
+                  <p class="sub" id="proNote">Ditagih bulanan. Berhenti kapan saja.</p>
+                  <ul>
+                    <li>Lamaran 1-klik tanpa batas*</li>
+                    <li>Skor CV tanpa batas + saran perbaikan AI</li>
+                    <li>Semua template surat lamaran, auto-isi</li>
+                    <li>Kirim massal via Gmail terhubung</li>
+                    <li>Penyimpanan 500 MB</li>
+                    <li>Notifikasi lowongan yang cocok duluan</li>
+                  </ul>
+                  <button class="btn acc" style="margin-top:auto" type="button">Upgrade ke Pro</button>
+                </div>
+                <div class="wf price">
+                  <span class="wf-label">Paket Kredit — tanpa langganan</span>
+                  <div class="amt">Rp10.000</div>
+                  <p class="sub">= 10 lamaran. Sekali beli, tidak kedaluwarsa.</p>
+                  <ul>
+                    <li>Cocok kalau lamarnya musiman</li>
+                    <li>Tanpa komitmen bulanan</li>
+                    <li>Kredit tidak hangus</li>
+                    <li class="no">Tanpa skor CV tanpa batas</li>
+                    <li class="no">Tanpa kirim massal Gmail</li>
+                  </ul>
+                  <button class="btn ghost" style="margin-top:auto" type="button">Beli 10 Kredit</button>
+                </div>
+              </div>
+              <p class="sub" style="margin-top:10px">*Batas wajar 50 lamaran/bulan untuk mencegah spam ke HRD.</p>
+
+              <div class="grid2" style="margin-top:16px">
+                <div class="wf" style="padding:18px">
+                  <span class="wf-label">Sekali bayar — dibantu manusia</span>
+                  <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">
+                    <div style="display:flex;justify-content:space-between;gap:10px"><span style="font-size:13.5px"><b>Review CV oleh manusia</b><br><span class="sub">Dikoreksi + diberi catatan personal</span></span><b>Rp49.000</b></div>
+                    <div style="display:flex;justify-content:space-between;gap:10px;border-top:1px dashed var(--line);padding-top:10px"><span style="font-size:13.5px"><b>Jasa buatkan CV ATS</b><br><span class="sub">Terima beres, siap kirim</span></span><b>Rp75.000</b></div>
+                  </div>
+                </div>
+                <div class="wf" style="padding:18px;border-color:var(--accent)">
+                  <span class="wf-label" style="color:var(--accent)">Untuk perusahaan &amp; UMKM</span>
+                  <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">
+                    <div style="display:flex;justify-content:space-between;gap:10px"><span style="font-size:13.5px"><b>Pasang 1 lowongan</b> / 30 hari</span><b>Rp199–299rb</b></div>
+                    <div style="display:flex;justify-content:space-between;gap:10px;border-top:1px dashed var(--line);padding-top:10px"><span style="font-size:13.5px"><b>Paket UMKM</b> — 5 lowongan + kandidat tersaring CV</span><b>Rp499rb/bln</b></div>
+                  </div>
+                  <button class="btn sm" style="margin-top:14px" type="button">Pasang Lowongan →</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- ============ ANNOTATIONS ============ -->
+  <aside class="anno" id="annoPanel"></aside>
+</div>
+
+<footer>
+  Mockup ini adalah <b>tampilan hi-fi bergaya referensi</b> dengan tema <b>monokrom</b> (hitam–putih–abu) untuk divalidasi sebelum masuk development — nama platform sudah final <b>RuangLoker</b> (“Satu Ruang, Semua Lamaran”), kota pilot Jabodetabek masih contoh dari blueprint. Data lowongan, profil “Budi Santoso”, dan skor CV di semua layar adalah <b>data contoh</b> untuk menunjukkan alur, bukan data asli. Navigasi: klik menu di kiri, atau tombol di dalam wireframe (mis. <span class="kbd">Lamar Semua →</span>).
+</footer>
+
+<script>
+/* ================= DATA ================= */
+var JOBS = [
+  {id:1, init:"MB", title:"Staff Admin", co:"PT Maju Bersama", city:"Jakarta Selatan", dist:"2,4 km", sal:"Rp 4,5 – 5,5 jt", type:"Full-time", via:"Email", cat:"Admin", match:92, checked:"20 Nov 2026"},
+  {id:2, init:"TB", title:"Kasir Retail", co:"Toserba Berkah Jaya", city:"Jakarta Selatan", dist:"3,1 km", sal:"Rp 4,2 – 4,8 jt", type:"Shift", via:"WhatsApp", cat:"Retail", match:88, checked:"20 Nov 2026"},
+  {id:3, init:"KL", title:"Staff Gudang", co:"PT Kilat Logistik", city:"Jakarta Timur", dist:"8,7 km", sal:"Rp 4,6 – 5,2 jt", type:"Full-time", via:"Email", cat:"Gudang", match:81, checked:"19 Nov 2026"},
+  {id:4, init:"KS", title:"Barista & Kasir", co:"Kopi Senja", city:"Depok", dist:"6,3 km", sal:"Rp 3,8 – 4,5 jt", type:"Shift", via:"WhatsApp", cat:"F&B", match:76, checked:"19 Nov 2026"},
+  {id:5, init:"AM", title:"Admin Marketplace", co:"CV Aneka Makmur", city:"Tangerang", dist:"14 km", sal:"Rp 4,8 – 5,8 jt", type:"Hybrid", via:"Email", cat:"Admin", match:84, checked:"18 Nov 2026"},
+  {id:6, init:"BS", title:"Driver Operasional", co:"PT Bersama Sejahtera", city:"Bekasi", dist:"11 km", sal:"Rp 5,0 – 6,0 jt", type:"Full-time", via:"WhatsApp", cat:"Operasional", match:69, checked:"18 Nov 2026"}
+];
+var picked = {1:true, 2:true, 3:true};
+var sentState = {};
+
+var URLS = {landing:"ruangloker.id/", dashboard:"ruangloker.id/dashboard", lowongan:"ruangloker.id/lowongan?kota=jabodetabek", detail:"ruangloker.id/lowongan/staff-admin-pt-maju-bersama", profil:"ruangloker.id/profil", brankas:"ruangloker.id/brankas", cv:"ruangloker.id/cv-builder", surat:"ruangloker.id/surat-lamaran", lamar:"ruangloker.id/lamar-massal/antrian", pricing:"ruangloker.id/harga"};
+
+var ANNO = {
+  landing:{n:"01", t:"Landing Page — gaya referensi", goal:"Menjelaskan janji utama dalam 5 detik: isi profil sekali, lamar banyak lowongan dalam satu klik — lalu mendorong daftar gratis.",
+    comp:["Hero + kolom cari posisi & lokasi (GPS) langsung di atas lipatan","Ticker lowongan terbaru (marquee teks, jalan pelan, pause on hover)","Marquee logo/nama perusahaan grayscale di bawah hero","Bukti kepercayaan: jumlah lowongan terverifikasi + label kota pilot","Cara kerja 3 langkah","3 kartu fitur unggulan: Skor CV, Surat Otomatis, Lowongan Terverifikasi"],
+    flow:"CTA utama → Daftar Gratis (layar 05). CTA sekunder → Cari Lowongan (layar 03) tanpa wajib daftar dulu.",
+    dev:"Nama sudah final: RuangLoker (tagline: Satu Ruang, Semua Lamaran). Tema monokrom hitam-putih-abu mengikuti permintaan user, tetap dengan layout referensi (pill nav melayang, kartu rounded, shadow lembut). Angka lowongan harus angka kurasi asli saat live."},
+  dashboard:{n:"02", t:"Dashboard Pelamar", goal:"Satu layar ringkasan: seberapa siap user untuk melamar, dan apa langkah berikutnya yang paling penting.",
+    comp:["Banner kelengkapan profil (80%) dengan CTA lengkapi","3 kartu status: lamaran terkirim, skor CV, sisa penyimpanan","Rekomendasi lowongan personal (lokasi + kecocokan)","Banner upsell kuota habis → Pricing"],
+    flow:"Hampir semua kartu adalah jalan pintas ke layar terkait: profil, CV, brankas, lowongan.",
+    dev:"Status lamaran (“dibalas HRD”) di MVP dicatat manual oleh user / dari penandaan di antrian kirim — belum ada integrasi inbox."},
+  lowongan:{n:"03", t:"Cari Lowongan — inti pemilihan massal", goal:"User menemukan lowongan valid di dekatnya dan memilih 3–5 sekaligus untuk dilamar bersamaan.",
+    comp:["Pencarian teks + filter kota + tombol GPS (radius 10 km)","Chip kategori: Admin, Retail, Gudang, F&B, Operasional — sticky di atas list saat mobile","Di mobile: rekomendasi = carousel snap, hasil pencarian tetap list vertikal compact","Kartu lowongan: label Terverifikasi + tanggal cek, jalur kirim (Email/WA), % kecocokan","Tombol Pilih / Dipilih di tiap kartu + bilah “Lamar Semua” yang menempel di bawah"],
+    flow:"Pilih beberapa kartu → bilah bawah aktif → Lamar Semua → Antrian Kirim (layar 09). Klik judul kartu → Detail (layar 04).",
+    dev:"Coba sendiri: ubah filter kota / kategori dan toggle tombol Pilih — hitungan di bilah bawah berubah real-time. % kecocokan dihitung dari profil vs kualifikasi."},
+  detail:{n:"04", t:"Detail Lowongan", goal:"User bisa menilai “saya cocok nggak?” dalam sekali lihat, termasuk berkas apa yang kurang.",
+    comp:["Header: posisi, perusahaan, jarak, gaji, label verifikasi + tanggal cek kurator","Checklist kualifikasi vs profil user (✓ memenuhi / ! kurang sedikit)","Checklist berkas yang diminta vs isi brankas","Penjelasan jujur cara melamar: Gmail user yang terbuka, tinggal Send"],
+    flow:"Dua jalan: “Lamar Lowongan Ini” langsung ke antrian, atau kembali dan memilih bareng lowongan lain.",
+    dev:"Label sumber + tanggal cek terakhir wajib tampil — ini pembeda anti-penipuan dari agregator biasa. Sediakan tombol “Laporkan lowongan”."},
+  profil:{n:"05", t:"Profil Sekali Isi", goal:"Satu formulir induk yang menjadi sumber semua auto-isi: lamaran, CV, dan surat lamaran.",
+    comp:["Data diri + email/WhatsApp pengirim","Pendidikan, pengalaman, keahlian","Preferensi: posisi dicari, gaji harapan, radius kerja","Upload foto formal + kartu privasi UU PDP"],
+    flow:"Simpan → diarahkan membuat CV (layar 07). Progress bar kelengkapan juga muncul di Dashboard.",
+    dev:"Email di sini = email pengirim lamaran. Tegaskan ke user: balasan HRD masuk ke email mereka, bukan ke platform."},
+  brankas:{n:"06", t:"Brankas Berkas (Penyimpanan Terbatas)", goal:"User tidak bolak-balik upload: semua dokumen tersimpan sekali dan tinggal dilampirkan.",
+    comp:["Meter penyimpanan 32/50 MB (Gratis) dengan jalur upgrade ke 500 MB (Pro)","Daftar berkas: jenis, ukuran, tanggal, status (Utama / terenkripsi / hampir kedaluwarsa)","Slot kosong yang kontekstual: “Foto formal — diminta 4 lowonganmu”","Area drag & drop + aturan retensi 90 hari"],
+    flow:"Dari sini user bisa melengkapi berkas yang kurang di Detail Lowongan (layar 04).",
+    dev:"Nama file dirapikan otomatis saat dipakai melamar (CV_Nama_Posisi.pdf). Enkripsi + auto-hapus 90 hari adalah janji privasi di blueprint."},
+  cv:{n:"07", t:"CV Builder + Skor CV", goal:"User membuat CV ATS & kreatif dari data profil yang sama, lalu tahu persis apa yang kurang dari CV-nya.",
+    comp:["Toggle pratinjau: CV ATS (satu kolom, aman mesin) vs CV Kreatif","Lingkaran skor 72/100 terhadap lowongan target","Daftar “sudah oke” vs “perlu ditambah” dengan saran konkret + perbaiki otomatis","Estimasi skor setelah perbaikan (86) sebagai motivasi upgrade"],
+    flow:"Unduh PDF → tersimpan otomatis ke Brankas. Lanjut → Generator Surat Lamaran (layar 08).",
+    dev:"Coba toggle ATS / Kreatif di atas pratinjau. Skor gratis 1×/bulan; tanpa batas = Pro. Review manusia Rp49rb & jasa buat CV Rp75rb ada di Pricing."},
+  surat:{n:"08", t:"Generator Surat Lamaran", goal:"Surat lamaran rapi tanpa mengetik dari nol: template + auto-isi dari profil dan lowongan.",
+    comp:["3 template: Formal, Fresh Graduate, Retail/Operasional","Pilihan lowongan tujuan + nada bahasa","Pratinjau surat dengan sorotan kuning pada bagian auto-isi","Keluaran: unduh PDF, salin teks, pakai langsung di lamaran"],
+    flow:"Klik template di kiri — nama template aktif di pratinjau ikut berubah. “Pakai di Lamaran” → Antrian Kirim (layar 09).",
+    dev:"Teks surat harus tetap bisa diedit manual sebelum dikirim — auto-isi adalah draf, bukan kunci mati."},
+  lamar:{n:"09", t:"Lamar Massal — Antrian Kirim (fitur inti)", goal:"Mewujudkan “1-klik lamar banyak” secara jujur: platform menyiapkan segalanya, user mengirim dari akunnya sendiri satu per satu dalam antrian.",
+    comp:["Progress bar pengiriman (x dari n terkirim)","Per lowongan: pratinjau subject & isi email yang sudah terisi","Tombol Kirim via Email (Gmail terbuka, lampiran otomatis) / via WhatsApp (pesan terisi + tautan CV)","Status tiap item: Belum terkirim → Terkirim ✓"],
+    flow:"Klik “Kirim via Email/WA” pada tiap kartu di layar ini untuk simulasi — status & progress berubah sampai muncul panel selesai.",
+    dev:"WA tidak bisa melampirkan PDF via link — solusinya tautan CV publik user (dicatat di kartu catatan). Kirim massal otomatis penuh = fitur Pro via koneksi Gmail (OAuth)."},
+  pricing:{n:"10", t:"Pricing", goal:"Monetisasi dua sisi: pencari kerja dibuat semurah mungkin, pendapatan utama dari perusahaan.",
+    comp:["Toggle Bulanan / Tahunan (Pro Rp29rb/bln vs Rp199rb/thn)","3 kartu: Gratis Rp0, Pro, Paket Kredit Rp10rb = 10 lamaran","Jasa sekali bayar: Review CV Rp49rb, Buat CV ATS Rp75rb","Blok B2B: pasang lowongan Rp199–299rb, UMKM Rp499rb/bln"],
+    flow:"Coba toggle tahunan — harga Pro berubah. CTA Gratis → Profil; CTA Pro/Kredit → checkout (di luar cakupan wireframe).",
+    dev:"Harga persis seperti kesepakatan di blueprint. Catatan kaki batas wajar 50 lamaran/bulan di Pro penting untuk anti-spam."}
+};
+
+/* ================= RENDER JOBS ================= */
+function jobCard(j, compact){
+  var isPicked = !!picked[j.id];
+  return '<article class="wf job">'
+    + '<div class="job-top"><div class="job-logo">'+j.init+'</div><div style="flex:1;min-width:0">'
+    + '<h4>'+j.title+'</h4><div class="co">'+j.co+' · '+j.city+'</div>'
+    + '<div style="margin-top:5px"><span class="match">KECOCOKAN '+j.match+'%</span><div class="matchbar" style="margin-top:4px"><i style="width:'+j.match+'%"></i></div></div>'
+    + '</div></div>'
+    + '<div class="job-meta"><span class="pill">📍 '+j.dist+'</span><span class="pill">'+j.sal+'</span><span class="pill">'+j.type+'</span><span class="pill '+(j.via==="Email"?"blue":"green")+'">'+(j.via==="Email"?"✉ Via Email":"💬 Via WA")+'</span></div>'
+    + (compact ? '' : '<span class="pill green" style="align-self:flex-start">✓ Terverifikasi · dicek '+j.checked+'</span>')
+    + '<div class="job-foot"><button class="btn ghost sm" data-go="detail" type="button">Detail</button>'
+    + '<button class="btn sm pickbtn '+(isPicked?"picked":"ghost")+'" data-pick="'+j.id+'" type="button">'+(isPicked?"✓ Dipilih":"＋ Pilih")+'</button></div>'
+    + '</article>';
+}
+function renderJobs(){
+  var q = (document.getElementById('jobSearch').value||"").toLowerCase();
+  var city = document.getElementById('cityFilter').value;
+  var cat = document.querySelector('#catChips .pill.green') ? document.querySelector('#catChips .pill.green').getAttribute('data-cat') : "";
+  var list = JOBS.filter(function(j){
+    return (!q || (j.title+" "+j.co).toLowerCase().indexOf(q)>-1) && (!city || j.city===city) && (!cat || j.cat===cat);
+  });
+  document.getElementById('jobGrid').innerHTML = list.map(function(j){return jobCard(j,false)}).join("");
+  document.getElementById('noJob').style.display = list.length ? "none" : "block";
+  document.getElementById('dash-jobs').innerHTML = JOBS.slice(0,2).map(function(j){return jobCard(j,true)}).join("");
+  bindDynamic();
+  updateSelBar(); renderQueue();
+}
+function pickedJobs(){ return JOBS.filter(function(j){return picked[j.id]}); }
+function updateSelBar(){
+  var n = pickedJobs().length;
+  document.getElementById('selCount').textContent = n + " lowongan dipilih";
+  document.getElementById('applyAllBtn').disabled = n===0;
+}
+
+/* ================= QUEUE ================= */
+function renderQueue(){
+  var list = pickedJobs();
+  var wrap = document.getElementById('queueList');
+  if(!list.length){
+    wrap.innerHTML = '<div class="wf wf-dash" style="padding:22px;text-align:center"><b>Antrian masih kosong</b><p class="sub" style="margin-top:5px">Pilih dulu lowongan di layar Cari Lowongan, lalu kembali ke sini.</p><button class="btn acc" style="margin-top:12px" data-go="lowongan" type="button">Pilih Lowongan →</button></div>';
+  } else {
+    wrap.innerHTML = list.map(function(j,i){
+      var done = !!sentState[j.id];
+      var viaBtn = j.via==="Email"
+        ? '<button class="btn acc sm" data-send="'+j.id+'" type="button" '+(done?"disabled":"")+'>✉ Kirim via Email Saya</button>'
+        : '<button class="btn acc sm" data-send="'+j.id+'" type="button" '+(done?"disabled":"")+'>💬 Kirim via WhatsApp Saya</button>';
+      var altBtn = j.via==="Email"
+        ? '<button class="btn ghost sm" data-send="'+j.id+'" type="button" '+(done?"disabled":"")+'>💬 via WA juga</button>'
+        : '<button class="btn ghost sm" data-send="'+j.id+'" type="button" '+(done?"disabled":"")+'>✉ via Email juga</button>';
+      var attach = j.via==="Email" ? "Lampiran otomatis: CV_Budi_"+j.title.replace(/\s+/g,"-")+".pdf + Surat Lamaran + Ijazah" : "Pesan berisi tautan CV: ruangloker.id/cv/budi-santoso (WA tidak bisa lampir PDF otomatis)";
+      return '<article class="wf qitem '+(done?"done":"")+'">'
+        + '<div class="qhead"><span class="qnum">'+(done?"✓":(i+1))+'</span><div style="flex:1;min-width:160px"><b style="font-size:14.5px">'+j.title+' — '+j.co+'</b><div class="sub">'+j.city+' · Jalur utama: '+j.via+'</div></div>'
+        + '<span class="status '+(done?"sent":"")+'">'+(done?"TERKIRIM ✓":"BELUM TERKIRIM")+'</span></div>'
+        + '<div class="mailprev"><b>Subject:</b> [Lamaran] '+j.title+' — Budi Santoso — Jakarta Selatan<br><b>Isi:</b> “Yth. HRD '+j.co+', saya Budi Santoso bermaksud melamar posisi '+j.title+'…” <span style="color:var(--muted)">(surat lengkap dari Generator Surat Lamaran)</span><br><b>Berkas:</b> '+attach+'</div>'
+        + '<div style="display:flex;gap:8px;flex-wrap:wrap">'+viaBtn+altBtn+(done?'':'<button class="btn ghost sm" data-skip="'+j.id+'" type="button">Lewati</button>')+'</div>'
+        + '</article>';
+    }).join("");
+  }
+  var total = list.length, doneN = list.filter(function(j){return sentState[j.id]}).length;
+  document.getElementById('qProgressText').textContent = doneN + " dari " + total + " terkirim";
+  document.getElementById('qProgressBar').style.width = total ? Math.round(doneN/total*100)+"%" : "0%";
+  document.getElementById('qDone').style.display = (total>0 && doneN===total) ? "block" : "none";
+  bindDynamic();
+}
+
+/* ================= NAVIGATION ================= */
+function go(name){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('on')});
+  var el = document.getElementById('scr-'+name); if(el) el.classList.add('on');
+  document.querySelectorAll('.navbtn').forEach(function(b){b.classList.toggle('on', b.getAttribute('data-go')===name)});
+  document.getElementById('urlbar').textContent = URLS[name] || "ruangloker.id/";
+  var a = ANNO[name];
+  if(a){
+    document.getElementById('annoPanel').innerHTML =
+      '<span class="wf-label">Anotasi Layar '+a.n+' / 10</span><h3>'+a.t+'</h3>'
+      + '<section><h4>Tujuan</h4><p style="margin:0">'+a.goal+'</p></section>'
+      + '<section><h4>Komponen kunci</h4><ul>'+a.comp.map(function(c){return '<li>'+c+'</li>'}).join("")+'</ul></section>'
+      + '<section><h4>Alur</h4><p style="margin:0">'+a.flow+'</p></section>'
+      + '<section><div class="devnote"><b>Catatan produk / dev:</b> '+a.dev+'</div></section>';
+  }
+  window.scrollTo(0,0);
+}
+function bindDynamic(){
+  document.querySelectorAll('[data-go]').forEach(function(b){
+    if(b._bound) return; b._bound = true;
+    b.addEventListener('click', function(e){ e.preventDefault(); go(b.getAttribute('data-go')); });
+  });
+  document.querySelectorAll('[data-pick]').forEach(function(b){
+    if(b._bound) return; b._bound = true;
+    b.addEventListener('click', function(){
+      var id = b.getAttribute('data-pick');
+      picked[id] = !picked[id];
+      if(!picked[id]) delete sentState[id];
+      renderJobs();
+    });
+  });
+  document.querySelectorAll('[data-send]').forEach(function(b){
+    if(b._bound) return; b._bound = true;
+    b.addEventListener('click', function(){ sentState[b.getAttribute('data-send')] = true; renderQueue(); });
+  });
+  document.querySelectorAll('[data-skip]').forEach(function(b){
+    if(b._bound) return; b._bound = true;
+    b.addEventListener('click', function(){ delete picked[b.getAttribute('data-skip')]; renderJobs(); });
+  });
+}
+document.querySelectorAll('.navbtn').forEach(function(b){ b.addEventListener('click', function(){ go(b.getAttribute('data-go')); }); });
+bindDynamic();
+
+/* filters */
+document.getElementById('jobSearch').addEventListener('input', renderJobs);
+document.getElementById('cityFilter').addEventListener('change', renderJobs);
+document.querySelectorAll('#catChips .pill').forEach(function(p){
+  p.addEventListener('click', function(){
+    document.querySelectorAll('#catChips .pill').forEach(function(x){x.classList.remove('green')});
+    p.classList.add('green'); renderJobs();
+  });
+});
+document.getElementById('gpsBtn').addEventListener('click', function(){
+  var n = document.getElementById('gpsNote');
+  var on = n.style.display !== "block";
+  n.style.display = on ? "block" : "none";
+  this.textContent = on ? "📍 GPS Aktif — Radius 10 km" : "📍 Pakai GPS Saya";
+  if(on){ document.getElementById('cityFilter').value = ""; renderJobs(); }
+});
+
+/* device toggle */
+document.getElementById('btnDesktop').addEventListener('click', function(){
+  document.body.classList.remove('phone'); this.classList.add('on'); document.getElementById('btnPhone').classList.remove('on');
+  document.getElementById('devnote').textContent = "1440 × 900";
+});
+document.getElementById('btnPhone').addEventListener('click', function(){
+  document.body.classList.add('phone'); this.classList.add('on'); document.getElementById('btnDesktop').classList.remove('on');
+  document.getElementById('devnote').textContent = "390 × 844";
+});
+
+/* CV toggle */
+var cvAts = document.getElementById('cvPreview').innerHTML;
+var cvKre = '<h5 style="color:var(--accent)">Budi Santoso</h5><p style="margin:2px 0"><b>STAFF ADMIN</b> · Jakarta Selatan</p><div style="display:flex;gap:14px;margin-top:10px;flex-wrap:wrap"><div style="flex:1;min-width:150px"><h6>Tentang Saya</h6><p style="margin:0">Admin muda yang rapi & teliti. 300+ dokumen terinput per hari selama magang logistik.</p><h6>Keahlian</h6><p style="margin:0">Excel ▰▰▰▰▱ · Sheets ▰▰▰▰▱ · Arsip ▰▰▰▱▱</p></div><div style="flex:1;min-width:150px"><h6>Pengalaman</h6><p style="margin:0"><b style="color:var(--ink)">Magang Admin</b> — CV Sinar Logistik<br>Input data, verifikasi & arsip digital pengiriman.</p><h6>Pendidikan</h6><p style="margin:0">SMK — Administrasi Perkantoran (2024)</p></div></div><p class="sub" style="margin-top:12px">Template kreatif: dua kolom + aksen warna. Cocok untuk kirim langsung / UMKM — untuk portal ATS tetap pakai versi ATS.</p>';
+document.getElementById('tabAts').addEventListener('click', function(){
+  this.classList.add('on'); document.getElementById('tabKre').classList.remove('on');
+  var p = document.getElementById('cvPreview'); p.innerHTML = cvAts; p.classList.remove('creative');
+});
+document.getElementById('tabKre').addEventListener('click', function(){
+  this.classList.add('on'); document.getElementById('tabAts').classList.remove('on');
+  var p = document.getElementById('cvPreview'); p.innerHTML = cvKre; p.classList.add('creative');
+});
+
+/* surat templates */
+document.querySelectorAll('.tpl').forEach(function(b){
+  b.addEventListener('click', function(){
+    document.querySelectorAll('.tpl').forEach(function(x){x.style.borderColor="";x.style.background=""});
+    b.style.borderColor = "var(--accent)"; b.style.background = "var(--accent-soft)";
+    document.getElementById('tplName').textContent = b.getAttribute('data-tpl');
+  });
+});
+
+/* pricing toggle */
+document.getElementById('billM').addEventListener('click', function(){
+  this.classList.add('on'); document.getElementById('billY').classList.remove('on');
+  document.getElementById('proAmt').innerHTML = 'Rp29.000<small> /bulan</small>';
+  document.getElementById('proNote').textContent = "Ditagih bulanan. Berhenti kapan saja.";
+});
+document.getElementById('billY').addEventListener('click', function(){
+  this.classList.add('on'); document.getElementById('billM').classList.remove('on');
+  document.getElementById('proAmt').innerHTML = 'Rp199.000<small> /tahun</small>';
+  document.getElementById('proNote').textContent = "Sekali bayar setahun — setara ±Rp16.600/bulan, hemat 43%.";
+});
+
+/* init */
+renderJobs();
+go('landing');
+</script>
+</body>
+</html>

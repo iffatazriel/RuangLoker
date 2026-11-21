@@ -1,0 +1,105 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+  noindex?: boolean;
+}
+
+const {
+  title,
+  description = 'Profil sekali isi, lamaran rapi ke banyak lowongan terkurasi di Jabodetabek. CV dinilai sebelum berangkat.',
+  noindex = false,
+} = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex" />}
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content="id_ID" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="min-h-screen">
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-ink focus:px-4 focus:py-2 focus:text-white"
+    >
+      Lompat ke konten
+    </a>
+
+    <slot name="header">
+      <header class="sticky top-3 z-50 px-4">
+        <div
+          class="mx-auto flex max-w-6xl flex-wrap items-center gap-3 rounded-full border border-white/90 bg-white/92 px-3 py-2 shadow-sm backdrop-blur"
+        >
+          <a href="/" class="flex items-center gap-2.5 no-underline">
+            <span
+              class="grid size-9 place-items-center rounded-xl bg-ink text-[13px] font-extrabold text-white"
+              aria-hidden="true">R</span
+            >
+            <span class="text-[15px] font-extrabold tracking-tight text-ink">
+              Ruang<span class="text-muted">Loker</span>
+            </span>
+          </a>
+
+          <nav class="ml-auto flex items-center gap-1 text-[13px] font-semibold text-muted">
+            <a href="/lowongan" class="rounded-full px-3 py-1.5 no-underline hover:bg-surface-2 hover:text-ink">
+              Lowongan
+            </a>
+            <a href="/perusahaan" class="hidden rounded-full px-3 py-1.5 no-underline hover:bg-surface-2 hover:text-ink sm:inline">
+              Untuk Perusahaan
+            </a>
+            <a href="/masuk" class="rounded-full px-3 py-1.5 no-underline hover:bg-surface-2 hover:text-ink">
+              Masuk
+            </a>
+          </nav>
+          <a href="/daftar" class="btn btn-sm">Daftar Gratis</a>
+        </div>
+      </header>
+    </slot>
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <footer class="mx-auto max-w-6xl px-4 py-10 text-[12.5px] leading-relaxed text-muted">
+      <div class="border-t border-line pt-6">
+        <p class="m-0">
+          <strong class="text-ink">RuangLoker</strong> — Satu Ruang, Semua Lamaran.
+          Pilot Jabodetabek untuk kategori Admin &amp; Retail.
+        </p>
+        <p class="m-0 mt-1.5">
+          Lowongan dikurasi manual dari sumber publik. Setiap kartu mencantumkan sumber asli dan
+          tanggal pengecekan terakhir. Lamaran tetap dikirim dari email atau WhatsApp milik pelamar.
+        </p>
+        <p class="m-0 mt-1.5">
+          Data contoh di lingkungan pengembangan. <a href="/lowongan" class="text-ink underline">Lihat lowongan</a> ·
+          <a href="/kelola" class="text-ink underline">Panel kurasi</a>
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>
