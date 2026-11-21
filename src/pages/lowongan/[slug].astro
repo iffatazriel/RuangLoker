@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { getJobBySlug } from '../../db/queries';
+import { getJobBySlug, isPublicStatus } from '../../db/queries';
+import { isAdmin } from '../../lib/admin';
 import {
   CATEGORY_LABELS,
   CHANNEL_LABELS,
@@ -14,7 +15,8 @@ import {
 const { slug } = Astro.params;
 const job = await getJobBySlug(slug ?? '');
 
-if (!job || !job.isActive) {
+const adminPreview = !!job && isAdmin(Astro.locals.user) && (!job.isActive || !isPublicStatus(job.verificationStatus));
+if (!job || ((!job.isActive || !isPublicStatus(job.verificationStatus)) && !adminPreview)) {
   Astro.response.status = 404;
   return Astro.rewrite('/404');
 }
@@ -38,6 +40,12 @@ const description = `${job.title} di ${job.company} (${job.city}). ${salaryRange
 ---
 
 <Base title={title} description={description}>
+  {adminPreview && (
+    <p class="mx-auto mt-4 max-w-6xl rounded-lg border border-line bg-surface-2 px-4 py-2.5 text-[13px] text-ink-2">
+      Pratinjau admin: lowongan ini tidak tayang untuk publik ({job.isActive ? 'belum terverifikasi' : 'nonaktif'}).
+      <a href={`/kelola/lowongan/${job.id}`} class="text-ink underline">Ubah</a>
+    </p>
+  )}
   <section class="mx-auto max-w-6xl px-4 pt-6">
     <nav class="flex flex-wrap items-center gap-1.5 text-[12px] text-muted" aria-label="Remah roti">
       <a href="/" class="text-muted no-underline hover:text-ink">Beranda</a>

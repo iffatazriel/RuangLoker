@@ -16,9 +16,10 @@ const latRaw = params.get('lat');
 const lngRaw = params.get('lng');
 const radiusRaw = params.get('radius');
 
-const hasGeo = latRaw !== null && lngRaw !== null;
-const lat = hasGeo ? Number(latRaw) : undefined;
-const lng = hasGeo ? Number(lngRaw) : undefined;
+const coord = (raw: string | null) => (raw && raw.trim() !== '' && Number.isFinite(Number(raw)) ? Number(raw) : undefined);
+const lat = coord(latRaw);
+const lng = coord(lngRaw);
+const hasGeo = lat !== undefined && lng !== undefined;
 const radiusKm = radiusRaw ? Number(radiusRaw) : 10;
 
 const [jobs, facets, total] = await Promise.all([
@@ -112,8 +113,8 @@ const description = `${jobs.length} lowongan valid${city ? ` di ${city}` : ' di 
           </span>
         )}
 
-        <input type="hidden" name="lat" value={latRaw ?? ''} data-geo="lat" />
-        <input type="hidden" name="lng" value={lngRaw ?? ''} data-geo="lng" />
+        <input type="hidden" name="lat" value={hasGeo ? latRaw : ''} data-geo="lat" />
+        <input type="hidden" name="lng" value={hasGeo ? lngRaw : ''} data-geo="lng" />
         <input type="hidden" name="radius" value={radiusRaw ?? '10'} data-geo="radius" />
       </div>
 
@@ -177,6 +178,11 @@ const description = `${jobs.length} lowongan valid${city ? ` di ${city}` : ' di 
 
   const btn = document.getElementById('gps-btn') as HTMLButtonElement | null;
   const form = document.querySelector('[data-filter-form]') as HTMLFormElement | null;
+  form?.addEventListener('submit', () => {
+    const lat = form.querySelector('[data-geo="lat"]') as HTMLInputElement | null;
+    if (lat?.value) return;
+    form.querySelectorAll<HTMLInputElement>('[data-geo]').forEach((el) => (el.disabled = true));
+  });
   const hint = document.getElementById('gps-hint');
 
   btn?.addEventListener('click', () => {

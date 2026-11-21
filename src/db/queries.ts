@@ -66,6 +66,10 @@ export async function findJobs(query: JobQuery = {}): Promise<JobWithDistance[]>
   return rows.map((r) => ({ ...r.job, distanceKm: r.distanceKm ?? null }));
 }
 
+export function isPublicStatus(status: string): boolean {
+  return (PUBLIC_STATUSES as readonly string[]).includes(status);
+}
+
 export async function getJobBySlug(slug: string): Promise<Job | null> {
   const rows = await db.select().from(jobs).where(eq(jobs.slug, slug)).limit(1);
   return rows[0] ?? null;

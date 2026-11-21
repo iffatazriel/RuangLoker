@@ -1,6 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
-import { getJobBySlug } from '../db/queries';
+import { getJobBySlug, isPublicStatus } from '../db/queries';
 import { createReport } from '../db/reports';
 import { hitRate, requestIp } from '../db/rate-limit';
 import { retryText } from '../lib/rate-limit';
@@ -8,7 +8,8 @@ import { notifyAdmins } from '../lib/notify';
 import { appOrigin } from '../lib/mail';
 
 const slug = Astro.url.searchParams.get('lowongan') ?? '';
-const job = slug ? await getJobBySlug(slug) : null;
+const found = slug ? await getJobBySlug(slug) : null;
+const job = found && found.isActive && isPublicStatus(found.verificationStatus) ? found : null;
 const user = Astro.locals.user;
 
 let values = { target: job ? `${job.title} — ${job.company}` : '', reason: '', contact: '' };
