@@ -2,6 +2,8 @@
 import Base from '../layouts/Base.astro';
 import { checkPasswordStrength, hashPassword, isValidEmail } from '../lib/password';
 import { createUser, findUserByEmail, logAudit, recordConsents } from '../lib/auth';
+import { hitRate, requestIp } from '../db/rate-limit';
+import { retryText } from '../lib/rate-limit';
 
 let error: string | null = null;
 let fieldErrors: Record<string, string> = {};
@@ -33,6 +35,14 @@ if (Astro.request.method === 'POST') {
   }
 
   if (Object.keys(fieldErrors).length === 0) {
+    const rate = await hitRate(`daftar:ip:${requestIp(Astro.request, Astro.clientAddress)}`, 5, 60 * 60);
+    if (!rate.ok) {
+      fieldErrors.email = `Terlalu banyak pendaftaran dari jaringan ini. Coba lagi dalam ${retryText(rate.retryAfterSec)}.`;
+      Astro.response.status = 429;
+    }
+  }
+
+  if (Object.keys(fieldErrors).length === 0) {
     const existing = await findUserByEmail(email);
     if (existing) {
       fieldErrors.email = 'Email ini sudah terdaftar. Coba masuk.';
@@ -54,6 +64,7 @@ if (Astro.request.method === 'POST') {
 
     await Astro.session?.regenerate();
     Astro.session?.set('userId', user.id);
+    Astro.session?.set('authAt', Date.now());
 
     return Astro.redirect(consentSensitif ? '/brankas' : '/profil', 302);
   }
@@ -161,7 +172,9 @@ if (Astro.request.method === 'POST') {
           <input type="checkbox" name="consentAkun" class="mt-0.5 size-4 shrink-0" required />
           <span>
             <strong>Wajib.</strong> Saya setuju data akun dan profil saya diproses untuk
-            menyiapkan lamaran. Data disimpan selama akun aktif dan dapat saya hapus kapan saja.
+            menyiapkan lamaran sesuai <a href="/privasi" target="_blank" class="text-ink underline">Kebijakan Privasi</a>
+            dan <a href="/syarat" target="_blank" class="text-ink underline">Syarat Layanan</a>. Data disimpan selama
+            akun aktif dan dapat saya hapus kapan saja.
           </span>
         </label>
         {fieldErrors.consentAkun && (

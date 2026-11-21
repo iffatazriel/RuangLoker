@@ -1,0 +1,37 @@
+---
+import Base from '../../../layouts/Base.astro';
+import JobForm from '../../../components/JobForm.astro';
+import { jobToFormValues, readJobForm, validateJobForm, type JobFormValues } from '../../../lib/job-form';
+import { getJobById, updateJob } from '../../../db/admin-jobs';
+import { logAudit } from '../../../lib/auth';
+
+const job = await getJobById(Number(Astro.params.id));
+if (!job) return new Response('Lowongan tidak ditemukan', { status: 404 });
+
+let values: JobFormValues = jobToFormValues(job);
+let errors: Partial<Record<keyof JobFormValues, string>> = {};
+
+if (Astro.request.method === 'POST') {
+  values = readJobForm(await Astro.request.formData());
+  const result = validateJobForm(values, new Date());
+  if (result.ok) {
+    const user = Astro.locals.user!;
+    await updateJob(job, result.record, user.email);
+    await logAudit(user.id, 'admin.lowongan.ubah', job.slug);
+    return Astro.redirect(`/kelola?ok=edit`, 303);
+  }
+  errors = result.errors;
+  Astro.response.status = 422;
+}
+---
+
+<Base title={`Ubah ${job.title} — Panel Kurasi`} noindex>
+  <section class="mx-auto max-w-3xl px-4 pt-6 pb-12">
+    <a href="/kelola" class="text-[12.5px] text-muted underline">Panel kurasi</a>
+    <h1 class="m-0 mt-1 text-[26px] font-extrabold tracking-tight">Ubah lowongan</h1>
+    <p class="m-0 mt-1.5 text-[13px] text-muted">
+      {job.title} · {job.company}. Alamat halaman <a href={`/lowongan/${job.slug}`} class="text-ink underline">/lowongan/{job.slug}</a> tidak berubah.
+    </p>
+    <JobForm values={values} errors={errors} submitLabel="Simpan perubahan" />
+  </section>
+</Base>

@@ -36,6 +36,13 @@
       "when": 1795270189595,
       "tag": "0004_productive_butterfly",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1795272811676,
+      "tag": "0005_awesome_mandroid",
+      "breakpoints": true
     }
   ]
 }

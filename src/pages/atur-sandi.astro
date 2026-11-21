@@ -1,0 +1,80 @@
+---
+import Base from '../layouts/Base.astro';
+import { logAudit } from '../lib/auth';
+import { checkPasswordStrength, hashPassword } from '../lib/password';
+import { hitRate, requestIp } from '../db/rate-limit';
+import { retryText } from '../lib/rate-limit';
+import { applyNewPassword, findResetUser } from '../db/password-reset';
+import { passwordChangedEmail, sendMail } from '../lib/mail';
+
+let token = Astro.url.searchParams.get('token') ?? '';
+let error: string | null = null;
+
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData();
+  token = String(form.get('token') ?? '');
+  const password = String(form.get('password') ?? '');
+  const confirm = String(form.get('passwordConfirm') ?? '');
+
+  const rate = await hitRate(`atur:ip:${requestIp(Astro.request, Astro.clientAddress)}`, 10, 15 * 60);
+  if (!rate.ok) {
+    error = `Terlalu banyak percobaan. Coba lagi dalam ${retryText(rate.retryAfterSec)}.`;
+    Astro.response.status = 429;
+  } else {
+    const found = await findResetUser(token);
+    const issue = checkPasswordStrength(password) ?? (password !== confirm ? 'Konfirmasi kata sandi tidak sama.' : null);
+    if (found && !issue) {
+      const ok = await applyNewPassword(found.resetId, found.user.id, await hashPassword(password));
+      if (ok) {
+        await logAudit(found.user.id, 'auth.reset-done');
+        await sendMail({ to: found.user.email, ...passwordChangedEmail(found.user.displayName) });
+        Astro.session?.destroy();
+        return Astro.redirect('/masuk?ok=sandi', 303);
+      }
+    }
+    error = found ? issue : null;
+  }
+}
+
+const valid = Boolean(await findResetUser(token));
+---
+
+<Base title="Atur Kata Sandi Baru — RuangLoker" noindex>
+  <section class="mx-auto max-w-md px-4 py-12">
+    <h1 class="m-0 text-[28px] font-extrabold tracking-tight">Kata sandi baru</h1>
+
+    {!valid ? (
+      <div class="card mt-4 p-5" role="alert">
+        <p class="m-0 text-[14px] font-bold">Tautan tidak berlaku</p>
+        <p class="m-0 mt-1.5 text-[12.5px] leading-relaxed text-muted">
+          Tautan ini sudah dipakai, sudah lewat batas waktu, atau tidak lengkap. Minta tautan baru.
+        </p>
+        <a href="/lupa-sandi" class="btn btn-sm mt-3">Minta tautan baru</a>
+      </div>
+    ) : (
+      <>
+        <p class="m-0 mt-1.5 text-[13px] text-muted">
+          Setelah disimpan, semua perangkat yang masih masuk ke akunmu akan dikeluarkan.
+        </p>
+        {error && (
+          <p class="mt-4 rounded-xl border border-ink bg-surface-2 px-4 py-2.5 text-[13px] font-semibold" role="alert">
+            {error}
+          </p>
+        )}
+        <form method="POST" class="card mt-4 flex flex-col gap-4 p-5" novalidate>
+          <input type="hidden" name="token" value={token} />
+          <div>
+            <label class="block text-[12px] font-bold" for="password">Kata sandi baru</label>
+            <input class="field mt-1.5" id="password" name="password" type="password" autocomplete="new-password" required minlength="8" aria-describedby="hint-password" />
+            <p class="m-0 mt-1 text-[11.5px] text-muted" id="hint-password">Minimal 8 karakter, ada huruf dan angka.</p>
+          </div>
+          <div>
+            <label class="block text-[12px] font-bold" for="passwordConfirm">Ulangi kata sandi baru</label>
+            <input class="field mt-1.5" id="passwordConfirm" name="passwordConfirm" type="password" autocomplete="new-password" required />
+          </div>
+          <button class="btn" type="submit">Simpan kata sandi</button>
+        </form>
+      </>
+    )}
+  </section>
+</Base>

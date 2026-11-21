@@ -175,7 +175,7 @@ const description = `${job.title} di ${job.company} (${job.city}). ${salaryRange
             Kami tidak menyalin seluruh isi lowongan. Sumber asli selalu dicantumkan agar perusahaan
             pemilik lowongan dapat meminta penurunan kapan saja.
           </p>
-          <a href="/laporkan" class="mt-1.5 inline-block text-[11.5px] text-ink underline">
+          <a href={`/laporkan?lowongan=${job.slug}`} class="mt-1.5 inline-block text-[11.5px] text-ink underline">
             Laporkan lowongan mencurigakan
           </a>
         </div>

@@ -1,0 +1,161 @@
+---
+import {
+  APPLY_CHANNELS,
+  CITY_COORDS,
+  EMPLOYMENT_TYPES,
+  JOB_CATEGORIES,
+  type JobFormValues,
+} from '../lib/job-form';
+
+interface Props {
+  values: JobFormValues;
+  errors: Partial<Record<keyof JobFormValues, string>>;
+  submitLabel: string;
+}
+
+const { values: v, errors, submitLabel } = Astro.props;
+
+const statusOptions = [
+  ['verified', 'Terverifikasi (langsung tayang)'],
+  ['manual_checked', 'Dicek manual (langsung tayang)'],
+  ['pending', 'Belum dicek (tidak tayang)'],
+  ['rejected', 'Ditolak (tidak tayang)'],
+];
+const targetHint: Record<string, string> = {
+  Email: 'Alamat email HRD, mis. hrd@perusahaan.co.id',
+  WhatsApp: 'Nomor WhatsApp HRD, mis. 0812 3456 7890',
+  'Google Form': 'Tautan formulir, mis. https://forms.gle/…',
+  'Portal Eksternal': 'Tautan halaman lamaran di situs perusahaan',
+};
+---
+
+<form method="POST" class="mt-4 flex flex-col gap-4" novalidate>
+  {Object.keys(errors).length > 0 && (
+    <p class="m-0 rounded-xl border border-ink bg-surface-2 px-4 py-2.5 text-[13px] font-semibold" role="alert">
+      Ada {Object.keys(errors).length} isian yang perlu diperbaiki.
+    </p>
+  )}
+
+  <fieldset class="card grid gap-3 p-5 sm:grid-cols-2">
+    <legend class="sr-only">Posisi</legend>
+    <label class="sm:col-span-2">
+      <span class="block text-[12px] font-bold">Posisi</span>
+      <input class="field mt-1.5" name="title" value={v.title} required maxlength="120" />
+      {errors.title && <span class="mt-1 block text-[11.5px] font-semibold">{errors.title}</span>}
+    </label>
+    <label>
+      <span class="block text-[12px] font-bold">Perusahaan</span>
+      <input class="field mt-1.5" name="company" value={v.company} required maxlength="120" />
+      {errors.company && <span class="mt-1 block text-[11.5px] font-semibold">{errors.company}</span>}
+    </label>
+    <label class="flex items-end gap-2 pb-2.5 text-[12.5px]">
+      <input type="checkbox" name="isDirectEmployer" class="size-4" checked={v.isDirectEmployer} />
+      Langsung dari perusahaan (bukan agen/penyalur)
+    </label>
+    <label>
+      <span class="block text-[12px] font-bold">Kategori</span>
+      <select class="field mt-1.5" name="category">
+        {JOB_CATEGORIES.map((c) => <option selected={v.category === c}>{c}</option>)}
+      </select>
+    </label>
+    <label>
+      <span class="block text-[12px] font-bold">Jenis kerja</span>
+      <select class="field mt-1.5" name="employmentType">
+        {EMPLOYMENT_TYPES.map((c) => <option selected={v.employmentType === c}>{c}</option>)}
+      </select>
+    </label>
+    <label>
+      <span class="block text-[12px] font-bold">Gaji minimum (Rp, opsional)</span>
+      <input class="field mt-1.5" name="salaryMin" value={v.salaryMin} inputmode="numeric" placeholder="4500000" />
+      {errors.salaryMin && <span class="mt-1 block text-[11.5px] font-semibold">{errors.salaryMin}</span>}
+    </label>
+    <label>
+      <span class="block text-[12px] font-bold">Gaji maksimum (Rp, opsional)</span>
+      <input class="field mt-1.5" name="salaryMax" value={v.salaryMax} inputmode="numeric" placeholder="5500000" />
+      {errors.salaryMax && <span class="mt-1 block text-[11.5px] font-semibold">{errors.salaryMax}</span>}
+    </label>
+  </fieldset>
+
+  <fieldset class="card grid gap-3 p-5 sm:grid-cols-2">
+    <legend class="sr-only">Lokasi</legend>
+    <label>
+      <span class="block text-[12px] font-bold">Kota</span>
+      <select class="field mt-1.5" name="city">
+        {Object.keys(CITY_COORDS).map((c) => <option selected={v.city === c}>{c}</option>)}
+      </select>
+      {errors.city && <span class="mt-1 block text-[11.5px] font-semibold">{errors.city}</span>}
+    </label>
+    <label>
+      <span class="block text-[12px] font-bold">Kecamatan (opsional)</span>
+      <input class="field mt-1.5" name="district" value={v.district} maxlength="80" />
+    </label>
+    <label>
+      <span class="block text-[12px] font-bold">Lintang kantor (opsional)</span>
+      <input class="field mt-1.5" name="lat" value={v.lat} inputmode="decimal" placeholder="-6.2437" />
+    </label>
+    <label>
+      <span class="block text-[12px] font-bold">Bujur kantor (opsional)</span>
+      <input class="field mt-1.5" name="lng" value={v.lng} inputmode="decimal" placeholder="106.7991" />
+    </label>
+    <p class="m-0 text-[11.5px] text-muted sm:col-span-2">
+      {errors.lat ? <strong class="text-ink">{errors.lat}</strong> : 'Kosongkan koordinat untuk memakai titik tengah kota. Ambil dari Google Maps (klik kanan pada lokasi kantor).'}
+    </p>
+  </fieldset>
+
+  <fieldset class="card grid gap-3 p-5">
+    <legend class="sr-only">Isi lowongan</legend>
+    <label>
+      <span class="block text-[12px] font-bold">Deskripsi singkat</span>
+      <textarea class="field mt-1.5 min-h-28" name="description" maxlength="2000">{v.description}</textarea>
+      <span class="mt-1 block text-[11.5px] text-muted">Ringkas dengan kata-kata sendiri. Jangan salin utuh dari sumber.</span>
+      {errors.description && <span class="mt-1 block text-[11.5px] font-semibold">{errors.description}</span>}
+    </label>
+    <label>
+      <span class="block text-[12px] font-bold">Persyaratan (satu per baris)</span>
+      <textarea class="field mt-1.5 min-h-28" name="requirements">{v.requirements}</textarea>
+      {errors.requirements && <span class="mt-1 block text-[11.5px] font-semibold">{errors.requirements}</span>}
+    </label>
+  </fieldset>
+
+  <fieldset class="card grid gap-3 p-5 sm:grid-cols-2">
+    <legend class="sr-only">Cara melamar dan sumber</legend>
+    <label>
+      <span class="block text-[12px] font-bold">Jalur lamar</span>
+      <select class="field mt-1.5" name="applyChannel">
+        {APPLY_CHANNELS.map((c) => <option selected={v.applyChannel === c}>{c}</option>)}
+      </select>
+    </label>
+    <label>
+      <span class="block text-[12px] font-bold">Tujuan lamaran</span>
+      <input class="field mt-1.5" name="applyTarget" value={v.applyTarget} />
+      <span class="mt-1 block text-[11.5px] text-muted">{targetHint[v.applyChannel] ?? targetHint.Email}</span>
+      {errors.applyTarget && <span class="mt-1 block text-[11.5px] font-semibold">{errors.applyTarget}</span>}
+    </label>
+    <label>
+      <span class="block text-[12px] font-bold">Nama sumber</span>
+      <input class="field mt-1.5" name="sourceName" value={v.sourceName} placeholder="Situs karier perusahaan / Instagram resmi" />
+      {errors.sourceName && <span class="mt-1 block text-[11.5px] font-semibold">{errors.sourceName}</span>}
+    </label>
+    <label>
+      <span class="block text-[12px] font-bold">URL sumber (opsional)</span>
+      <input class="field mt-1.5" name="sourceUrl" value={v.sourceUrl} placeholder="https://…" />
+      {errors.sourceUrl && <span class="mt-1 block text-[11.5px] font-semibold">{errors.sourceUrl}</span>}
+    </label>
+    <label>
+      <span class="block text-[12px] font-bold">Batas tayang</span>
+      <input class="field mt-1.5" type="date" name="expiresAt" value={v.expiresAt} />
+      {errors.expiresAt && <span class="mt-1 block text-[11.5px] font-semibold">{errors.expiresAt}</span>}
+    </label>
+    <label>
+      <span class="block text-[12px] font-bold">Status kurasi</span>
+      <select class="field mt-1.5" name="verificationStatus">
+        {statusOptions.map(([val, label]) => <option value={val} selected={v.verificationStatus === val}>{label}</option>)}
+      </select>
+    </label>
+  </fieldset>
+
+  <div class="flex flex-wrap gap-2">
+    <button class="btn" type="submit">{submitLabel}</button>
+    <a href="/kelola" class="btn btn-ghost">Batal</a>
+  </div>
+</form>

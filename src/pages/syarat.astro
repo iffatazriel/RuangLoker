@@ -1,0 +1,64 @@
+---
+import LegalPage from '../components/LegalPage.astro';
+import { env } from '../lib/env';
+
+const contact = env('CONTACT_EMAIL');
+---
+
+<LegalPage title="Syarat Layanan" updated="21 November 2026">
+  <p>
+    Dengan membuat akun RuangLoker, kamu menyetujui syarat berikut. Baca juga
+    <a href="/privasi">Kebijakan Privasi</a>.
+  </p>
+
+  <h2>Apa yang RuangLoker lakukan</h2>
+  <ul>
+    <li>Menampilkan lowongan yang dikurasi dari sumber publik, lengkap dengan sumber aslinya.</li>
+    <li>Menyiapkan CV, surat lamaran, subjek email, pesan WhatsApp, dan nama berkas dari data yang kamu isi.</li>
+    <li>Membuka Gmail, aplikasi email, WhatsApp, atau formulir perusahaan dengan isi yang sudah disiapkan.</li>
+  </ul>
+
+  <h2>Apa yang tidak RuangLoker lakukan</h2>
+  <ul>
+    <li>Tidak mengirim lamaran atas namamu. Kamu yang menekan tombol kirim di akunmu sendiri.</li>
+    <li>Tidak melampirkan CV otomatis di WhatsApp; yang dikirim adalah tautan CV.</li>
+    <li>Tidak menjamin kamu dipanggil interview atau diterima kerja. Skor CV hanya mengukur kelengkapan dan keterbacaan menurut aturan tertulis.</li>
+    <li>Tidak memungut biaya apa pun atas nama perusahaan pemberi kerja.</li>
+  </ul>
+
+  <h2>Lowongan</h2>
+  <p>
+    Kami mengecek lowongan sebelum tayang, tetapi isi dan keputusan rekrutmen sepenuhnya milik perusahaan.
+    Jangan pernah membayar biaya pendaftaran, seragam, pelatihan, atau medical check-up kepada pihak yang
+    mengaku perekrut. Laporkan lowongan seperti itu lewat <a href="/laporkan">formulir laporan</a>.
+  </p>
+
+  <h2>Kewajibanmu</h2>
+  <ul>
+    <li>Mengisi data yang benar dan milikmu sendiri. Dilarang memalsukan ijazah, pengalaman, atau identitas.</li>
+    <li>Menjaga kerahasiaan kata sandi.</li>
+    <li>Tidak memakai RuangLoker untuk spam, mengirim lamaran massal tanpa membaca isinya, atau mengganggu sistem.</li>
+  </ul>
+  <p>Akun yang melanggar dapat kami nonaktifkan.</p>
+
+  <h2>Pembayaran</h2>
+  <ul>
+    <li>Pembayaran dilakukan lewat transfer bank atau QRIS dan dikonfirmasi manual oleh admin, biasanya pada jam kerja.</li>
+    <li>Kredit lamaran dipakai otomatis setelah kuota gratis bulanan habis. Kredit tidak dapat diuangkan.</li>
+    <li>Kuota atau kredit yang terpakai untuk menyiapkan lamaran tidak kembali walau lamaran dibatalkan.</li>
+    <li>
+      Kendala pembayaran atau permintaan pembatalan jasa yang belum dikerjakan dapat diajukan
+      {contact ? <> ke <a href={`mailto:${contact}`}>{contact}</a></> : ' dengan membalas email status pesanan'}.
+    </li>
+  </ul>
+
+  <h2>Batas tanggung jawab</h2>
+  <p>
+    Layanan disediakan apa adanya. Kami berusaha menjaga aplikasi tetap berjalan dan data tetap aman, tetapi
+    tidak bertanggung jawab atas keputusan perusahaan, isi lowongan pihak ketiga, atau kerugian akibat
+    transaksi di luar RuangLoker.
+  </p>
+
+  <h2>Perubahan</h2>
+  <p>Kalau syarat ini berubah, tanggal di atas diperbarui dan perubahan penting kami umumkan lewat email.</p>
+</LegalPage>

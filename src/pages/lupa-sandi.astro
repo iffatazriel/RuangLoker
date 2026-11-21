@@ -1,0 +1,82 @@
+---
+import Base from '../layouts/Base.astro';
+import { findUserByEmail, logAudit } from '../lib/auth';
+import { isValidEmail } from '../lib/password';
+import { hitRate, requestIp } from '../db/rate-limit';
+import { retryText } from '../lib/rate-limit';
+import { createResetToken, RESET_TTL_MINUTES } from '../db/password-reset';
+import { appOrigin, resetPasswordEmail, sendMail } from '../lib/mail';
+
+let error: string | null = null;
+let sent = false;
+let emailValue = '';
+
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData();
+  const email = String(form.get('email') ?? '').trim().toLowerCase();
+  emailValue = email;
+
+  if (!isValidEmail(email)) {
+    error = 'Alamat email tidak valid.';
+  } else {
+    const ip = requestIp(Astro.request, Astro.clientAddress);
+    const [byIp, byEmail] = await Promise.all([
+      hitRate(`reset:ip:${ip}`, 5, 60 * 60),
+      hitRate(`reset:email:${email}`, 3, 60 * 60),
+    ]);
+    const limited = !byIp.ok ? byIp : !byEmail.ok ? byEmail : null;
+
+    if (limited) {
+      error = `Terlalu banyak permintaan. Coba lagi dalam ${retryText(limited.retryAfterSec)}.`;
+      Astro.response.status = 429;
+    } else {
+      const user = await findUserByEmail(email);
+      if (user) {
+        const token = await createResetToken(user.id);
+        const link = `${appOrigin(Astro.url, import.meta.env.PROD)}/atur-sandi?token=${token}`;
+        await sendMail({ to: user.email, ...resetPasswordEmail(user.displayName, link, RESET_TTL_MINUTES) });
+        await logAudit(user.id, 'auth.reset-request');
+      }
+      // Jawaban sama untuk email terdaftar maupun tidak, agar tidak bisa dipakai menebak akun.
+      sent = true;
+    }
+  }
+}
+---
+
+<Base title="Lupa Kata Sandi — RuangLoker" noindex>
+  <section class="mx-auto max-w-md px-4 py-12">
+    <h1 class="m-0 text-[28px] font-extrabold tracking-tight">Lupa kata sandi</h1>
+    <p class="m-0 mt-1.5 text-[13px] text-muted">
+      Masukkan email akunmu. Kami kirim tautan untuk membuat kata sandi baru, berlaku {RESET_TTL_MINUTES} menit.
+    </p>
+
+    {error && (
+      <p class="mt-4 rounded-xl border border-ink bg-surface-2 px-4 py-2.5 text-[13px] font-semibold" role="alert">
+        {error}
+      </p>
+    )}
+
+    {sent ? (
+      <div class="card mt-4 p-5" role="status">
+        <p class="m-0 text-[14px] font-bold">Cek kotak masuk {emailValue}</p>
+        <p class="m-0 mt-1.5 text-[12.5px] leading-relaxed text-muted">
+          Kalau email ini terdaftar, tautan atur ulang sudah dikirim. Cek juga folder Spam atau Promosi.
+          Belum masuk dalam beberapa menit? Coba kirim ulang.
+        </p>
+        <a href="/masuk" class="btn btn-ghost btn-sm mt-3">Kembali ke Masuk</a>
+      </div>
+    ) : (
+      <form method="POST" class="card mt-4 flex flex-col gap-4 p-5" novalidate>
+        <div>
+          <label class="block text-[12px] font-bold" for="email">Email</label>
+          <input class="field mt-1.5" id="email" name="email" type="email" autocomplete="email" required value={emailValue} />
+        </div>
+        <button class="btn" type="submit">Kirim tautan</button>
+        <p class="m-0 text-center text-[12px] text-muted">
+          Ingat kata sandimu? <a href="/masuk" class="text-ink underline">Masuk</a>
+        </p>
+      </form>
+    )}
+  </section>
+</Base>

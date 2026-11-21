@@ -2,6 +2,8 @@
 import Base from '../layouts/Base.astro';
 import { findUserByEmail, touchLogin, logAudit } from '../lib/auth';
 import { verifyPassword } from '../lib/password';
+import { clearRate, hitRate, requestIp } from '../db/rate-limit';
+import { retryText } from '../lib/rate-limit';
 
 const rawNext = Astro.url.searchParams.get('next') ?? '';
 // Hanya izinkan path internal — mencegah open redirect.
@@ -20,26 +22,41 @@ if (Astro.request.method === 'POST') {
 
   emailValue = email;
 
-  const user = await findUserByEmail(email);
+  const ip = requestIp(Astro.request, Astro.clientAddress);
+  const emailKey = `masuk:email:${email.toLowerCase()}`;
+  const [byIp, byEmail] = await Promise.all([
+    hitRate(`masuk:ip:${ip}`, 20, 15 * 60),
+    hitRate(emailKey, 8, 15 * 60),
+  ]);
+  const limited = !byIp.ok ? byIp : !byEmail.ok ? byEmail : null;
+
+  const user = limited ? null : await findUserByEmail(email);
 
   // Pesan gagal dibuat sama untuk email tidak ada maupun sandi salah,
   // agar tidak bisa dipakai menebak email mana yang terdaftar.
   const ok = user ? await verifyPassword(password, user.passwordHash) : false;
 
-  if (ok && user) {
+  if (limited) {
+    error = `Terlalu banyak percobaan masuk. Coba lagi dalam ${retryText(limited.retryAfterSec)}.`;
+    Astro.response.status = 429;
+  } else if (ok && user) {
+    await clearRate(emailKey);
     await touchLogin(user.id);
     await logAudit(user.id, 'auth.login');
 
     await Astro.session?.regenerate();
     Astro.session?.set('userId', user.id);
+    Astro.session?.set('authAt', Date.now());
 
     return Astro.redirect(target, 302);
+  } else {
+    attempts++;
+    error = 'Email atau kata sandi tidak cocok.';
+    await logAudit(null, 'auth.failed', email.slice(0, 3) + '***');
   }
-
-  attempts++;
-  error = 'Email atau kata sandi tidak cocok.';
-  await logAudit(null, 'auth.failed', email.slice(0, 3) + '***');
 }
+
+const okSandi = Astro.url.searchParams.get('ok') === 'sandi';
 ---
 
 <Base title="Masuk — RuangLoker" noindex>
@@ -48,6 +65,12 @@ if (Astro.request.method === 'POST') {
     <p class="m-0 mt-1.5 text-[13px] text-muted">
       Lanjutkan dari tempat kamu berhenti — profil dan berkasmu sudah tersimpan.
     </p>
+
+    {okSandi && !error && (
+      <p class="mt-4 rounded-xl border border-line bg-accent-soft px-4 py-2.5 text-[13px] font-semibold" role="status">
+        Kata sandi baru tersimpan. Silakan masuk.
+      </p>
+    )}
 
     {error && (
       <p class="mt-4 rounded-xl border border-ink bg-surface-2 px-4 py-2.5 text-[13px] font-semibold" role="alert">
@@ -84,6 +107,10 @@ if (Astro.request.method === 'POST') {
       </div>
 
       <button class="btn" type="submit">Masuk</button>
+
+      <p class="m-0 text-center text-[12px]">
+        <a href="/lupa-sandi" class="text-ink underline">Lupa kata sandi?</a>
+      </p>
 
       <p class="m-0 text-center text-[12px] text-muted">
         Belum punya akun? <a href="/daftar" class="text-ink underline">Daftar gratis</a>

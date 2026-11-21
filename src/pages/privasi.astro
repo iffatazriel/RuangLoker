@@ -1,0 +1,73 @@
+---
+import LegalPage from '../components/LegalPage.astro';
+import { env } from '../lib/env';
+
+const contact = env('CONTACT_EMAIL');
+---
+
+<LegalPage title="Kebijakan Privasi" updated="21 November 2026">
+  <p>
+    Halaman ini menjelaskan data apa yang disimpan RuangLoker, untuk apa, dan bagaimana kamu bisa mengatur
+    atau menghapusnya. Kebijakan ini disusun mengacu pada Undang-Undang Nomor 27 Tahun 2022 tentang
+    Pelindungan Data Pribadi (UU PDP).
+  </p>
+
+  <h2>Data yang kami simpan</h2>
+  <ul>
+    <li><strong>Akun:</strong> nama, email, dan kata sandi dalam bentuk hash scrypt (kata sandi asli tidak pernah disimpan).</li>
+    <li><strong>Profil dan CV:</strong> nomor telepon, kota, posisi yang dituju, pendidikan, pengalaman, keahlian, dan isi CV yang kamu tulis.</li>
+    <li><strong>Brankas berkas:</strong> CV, dan bila kamu memberi persetujuan terpisah, dokumen seperti KTP, ijazah, atau transkrip. Semua berkas dienkripsi AES-256-GCM.</li>
+    <li><strong>Lamaran:</strong> draf surat, subjek, tujuan lamaran, dan status yang kamu tandai.</li>
+    <li><strong>Pesanan:</strong> produk, nominal, kode pesanan, catatan pembayaran yang kamu isi, dan status konfirmasi.</li>
+    <li><strong>Catatan keamanan:</strong> log aksi penting (masuk, unggah, hapus, pembayaran) dan alamat IP sementara untuk membatasi percobaan masuk berulang.</li>
+  </ul>
+
+  <h2>Untuk apa data dipakai</h2>
+  <ul>
+    <li>Menyiapkan CV, surat lamaran, subjek, dan nama berkas yang kamu kirim sendiri.</li>
+    <li>Menghitung skor CV dengan aturan tertulis, tanpa AI.</li>
+    <li>Memproses pesanan dan menambah kredit setelah pembayaran dikonfirmasi.</li>
+    <li>Mengirim email layanan: atur ulang kata sandi dan status pesanan.</li>
+    <li>Mengirim info lowongan dan produk, hanya jika kamu mencentang persetujuan pemasaran.</li>
+  </ul>
+  <p>Kami tidak menjual data pribadi dan tidak memberikannya ke perusahaan pemberi kerja.</p>
+
+  <h2>Kapan data keluar dari RuangLoker</h2>
+  <ul>
+    <li><strong>Saat kamu melamar.</strong> Lamaran dikirim dari Gmail, aplikasi email, atau WhatsApp milikmu. Data yang kamu kirim ke perusahaan tunduk pada kebijakan perusahaan tersebut.</li>
+    <li><strong>Tautan CV.</strong> Kalau kamu membuat tautan CV di Brankas, siapa pun yang memegang tautan itu bisa membuka CV aktifmu sampai tautan kedaluwarsa (30 hari) atau kamu cabut. Berkas lain tidak ikut terbuka.</li>
+    <li><strong>Penyedia layanan.</strong> Server tempat aplikasi berjalan, dan Resend untuk mengirim email layanan (alamat email dan isi email).</li>
+    <li><strong>Kewajiban hukum.</strong> Bila diminta oleh aparat berwenang sesuai peraturan.</li>
+  </ul>
+
+  <h2>Berapa lama disimpan</h2>
+  <p>
+    Data disimpan selama akunmu aktif. Saat akun dihapus, profil, CV, dan seluruh berkas brankas dihapus,
+    dan email diganti dengan penanda anonim. Log audit dan catatan pesanan disimpan tanpa identitas untuk
+    keperluan keamanan dan pembukuan. Salinan cadangan server ikut terhapus saat masa simpannya habis.
+  </p>
+
+  <h2>Hakmu</h2>
+  <ul>
+    <li>Melihat dan memperbaiki data di halaman Profil, CV, dan Brankas.</li>
+    <li>Menarik persetujuan dokumen sensitif atau pemasaran kapan saja di halaman Akun.</li>
+    <li>Menghapus akun beserta datanya di halaman Akun.</li>
+    <li>Mengajukan pertanyaan atau keberatan atas pemrosesan data.</li>
+  </ul>
+
+  <h2>Keamanan</h2>
+  <p>
+    Berkas dienkripsi dengan kunci yang disimpan terpisah dari database, kata sandi di-hash, dan percobaan
+    masuk dibatasi. Tidak ada sistem yang sepenuhnya kebal; bila terjadi kebocoran yang berdampak padamu,
+    kami akan memberi tahu lewat email sesuai ketentuan UU PDP.
+  </p>
+
+  <h2>Kontak</h2>
+  <p>
+    {contact ? (
+      <>Pertanyaan soal data pribadi: <a href={`mailto:${contact}`}>{contact}</a>.</>
+    ) : (
+      <>Pertanyaan soal data pribadi bisa dikirim lewat <a href="/laporkan">formulir laporan</a>.</>
+    )}
+  </p>
+</LegalPage>

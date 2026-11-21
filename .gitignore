@@ -30,3 +30,6 @@ data/
 
 # konfigurasi tool lokal
 .commandcode/
+
+# cadangan lokal (npm run db:backup)
+backups/

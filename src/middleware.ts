@@ -4,7 +4,7 @@ import { isAdmin } from './lib/admin';
 
 const PRIVATE_PREFIXES = ['/app', '/profil', '/cv', '/brankas', '/akun', '/lamaran', '/pesanan'];
 const ADMIN_PREFIXES = ['/kelola', '/api/kurasi', '/api/admin'];
-const AUTH_PAGES = new Set(['/masuk', '/daftar']);
+const AUTH_PAGES = new Set(['/masuk', '/daftar', '/lupa-sandi']);
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const { cookies, url, session, redirect } = context;
@@ -15,7 +15,10 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   if (typeof userId === 'number') {
     const user = await findUserById(userId);
-    if (user) {
+    const authAt = (await session?.get('authAt')) ?? 0;
+    // Sesi yang dibuat sebelum kata sandi diganti tidak berlaku lagi.
+    const stale = user?.passwordChangedAt && authAt < user.passwordChangedAt.getTime();
+    if (user && !stale) {
       context.locals.user = user;
     } else {
       session?.destroy();

@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import { isAdmin } from '../lib/admin';
 
 interface Props {
   title: string;
@@ -109,10 +110,15 @@ const isTab = (href: string) => path === href || path.startsWith(`${href}/`);
           Lowongan dikurasi manual dari sumber publik. Setiap kartu mencantumkan sumber asli dan
           tanggal pengecekan terakhir. Lamaran tetap dikirim dari email atau WhatsApp milik pelamar.
         </p>
-        <p class="m-0 mt-1.5">
-          Data contoh di lingkungan pengembangan. <a href="/lowongan" class="text-ink underline">Lihat lowongan</a> ·
-          <a href="/kelola" class="text-ink underline">Panel kurasi</a>
+        <p class="m-0 mt-1.5 flex flex-wrap gap-x-3 gap-y-1">
+          <a href="/lowongan" class="text-ink underline">Lowongan</a>
+          <a href="/paket" class="text-ink underline">Harga</a>
+          <a href="/privasi" class="text-ink underline">Kebijakan Privasi</a>
+          <a href="/syarat" class="text-ink underline">Syarat Layanan</a>
+          <a href="/laporkan" class="text-ink underline">Laporkan lowongan</a>
+          {isAdmin(currentUser) && <a href="/kelola" class="text-ink underline">Panel kurasi</a>}
         </p>
+        {import.meta.env.DEV && <p class="m-0 mt-1.5">Data contoh di lingkungan pengembangan.</p>}
       </div>
     </footer>
     {currentUser && (

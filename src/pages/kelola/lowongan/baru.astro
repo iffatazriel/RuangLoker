@@ -1,0 +1,34 @@
+---
+import Base from '../../../layouts/Base.astro';
+import JobForm from '../../../components/JobForm.astro';
+import { emptyJobForm, readJobForm, validateJobForm, type JobFormValues } from '../../../lib/job-form';
+import { createJob } from '../../../db/admin-jobs';
+import { logAudit } from '../../../lib/auth';
+
+let values: JobFormValues = emptyJobForm(new Date());
+let errors: Partial<Record<keyof JobFormValues, string>> = {};
+
+if (Astro.request.method === 'POST') {
+  values = readJobForm(await Astro.request.formData());
+  const result = validateJobForm(values, new Date());
+  if (result.ok) {
+    const user = Astro.locals.user!;
+    const job = await createJob(result.record, user.email);
+    await logAudit(user.id, 'admin.lowongan.buat', job.slug);
+    return Astro.redirect(`/kelola?ok=create`, 303);
+  }
+  errors = result.errors;
+  Astro.response.status = 422;
+}
+---
+
+<Base title="Tambah Lowongan — Panel Kurasi" noindex>
+  <section class="mx-auto max-w-3xl px-4 pt-6 pb-12">
+    <a href="/kelola" class="text-[12.5px] text-muted underline">Panel kurasi</a>
+    <h1 class="m-0 mt-1 text-[26px] font-extrabold tracking-tight">Tambah lowongan</h1>
+    <p class="m-0 mt-1.5 text-[13px] text-muted">
+      Pastikan lowongan benar-benar dibuka perusahaan dan tidak meminta biaya. Sumber wajib dicantumkan.
+    </p>
+    <JobForm values={values} errors={errors} submitLabel="Simpan lowongan" />
+  </section>
+</Base>

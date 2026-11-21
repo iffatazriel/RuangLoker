@@ -80,6 +80,7 @@ export const users = sqliteTable(
     displayName: text('display_name').notNull(),
     createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
     lastLoginAt: integer('last_login_at', { mode: 'timestamp' }),
+    passwordChangedAt: integer('password_changed_at', { mode: 'timestamp' }),
     deletedAt: integer('deleted_at', { mode: 'timestamp' }),
   },
   (t) => [uniqueIndex('users_email_unique').on(t.email)],
@@ -313,3 +314,44 @@ export const creditLedger = sqliteTable(
 );
 
 export type Order = typeof orders.$inferSelect;
+
+export const passwordResets = sqliteTable(
+  'password_resets',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    tokenHash: text('token_hash').notNull(),
+    expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
+    usedAt: integer('used_at', { mode: 'timestamp' }),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+  },
+  (t) => [uniqueIndex('password_resets_token_unique').on(t.tokenHash), index('password_resets_user_idx').on(t.userId)],
+);
+
+export const rateLimits = sqliteTable('rate_limits', {
+  key: text('key').primaryKey(),
+  count: integer('count').notNull(),
+  resetAt: integer('reset_at').notNull(),
+});
+
+export const jobReports = sqliteTable(
+  'job_reports',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    jobId: integer('job_id').references(() => jobs.id, { onDelete: 'set null' }),
+    userId: integer('user_id').references(() => users.id, { onDelete: 'set null' }),
+    target: text('target').notNull(),
+    reason: text('reason').notNull(),
+    contact: text('contact'),
+    // 'baru' | 'ditindak' | 'diabaikan'
+    status: text('status').notNull().default('baru'),
+    resolvedBy: text('resolved_by'),
+    resolvedAt: integer('resolved_at', { mode: 'timestamp' }),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+  },
+  (t) => [index('job_reports_status_idx').on(t.status, t.createdAt)],
+);
+
+export type JobReport = typeof jobReports.$inferSelect;

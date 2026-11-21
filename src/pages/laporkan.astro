@@ -1,5 +1,57 @@
 ---
 import Base from '../layouts/Base.astro';
+import { getJobBySlug } from '../db/queries';
+import { createReport } from '../db/reports';
+import { hitRate, requestIp } from '../db/rate-limit';
+import { retryText } from '../lib/rate-limit';
+import { notifyAdmins } from '../lib/notify';
+import { appOrigin } from '../lib/mail';
+
+const slug = Astro.url.searchParams.get('lowongan') ?? '';
+const job = slug ? await getJobBySlug(slug) : null;
+const user = Astro.locals.user;
+
+let values = { target: job ? `${job.title} — ${job.company}` : '', reason: '', contact: '' };
+let error: string | null = null;
+let done = false;
+
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData();
+  values = {
+    target: String(form.get('target') ?? '').trim().slice(0, 300),
+    reason: String(form.get('reason') ?? '').trim(),
+    contact: String(form.get('contact') ?? '').trim().slice(0, 120),
+  };
+
+  if (values.target.length < 3) error = 'Isi tautan lowongan atau nama perusahaannya.';
+  else if (values.reason.length < 10) error = 'Jelaskan masalahnya minimal 10 karakter.';
+  else if (values.reason.length > 2000) error = 'Penjelasan maksimal 2.000 karakter.';
+  else if (String(form.get('website') ?? '')) done = true; // honeypot: bot mengisi kolom tersembunyi
+  else {
+    const rate = await hitRate(`lapor:ip:${requestIp(Astro.request, Astro.clientAddress)}`, 5, 60 * 60);
+    if (!rate.ok) {
+      error = `Terlalu banyak laporan dari jaringan ini. Coba lagi dalam ${retryText(rate.retryAfterSec)}.`;
+      Astro.response.status = 429;
+    } else {
+      const report = await createReport({
+        jobId: job?.id ?? null,
+        userId: user?.id ?? null,
+        target: values.target,
+        reason: values.reason,
+        contact: values.contact || user?.email || null,
+      });
+      await notifyAdmins(`Laporan lowongan #${report.id}`, [
+        `Lowongan: ${values.target}`,
+        job ? `Halaman: ${appOrigin(Astro.url, import.meta.env.PROD)}/lowongan/${job.slug}` : '',
+        `Alasan: ${values.reason}`,
+        `Kontak pelapor: ${report.contact ?? '-'}`,
+        '',
+        `Tindak lanjuti di ${appOrigin(Astro.url, import.meta.env.PROD)}/kelola`,
+      ]);
+      done = true;
+    }
+  }
+}
 ---
 
 <Base title="Laporkan Lowongan — RuangLoker" noindex>
@@ -10,21 +62,40 @@ import Base from '../layouts/Base.astro';
       atau ternyata sudah tidak aktif. Kami akan memverifikasi ulang dan menurunkannya bila terbukti.
     </p>
 
-    <form class="card mt-4 flex flex-col gap-3 p-5">
-      <label class="f">
-        <span class="block text-[12px] font-bold">Tautan lowongan atau nama perusahaan</span>
-        <input class="field mt-1.5" type="text" name="target" placeholder="ruangloker.id/lowongan/…" />
-      </label>
-      <label class="f">
-        <span class="block text-[12px] font-bold">Apa yang salah?</span>
-        <textarea class="field mt-1.5 min-h-24" name="reason" rows="4" placeholder="Jelaskan singkat…"></textarea>
-      </label>
-      <button class="btn self-start" type="button" disabled>Kirim laporan (belum aktif)</button>
-    </form>
-
-    <p class="m-0 mt-3 text-[12px] text-muted">
-      Formulir ini masih tampilan. Endpoint laporan akan dibangun bersama antrean kurasi versi
-      produksi.
-    </p>
+    {done ? (
+      <div class="card mt-4 p-5" role="status">
+        <p class="m-0 text-[14px] font-bold">Laporan terkirim. Terima kasih.</p>
+        <p class="m-0 mt-1.5 text-[12.5px] leading-relaxed text-muted">
+          Tim kurasi akan mengecek ulang lowongan ini. Sambil menunggu, jangan transfer uang atau mengirim
+          data pribadi ke pihak yang meminta biaya.
+        </p>
+        <a href="/lowongan" class="btn btn-ghost btn-sm mt-3">Kembali ke lowongan</a>
+      </div>
+    ) : (
+      <form method="POST" class="card mt-4 flex flex-col gap-3 p-5" novalidate>
+        {error && (
+          <p class="m-0 rounded-xl border border-ink bg-surface-2 px-4 py-2.5 text-[13px] font-semibold" role="alert">{error}</p>
+        )}
+        <label>
+          <span class="block text-[12px] font-bold">Tautan lowongan atau nama perusahaan</span>
+          <input class="field mt-1.5" type="text" name="target" value={values.target} placeholder="ruangloker.id/lowongan/…" maxlength="300" />
+        </label>
+        <label>
+          <span class="block text-[12px] font-bold">Apa yang salah?</span>
+          <textarea class="field mt-1.5 min-h-24" name="reason" rows="4" maxlength="2000" placeholder="Mis. diminta transfer biaya seragam sebelum interview.">{values.reason}</textarea>
+        </label>
+        {!user && (
+          <label>
+            <span class="block text-[12px] font-bold">Email atau WhatsApp kamu (opsional)</span>
+            <input class="field mt-1.5" type="text" name="contact" value={values.contact} maxlength="120" />
+            <span class="mt-1 block text-[11.5px] text-muted">Hanya dipakai kalau kami perlu bertanya soal laporan ini.</span>
+          </label>
+        )}
+        <div class="hidden" aria-hidden="true">
+          <label>Website <input type="text" name="website" tabindex="-1" autocomplete="off" /></label>
+        </div>
+        <button class="btn self-start" type="submit">Kirim laporan</button>
+      </form>
+    )}
   </section>
 </Base>
