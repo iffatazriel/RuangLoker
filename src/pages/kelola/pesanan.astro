@@ -1,0 +1,54 @@
+---
+import Base from '../../layouts/Base.astro';
+import { adminOrders } from '../../db/orders';
+import { formatDate } from '../../lib/format';
+import { formatRp, PRODUCTS, STATUS_LABELS, type OrderStatus, type ProductKey } from '../../lib/pricing';
+
+const waiting = await adminOrders(['menunggu']);
+const working = await adminOrders(['dibayar']);
+const ok = Astro.url.searchParams.get('ok');
+const error = Astro.url.searchParams.get('error');
+---
+
+<Base title="Pesanan · Panel admin" noindex>
+  <section class="mx-auto max-w-6xl px-4 pt-6 pb-12">
+    <a href="/kelola" class="text-[12.5px] font-semibold text-muted no-underline hover:text-ink">Panel kurasi</a>
+    <h1 class="m-0 mt-1 text-[26px] font-extrabold tracking-tight">Pesanan dan pembayaran</h1>
+    <p class="m-0 mt-1 max-w-2xl text-[13px] text-muted">Cocokkan kode di berita transfer dan nominal di mutasi rekening/QRIS sebelum konfirmasi. Konfirmasi kredit langsung menambah saldo pengguna dan tercatat di log audit.</p>
+    {ok && <p class="mt-3 rounded-xl border border-line bg-white px-4 py-2.5 text-[13px] font-semibold" role="status">Pesanan diperbarui ({ok}).</p>}
+    {error && <p class="mt-3 rounded-xl border border-ink bg-white px-4 py-2.5 text-[13px] font-semibold" role="alert">Status pesanan sudah berubah. Muat ulang halaman.</p>}
+
+    <h2 class="m-0 mt-6 text-[16px] font-bold">Menunggu konfirmasi ({waiting.length})</h2>
+    {waiting.length === 0 ? <p class="card m-0 mt-2 p-4 text-[13px] text-muted">Tidak ada pesanan menunggu.</p> : (
+      <ul class="m-0 mt-2 grid list-none gap-2 p-0">
+        {waiting.map(({ order: o, email, name }) => (
+          <li class="card grid gap-3 p-4 md:grid-cols-[1fr_auto] md:items-center">
+            <div class="text-[13px]">
+              <b class="font-mono text-[14px]">{o.code}</b> · {formatRp(o.amountRp)} · {PRODUCTS[o.product as ProductKey]?.name ?? o.product}
+              <span class="block text-muted">{name} ({email}) · dibuat {formatDate(o.createdAt)}</span>
+              <span class="block text-muted">{o.claimedAt ? `Ditandai sudah bayar ${formatDate(o.claimedAt)}${o.payerNote ? ` · "${o.payerNote}"` : ''}` : 'Belum ditandai sudah bayar oleh pengguna'}</span>
+            </div>
+            <form method="POST" action="/api/admin/pesanan" class="flex flex-wrap items-center gap-2">
+              <input type="hidden" name="orderId" value={o.id} />
+              <input name="note" class="field w-40" maxlength="300" placeholder="Catatan" />
+              <button class="btn btn-sm" name="action" value="konfirmasi" type="submit">Konfirmasi dibayar</button>
+              <button class="btn btn-ghost btn-sm" name="action" value="tolak" type="submit">Tolak</button>
+            </form>
+          </li>
+        ))}
+      </ul>
+    )}
+
+    <h2 class="m-0 mt-6 text-[16px] font-bold">Jasa sedang dikerjakan ({working.length})</h2>
+    {working.length === 0 ? <p class="card m-0 mt-2 p-4 text-[13px] text-muted">Tidak ada jasa yang sedang dikerjakan.</p> : (
+      <ul class="m-0 mt-2 grid list-none gap-2 p-0">
+        {working.map(({ order: o, email }) => (
+          <li class="card flex flex-wrap items-center justify-between gap-3 p-4 text-[13px]">
+            <span><b class="font-mono">{o.code}</b> · {PRODUCTS[o.product as ProductKey]?.name ?? o.product} · {email} · {STATUS_LABELS[o.status as OrderStatus]} {formatDate(o.paidAt)}</span>
+            <form method="POST" action="/api/admin/pesanan"><input type="hidden" name="orderId" value={o.id} /><button class="btn btn-sm" name="action" value="selesai" type="submit">Tandai selesai</button></form>
+          </li>
+        ))}
+      </ul>
+    )}
+  </section>
+</Base>

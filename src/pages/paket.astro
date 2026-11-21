@@ -1,0 +1,58 @@
+---
+import Base from '../layouts/Base.astro';
+import { FREE_MONTHLY_APPLICATIONS } from '../db/applications';
+import { formatRp, PRODUCTS } from '../lib/pricing';
+
+const user = Astro.locals.user;
+const products = Object.values(PRODUCTS);
+---
+
+<Base title="Paket dan harga" description="Gratis 3 lamaran per bulan. Kredit lamaran dan jasa CV dibayar lewat transfer atau QRIS.">
+  <section class="mx-auto max-w-6xl px-4 pt-10 pb-12">
+    <h1 class="m-0 text-[34px] leading-tight font-light lg:text-[44px]">Mulai gratis, <strong class="font-extrabold">bayar kalau perlu.</strong></h1>
+    <p class="m-0 mt-2 max-w-xl text-[14px] text-muted">Semua fitur inti gratis: profil, brankas, CV ATS dengan skor, dan surat lamaran. Yang dibatasi hanya jumlah lamaran per bulan.</p>
+
+    <div class="mt-6 grid gap-3 md:grid-cols-3">
+      <article class="card flex flex-col p-5">
+        <h2 class="m-0 text-[16px] font-bold">Gratis</h2>
+        <p class="m-0 mt-2 text-[28px] font-extrabold">Rp0</p>
+        <ul class="m-0 mt-3 grid list-disc gap-1.5 pl-5 text-[13px] text-ink-2">
+          <li>{FREE_MONTHLY_APPLICATIONS} lamaran per bulan</li>
+          <li>CV ATS, skor, dan PDF</li>
+          <li>Brankas berkas 50 MB</li>
+        </ul>
+        <a href={user ? '/lowongan' : '/daftar'} class="btn btn-ghost mt-auto pt-2.5">{user ? 'Cari lowongan' : 'Daftar gratis'}</a>
+      </article>
+      {products.filter((p) => p.kind === 'kredit').map((p) => (
+        <article class="card flex flex-col border-accent p-5">
+          <h2 class="m-0 text-[16px] font-bold">{p.name}</h2>
+          <p class="m-0 mt-2 text-[28px] font-extrabold">{formatRp(p.priceRp)}<span class="text-[14px] font-medium text-muted"> / {p.credits} lamaran</span></p>
+          <p class="m-0 mt-2 text-[13px] text-muted">{p.summary}</p>
+          <ul class="m-0 mt-3 grid list-disc gap-1.5 pl-5 text-[13px] text-ink-2">{p.includes.map((i) => <li>{i}</li>)}</ul>
+          <form method="POST" action="/api/pesanan" class="mt-auto pt-4"><input type="hidden" name="action" value="buat" /><input type="hidden" name="product" value={p.key} /><button class="btn w-full" type="submit">Beli kredit</button></form>
+        </article>
+      ))}
+      <article class="card flex flex-col p-5">
+        <h2 class="m-0 text-[16px] font-bold">Pro</h2>
+        <p class="m-0 mt-2 text-[28px] font-extrabold">Menyusul</p>
+        <p class="m-0 mt-2 text-[13px] text-muted">Lamaran tanpa batas dan kirim langsung dari Gmail. Belum tersedia; kredit lamaran bisa dipakai dulu.</p>
+      </article>
+    </div>
+
+    <h2 class="m-0 mt-10 text-[20px] font-bold">Jasa dari tim RuangLoker</h2>
+    <p class="m-0 mt-1 text-[13px] text-muted">Dikerjakan orang, bukan otomatis. Kami mulai setelah pembayaran dikonfirmasi.</p>
+    <div class="mt-4 grid gap-3 md:grid-cols-3">
+      {products.filter((p) => p.kind === 'jasa').map((p) => (
+        <article class="card flex flex-col p-5">
+          <h3 class="m-0 text-[15px] font-bold">{p.name}</h3>
+          <p class="m-0 mt-2 text-[24px] font-extrabold">{formatRp(p.priceRp)}</p>
+          <p class="m-0 mt-2 text-[13px] text-muted">{p.summary}</p>
+          <ul class="m-0 mt-3 grid list-disc gap-1.5 pl-5 text-[13px] text-ink-2">{p.includes.map((i) => <li>{i}</li>)}</ul>
+          <form method="POST" action="/api/pesanan" class="mt-auto pt-4"><input type="hidden" name="action" value="buat" /><input type="hidden" name="product" value={p.key} /><button class="btn btn-ghost w-full" type="submit">Pesan</button></form>
+        </article>
+      ))}
+    </div>
+
+    <p class="m-0 mt-8 max-w-2xl text-[12.5px] text-muted">Pembayaran lewat transfer bank atau QRIS, lalu dicek manual oleh admin, biasanya di hari kerja yang sama. Kalau pembayaran tidak bisa kami temukan, pesanan ditolak dan kamu dihubungi lewat email akun.</p>
+  </section>
+</Base>

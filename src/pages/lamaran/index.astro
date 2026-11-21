@@ -24,10 +24,11 @@ const ok = Astro.url.searchParams.get('ok');
   <section class="card mt-4 p-4">
     <div class="flex items-center justify-between text-[13px]"><b>Kuota Gratis bulan ini</b><span>{quota.used} dari {quota.limit} terpakai</span></div>
     <div class="mt-2 h-2 overflow-hidden rounded-full bg-surface-3"><div class="h-full rounded-full bg-accent" style={`width:${Math.min(100, (quota.used / quota.limit) * 100)}%`}></div></div>
-    <p class="m-0 mt-2 text-[12px] text-muted">Kuota terpakai saat lamaran disiapkan, dan direset tiap awal bulan (WIB).</p>
+    <p class="m-0 mt-2 text-[12px] text-muted">Kuota terpakai saat lamaran disiapkan, dan direset tiap awal bulan (WIB). Setelah habis, kredit lamaran dipakai.</p>
+    <div class="mt-3 flex items-center justify-between gap-2 border-t border-line-2 pt-3 text-[13px]"><span>Kredit lamaran: <b>{quota.credits}</b></span><a href="/paket" class="text-[12.5px] font-semibold text-accent">Beli kredit</a></div>
   </section>
 
-  {error === 'kuota' && <p class="mt-3 rounded-xl border border-ink bg-white px-4 py-2.5 text-[13px] font-semibold" role="alert">Kuota Gratis bulan ini sudah habis. Lamaran yang sudah disiapkan tetap bisa dikirim.</p>}
+  {error === 'kuota' && <p class="mt-3 rounded-xl border border-ink bg-white px-4 py-2.5 text-[13px] font-semibold" role="alert">Kuota Gratis bulan ini habis dan kredit lamaranmu 0. Lamaran yang sudah disiapkan tetap bisa dikirim. <a href="/paket" class="text-accent">Beli kredit Rp10.000 untuk 10 lamaran</a>.</p>}
   {ok === 'batal' && <p class="mt-3 rounded-xl border border-line bg-white px-4 py-2.5 text-[13px] font-semibold" role="status">Lamaran dibatalkan.</p>}
 
   <section class="mt-5">

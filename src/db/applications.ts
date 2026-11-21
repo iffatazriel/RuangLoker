@@ -4,6 +4,7 @@ import { applications, cvLinks, files, type Application, type CvLink, type Job, 
 import { listCvs } from './cv';
 import { getProfile } from './account';
 import { logAudit } from '../lib/auth';
+import { creditBalance, creditsSpentSince, spendCredit } from './orders';
 import { buildApplication, type LetterApplicant, type LetterTemplate, type LetterTone } from '../lib/letter';
 import { hashToken, linkToken, newLinkNonce } from '../lib/vault';
 
@@ -17,12 +18,15 @@ export function monthStartWib(now = new Date()): Date {
 }
 
 export async function quotaState(userId: number) {
+  const since = monthStartWib();
   const [row] = await db
     .select({ n: count() })
     .from(applications)
-    .where(and(eq(applications.userId, userId), gte(applications.createdAt, monthStartWib()), ne(applications.status, 'batal')));
-  const used = row?.n ?? 0;
-  return { used, limit: FREE_MONTHLY_APPLICATIONS, remaining: Math.max(0, FREE_MONTHLY_APPLICATIONS - used) };
+    .where(and(eq(applications.userId, userId), gte(applications.createdAt, since), ne(applications.status, 'batal')));
+  const [paid, credits] = await Promise.all([creditsSpentSince(userId, since), creditBalance(userId)]);
+  const used = Math.max(0, (row?.n ?? 0) - paid);
+  const remaining = Math.max(0, FREE_MONTHLY_APPLICATIONS - used);
+  return { used, limit: FREE_MONTHLY_APPLICATIONS, remaining, credits, canPrepare: remaining > 0 || credits > 0 };
 }
 
 export async function listApplications(userId: number): Promise<Application[]> {
@@ -164,7 +168,8 @@ export async function prepareApplication(
 ): Promise<{ app: Application; created: boolean } | { error: 'kuota' }> {
   const open = await findOpenApplication(user.id, job.id);
   if (open) return { app: open, created: false };
-  if ((await quotaState(user.id)).remaining <= 0) return { error: 'kuota' };
+  const quota = await quotaState(user.id);
+  if (!quota.canPrepare) return { error: 'kuota' };
 
   const { applicant, cvId } = await applicantFor(user.id, await getProfile(user.id), user.email);
   const template: LetterTemplate = job.category === 'Admin' ? (applicant.experience ? 'formal' : 'fresh') : 'retail';
@@ -182,7 +187,8 @@ export async function prepareApplication(
     subject,
     body,
   });
-  await logAudit(user.id, 'lamaran.siapkan', String(app.id), `${job.title} · ${job.company}`);
+  if (quota.remaining <= 0) await spendCredit(user.id, app.id);
+  await logAudit(user.id, 'lamaran.siapkan', String(app.id), `${job.title} · ${job.company}${quota.remaining <= 0 ? ' · kredit' : ''}`);
   return { app, created: true };
 }
 

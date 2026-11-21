@@ -269,3 +269,47 @@ export const cvLinks = sqliteTable(
 
 export type Application = typeof applications.$inferSelect;
 export type CvLink = typeof cvLinks.$inferSelect;
+
+export const orders = sqliteTable(
+  'orders',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    // Kode untuk berita transfer, mis. RL-7K2Q9.
+    code: text('code').notNull(),
+    product: text('product').notNull(),
+    amountRp: integer('amount_rp').notNull(),
+    credits: integer('credits').notNull().default(0),
+    // 'menunggu' | 'dibayar' | 'selesai' | 'ditolak' | 'batal'
+    status: text('status').notNull().default('menunggu'),
+    payerNote: text('payer_note'),
+    claimedAt: integer('claimed_at', { mode: 'timestamp' }),
+    adminNote: text('admin_note'),
+    confirmedBy: text('confirmed_by'),
+    paidAt: integer('paid_at', { mode: 'timestamp' }),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+    updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+  },
+  (t) => [uniqueIndex('orders_code_unique').on(t.code), index('orders_user_idx').on(t.userId), index('orders_status_idx').on(t.status)],
+);
+
+export const creditLedger = sqliteTable(
+  'credit_ledger',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    delta: integer('delta').notNull(),
+    // 'pembelian' | 'lamaran'
+    reason: text('reason').notNull(),
+    orderId: integer('order_id').references(() => orders.id, { onDelete: 'set null' }),
+    applicationId: integer('application_id').references(() => applications.id, { onDelete: 'set null' }),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+  },
+  (t) => [index('credit_ledger_user_idx').on(t.userId), uniqueIndex('credit_ledger_order_unique').on(t.orderId)],
+);
+
+export type Order = typeof orders.$inferSelect;

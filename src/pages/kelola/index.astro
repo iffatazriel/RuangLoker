@@ -1,7 +1,7 @@
 ---
-import Base from '../layouts/Base.astro';
-import { getCurationQueue, getAllJobsForCuration } from '../db/queries';
-import { formatDate, relativeTime, salaryRange } from '../lib/format';
+import Base from '../../layouts/Base.astro';
+import { getCurationQueue, getAllJobsForCuration } from '../../db/queries';
+import { formatDate, relativeTime, salaryRange } from '../../lib/format';
 
 const [queue, allJobs] = await Promise.all([getCurationQueue(), getAllJobsForCuration()]);
 const okAction = Astro.url.searchParams.get('ok');
@@ -35,7 +35,7 @@ const statusLabel: Record<string, string> = {
           dan tidak ada harga yang menyelamatkan platform ini. Setiap keputusan di sini tercatat.
         </p>
       </div>
-      <a href="/lowongan" class="btn btn-ghost btn-sm">Lihat sisi publik</a>
+      <div class="flex gap-2"><a href="/kelola/pesanan" class="btn btn-sm">Pesanan &amp; pembayaran</a><a href="/lowongan" class="btn btn-ghost btn-sm">Lihat sisi publik</a></div>
     </div>
 
     {okAction && actionLabel[okAction] && (

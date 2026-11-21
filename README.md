@@ -33,7 +33,9 @@ dan mockup visual di [`Wireframe Platform Lamaran Kerja 1-Klik.html`](./Wirefram
 
 Slice 4–5: Siapkan lamaran (surat otomatis per kanal, salin/buka Gmail/WhatsApp/form, tautan CV publik bertoken), antrean "Lamar semua" sampai 5 lowongan, riwayat lamaran, kuota Gratis 3/bulan.
 
-Belum dibangun: CV kreatif, pembayaran, dashboard perusahaan.
+Slice 6: halaman Harga (`/paket`), Kredit Lamaran (Rp10.000 = 10 lamaran, dipakai setelah kuota Gratis habis), Pesanan Jasa, pembayaran transfer/QRIS manual yang dikonfirmasi admin di `/kelola/pesanan`. Panel kurasi dan admin hanya untuk email di `ADMIN_EMAILS`; info rekening/QRIS lewat `PAYMENT_*` di `.env`.
+
+Belum dibangun: payment gateway otomatis, paket Pro/Gmail OAuth, CV kreatif, dashboard perusahaan.
 
 ## Stack
 

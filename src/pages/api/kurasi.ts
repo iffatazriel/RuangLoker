@@ -5,13 +5,13 @@ import { jobs, curationLog } from '../../db/schema';
 
 const ACTIONS = new Set(['verify', 'manual_check', 'reject', 'deactivate', 'reactivate', 'extend']);
 
-export const POST: APIRoute = async ({ request, redirect }) => {
+export const POST: APIRoute = async ({ request, redirect, locals }) => {
   const form = await request.formData();
 
   const jobId = Number(form.get('jobId'));
   const action = String(form.get('action') ?? '');
   const note = form.get('note') ? String(form.get('note')) : null;
-  const curator = String(form.get('curator') ?? 'kurator@pilot');
+  const curator = locals.user?.email ?? 'admin';
 
   if (!Number.isInteger(jobId) || jobId <= 0) {
     return new Response('jobId tidak valid', { status: 400 });

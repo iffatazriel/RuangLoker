@@ -1,7 +1,9 @@
 import { defineMiddleware } from 'astro:middleware';
 import { findUserById } from './lib/auth';
+import { isAdmin } from './lib/admin';
 
-const PRIVATE_PREFIXES = ['/app', '/profil', '/cv', '/brankas', '/akun', '/lamaran'];
+const PRIVATE_PREFIXES = ['/app', '/profil', '/cv', '/brankas', '/akun', '/lamaran', '/pesanan'];
+const ADMIN_PREFIXES = ['/kelola', '/api/kurasi', '/api/admin'];
 const AUTH_PAGES = new Set(['/masuk', '/daftar']);
 
 export const onRequest = defineMiddleware(async (context, next) => {
@@ -26,6 +28,14 @@ export const onRequest = defineMiddleware(async (context, next) => {
   if (isPrivate && !context.locals.user) {
     const next = encodeURIComponent(path + url.search);
     return redirect(`/masuk?next=${next}`, 302);
+  }
+
+  const isAdminPath = ADMIN_PREFIXES.some((p) => path === p || path.startsWith(`${p}/`));
+  if (isAdminPath && !context.locals.user) {
+    return redirect(`/masuk?next=${encodeURIComponent(path)}`, 302);
+  }
+  if (isAdminPath && !isAdmin(context.locals.user)) {
+    return new Response('Halaman tidak ditemukan', { status: 404 });
   }
 
   if (AUTH_PAGES.has(path) && context.locals.user) {
