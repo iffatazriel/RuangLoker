@@ -4,6 +4,12 @@ import { jobs } from '../src/db/schema.ts';
 import { buildSectionsFromProfile } from '../src/lib/cv-build.ts';
 import { scoreCv } from '../src/lib/cv-score.ts';
 
+try {
+  process.loadEnvFile();
+} catch {
+  // .env opsional.
+}
+
 const url = process.env.DATABASE_URL ?? 'file:./data/ruangloker.db';
 const client = createClient({ url });
 const db = drizzle(client);

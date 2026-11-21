@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, lt } from 'drizzle-orm';
 import { db } from './index';
 import { rateLimits } from './schema';
 import { clientIp, stepRate, type RateDecision } from '../lib/rate-limit';
@@ -12,6 +12,7 @@ export async function hitRate(key: string, limit: number, windowSec: number): Pr
     .insert(rateLimits)
     .values({ key, ...decision.state })
     .onConflictDoUpdate({ target: rateLimits.key, set: decision.state });
+  if (Math.random() < 0.02) await db.delete(rateLimits).where(lt(rateLimits.resetAt, now));
   return decision;
 }
 

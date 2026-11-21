@@ -71,11 +71,16 @@ Buka `http://localhost:4321`. Panel kurasi: `/kelola`. Aplikasi pelamar: `/app`.
 
 ## Produksi
 
+Panduan langkah demi langkah (VPS + Docker + Caddy HTTPS, Resend, backup, checklist rilis): [`DEPLOY.md`](./DEPLOY.md).
+
 ```bash
 npm ci --include=dev && npm run build
 npm run db:migrate
-HOST=0.0.0.0 PORT=4321 node dist/server/entry.mjs
+HOST=0.0.0.0 PORT=4321 npm start   # cek .env dulu (scripts/check-env.mjs), lalu menjalankan server
 ```
+
+Variabel server dibaca dari environment/`.env` saat runtime, tidak ditanam ke hasil build, jadi mengubah `.env` cukup restart.
+Sesi login disimpan di `data/sessions`. `GET /api/health` mengecek database dan brankas untuk uptime monitor.
 
 Variabel wajib di `.env` produksi:
 

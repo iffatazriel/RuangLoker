@@ -4,6 +4,12 @@ import { createClient } from '@libsql/client';
 import { drizzle } from 'drizzle-orm/libsql';
 import { migrate } from 'drizzle-orm/libsql/migrator';
 
+try {
+  process.loadEnvFile();
+} catch {
+  // .env opsional.
+}
+
 const url = process.env.DATABASE_URL ?? 'file:./data/ruangloker.db';
 if (url.startsWith('file:')) {
   await mkdir(dirname(url.slice('file:'.length)), { recursive: true });

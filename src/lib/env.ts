@@ -1,6 +1,11 @@
-// Variabel server dibaca saat runtime; process.env sebagai cadangan untuk node:test dan skrip.
+// Variabel server selalu dibaca dari process.env saat runtime, tidak pernah ditanam ke hasil build.
+// .env lokal dimuat sekali; variabel yang sudah ada di environment server tetap diutamakan.
+try {
+  process.loadEnvFile();
+} catch {
+  // .env opsional (mis. di Docker variabel datang dari environment).
+}
+
 export function env(name: string): string {
-  const fromVite = (import.meta as { env?: Record<string, unknown> }).env?.[name];
-  const value = fromVite ?? process.env[name] ?? '';
-  return String(value).trim();
+  return String(process.env[name] ?? '').trim();
 }

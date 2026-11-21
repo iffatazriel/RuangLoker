@@ -1,0 +1,9 @@
+# Untuk VPS tanpa Docker: salin ke /etc/caddy/Caddyfile, ganti domain, lalu: sudo systemctl reload caddy
+ruangloker.id {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:4321
+}
+
+www.ruangloker.id {
+	redir https://ruangloker.id{uri} permanent
+}

@@ -1,6 +1,8 @@
+import { env } from './env';
+
 // Admin ditentukan lewat ADMIN_EMAILS (dipisah koma). Kosong berarti tidak ada admin.
 export function adminEmails(): string[] {
-  const raw = import.meta.env?.ADMIN_EMAILS ?? process.env.ADMIN_EMAILS ?? '';
+  const raw = env('ADMIN_EMAILS');
   return String(raw)
     .split(',')
     .map((e) => e.trim().toLowerCase())

@@ -21,7 +21,7 @@ const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short
 ---
 
 <AppLayout title="CV" active="cv" userName={profile?.fullName || user.email}>
-  <div class="flex flex-wrap items-start justify-between gap-3">
+  <div class="mt-4 flex flex-wrap items-start justify-between gap-3">
     <div>
       <h1 class="m-0 text-2xl font-extrabold tracking-tight">CV ATS dari profilmu</h1>
       <p class="m-0 mt-1 max-w-xl text-[13px] leading-relaxed text-muted">
@@ -54,7 +54,7 @@ const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short
     <div class="mt-4 rounded-xl border border-dashed border-line bg-white p-4">
       <p class="m-0 text-[13px] font-bold">Profil baru {completeness.percent}% lengkap</p>
       <p class="m-0 mt-1 text-[12.5px] leading-relaxed text-muted">
-        CV tetap bisa dibuat, tetapi bagian yang kosong di profil juga akan kosong di CV dan menurunkan skor.
+        CV tetap bisa dibuat, tetapi bagian yang kosong di profil juga akan kosong di CV dan menurunkan skor.{' '}
         <a href="/profil" class="font-semibold text-ink">Lengkapi profil</a>
       </p>
     </div>

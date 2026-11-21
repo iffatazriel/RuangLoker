@@ -1,0 +1,18 @@
+# Untuk VPS tanpa Docker. Salin ke /etc/systemd/system/ruangloker.service, lalu:
+#   sudo systemctl daemon-reload && sudo systemctl enable --now ruangloker
+[Unit]
+Description=RuangLoker
+After=network.target
+
+[Service]
+Type=simple
+User=ruangloker
+WorkingDirectory=/srv/ruangloker
+Environment=NODE_ENV=production HOST=127.0.0.1 PORT=4321
+ExecStartPre=/usr/bin/node scripts/migrate.mjs
+ExecStart=/usr/bin/npm start
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

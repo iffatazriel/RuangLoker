@@ -36,6 +36,10 @@ const isTab = (href: string) => path === href || path.startsWith(`${href}/`);
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="generator" content={Astro.generator} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#1c7cf4" />
 
     <title>{title}</title>
     <meta name="description" content={description} />
@@ -47,6 +51,11 @@ const isTab = (href: string) => path === href || path.startsWith(`${href}/`);
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:locale" content="id_ID" />
+    <meta property="og:site_name" content="RuangLoker" />
+    <meta property="og:image" content={new URL('/og.png', Astro.site)} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -104,7 +113,7 @@ const isTab = (href: string) => path === href || path.startsWith(`${href}/`);
       <div class="border-t border-line pt-6">
         <p class="m-0">
           <strong class="text-ink">RuangLoker</strong> — Satu Ruang, Semua Lamaran.
-          Pilot Jabodetabek untuk kategori Admin &amp; Retail.
+          Pilot Jabodetabek.
         </p>
         <p class="m-0 mt-1.5">
           Lowongan dikurasi manual dari sumber publik. Setiap kartu mencantumkan sumber asli dan

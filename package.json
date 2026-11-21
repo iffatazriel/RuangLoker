@@ -16,7 +16,9 @@
     "db:migrate": "node scripts/migrate.mjs",
     "db:seed": "node scripts/seed.mjs",
     "db:reset": "node scripts/reset.mjs",
-    "db:backup": "node scripts/backup.mjs"
+    "db:backup": "node scripts/backup.mjs",
+    "start": "node scripts/check-env.mjs && node dist/server/entry.mjs",
+    "check:env": "node scripts/check-env.mjs"
   },
   "dependencies": {
     "@astrojs/node": "^11.1.14",

@@ -3,6 +3,7 @@ import { and, desc, eq, gte, inArray, sql } from 'drizzle-orm';
 import { db } from './index';
 import { creditLedger, orders, users, type Order } from './schema';
 import { ACTION_RESULT, canTransition, orderCode, PRODUCTS, type ProductKey } from '../lib/pricing';
+import { env } from '../lib/env';
 
 export async function creditBalance(userId: number): Promise<number> {
   const [row] = await db
@@ -116,7 +117,6 @@ export async function adminAct(id: number, action: string, admin: string, note: 
 }
 
 export function paymentInfo() {
-  const env = (k: string) => String(import.meta.env?.[k] ?? process.env[k] ?? '').trim();
   return {
     bankName: env('PAYMENT_BANK_NAME'),
     accountNumber: env('PAYMENT_ACCOUNT_NUMBER'),

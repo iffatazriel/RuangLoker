@@ -1,6 +1,7 @@
 import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes, scryptSync } from 'node:crypto';
 import { mkdir, readFile, unlink, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
+import { env } from './env';
 
 const ALGO = 'aes-256-gcm';
 const IV_LEN = 12;
@@ -8,12 +9,16 @@ const IV_LEN = 12;
 const isProduction = (): boolean => {
   // Astro menyalakan NODE_ENV=production bahkan saat `astro dev`, jadi
   // jangan pakai NODE_ENV. import.meta.env.PROD hanya true untuk build.
-  if (typeof import.meta.env?.PROD === 'boolean') return import.meta.env.PROD;
-  return process.env.NODE_ENV === 'production';
+  // Tanpa optional chaining: `import.meta.env?.` membuat Vite menanam seluruh .env ke hasil build.
+  try {
+    return import.meta.env.PROD === true;
+  } catch {
+    return process.env.NODE_ENV === 'production';
+  }
 };
 
 function readSecret(): string {
-  const secret = import.meta.env?.VAULT_SECRET ?? process.env.VAULT_SECRET;
+  const secret = env('VAULT_SECRET');
 
   if (!secret) {
     if (isProduction()) {
@@ -39,7 +44,7 @@ function key(): Buffer {
 }
 
 export function vaultRoot(): string {
-  return resolve(process.env.VAULT_DIR ?? './data/vault');
+  return resolve(env('VAULT_DIR') || './data/vault');
 }
 
 export function storedNameFor(extension: string): string {
