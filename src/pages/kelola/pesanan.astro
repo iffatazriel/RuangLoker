@@ -11,9 +11,9 @@ const error = Astro.url.searchParams.get('error');
 ---
 
 <Base title="Pesanan · Panel admin" noindex>
-  <section class="mx-auto max-w-6xl px-4 pt-6 pb-12">
+  <section class="mx-auto max-w-6xl px-4 pt-8 sm:pt-10 pb-12">
     <a href="/kelola" class="text-[12.5px] font-semibold text-muted no-underline hover:text-ink">Panel kurasi</a>
-    <h1 class="m-0 mt-1 text-[26px] font-extrabold tracking-tight">Pesanan dan pembayaran</h1>
+    <h1 class="m-0 page-title mt-1">Pesanan dan pembayaran</h1>
     <p class="m-0 mt-1 max-w-2xl text-[13px] text-muted">Cocokkan kode di berita transfer dan nominal di mutasi rekening/QRIS sebelum konfirmasi. Konfirmasi kredit langsung menambah saldo pengguna dan tercatat di log audit.</p>
     {ok && <p class="mt-3 rounded-xl border border-line bg-white px-4 py-2.5 text-[13px] font-semibold" role="status">Pesanan diperbarui ({ok}).</p>}
     {error && <p class="mt-3 rounded-xl border border-ink bg-white px-4 py-2.5 text-[13px] font-semibold" role="alert">Status pesanan sudah berubah. Muat ulang halaman.</p>}

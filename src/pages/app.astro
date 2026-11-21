@@ -1,7 +1,7 @@
 ---
 import AppLayout from '../layouts/AppLayout.astro';
 import { listApplications } from '../db/applications';
-import { getAccountOverview, formatBytes, hasSensitiveConsent, listFiles } from '../db/account';
+import { getAccountOverview, formatBytes, hasSensitiveConsent, listFiles, PROFILE_FIELD_LABELS } from '../db/account';
 import { listCvs } from '../db/cv';
 import { countActiveJobs } from '../db/queries';
 
@@ -26,21 +26,11 @@ const current = allDone
   ? { title: 'Lamaran pertamamu sudah terkirim', body: 'Lanjut lamar lowongan lain, atau cek riwayat dan balasan HRD di email atau WhatsApp milikmu.', href: '/lowongan', cta: 'Cari lowongan lagi' }
   : journey[currentIndex];
 
-const missingLabels: Record<string, string> = {
-  fullName: 'nama lengkap',
-  phone: 'nomor WhatsApp',
-  city: 'kota domisili',
-  lastEducation: 'pendidikan terakhir',
-  lastExperience: 'pengalaman terakhir',
-  skills: 'keahlian',
-  desiredRoles: 'posisi yang dicari',
-};
-
 const nextSteps = [
   overview.completeness.percent < 100 && {
     href: '/profil',
     title: 'Lengkapi profil',
-    body: `Masih kurang: ${overview.completeness.missing.map((m) => missingLabels[m] ?? m).join(', ')}.`,
+    body: `Masih kurang: ${overview.completeness.missing.map((m) => PROFILE_FIELD_LABELS[m] ?? m).join(', ')}.`,
   },
   !sensitive && {
     href: '/brankas',
@@ -57,7 +47,7 @@ const nextSteps = [
 
 <AppLayout title="Ringkasan" active="ringkasan" userName={user.displayName}>
   <div class="mt-3">
-    <h1 class="m-0 text-[24px] font-extrabold tracking-tight">Halo, {user.displayName.split(' ')[0]}</h1>
+    <h1 class="m-0 page-title">Halo, {user.displayName.split(' ')[0]}</h1>
     <p class="m-0 mt-1 text-[13px] text-muted">
       {overview.completeness.percent === 100
         ? 'Profilmu lengkap. Tinggal pilih lowongan dan kirim.'

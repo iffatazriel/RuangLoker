@@ -1,6 +1,6 @@
 ---
 import AppLayout from '../layouts/AppLayout.astro';
-import { getProfile, profileCompleteness, saveProfile } from '../db/account';
+import { getProfile, PROFILE_FIELD_LABELS, profileCompleteness, saveProfile } from '../db/account';
 import { logAudit } from '../lib/auth';
 
 const user = Astro.locals.user!;
@@ -93,7 +93,7 @@ const cities = [
 <AppLayout title="Profil" active="profil" userName={user.displayName}>
   <div class="mt-3 flex flex-wrap items-end justify-between gap-2">
     <div>
-      <h1 class="m-0 text-[24px] font-extrabold tracking-tight">Profil sekali isi</h1>
+      <h1 class="m-0 page-title">Profil sekali isi</h1>
       <p class="m-0 mt-1 text-[13px] text-muted">
         Data ini yang akan mengisi semua lamaran, CV, dan surat lamaran. Diisi sekali, dipakai selamanya.
       </p>
@@ -219,7 +219,7 @@ const cities = [
         <div class="card border-dashed p-4">
           <p class="label-mono m-0">Masih kurang</p>
           <p class="m-0 mt-1.5 text-[12px] leading-relaxed text-ink-2">
-            Isi ini agar profil dianggap lengkap: {completeness.missing.join(', ')}.
+            Isi ini agar profil dianggap lengkap: {completeness.missing.map((m) => PROFILE_FIELD_LABELS[m] ?? m).join(', ')}.
           </p>
         </div>
       )}

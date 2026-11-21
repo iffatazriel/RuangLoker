@@ -125,7 +125,7 @@ function fixTarget(ruleId: string): { href: string; label: string } | null {
   <a href="/cv" class="mt-4 inline-block text-[12.5px] font-semibold text-muted no-underline hover:text-ink">Semua CV</a>
   <div class="mt-1 flex flex-wrap items-end justify-between gap-3">
     <div class="min-w-0">
-      <h1 class="m-0 text-2xl font-extrabold tracking-tight">CV ATS{s.targetRole ? ` — ${s.targetRole}` : ''}</h1>
+      <h1 class="m-0 page-title">CV ATS{s.targetRole ? ` — ${s.targetRole}` : ''}</h1>
       <p class="m-0 mt-1 text-[12.5px] text-muted">Berkas: <span class="font-mono">{fileName}</span></p>
     </div>
     <form method="POST" action={`/api/cv/${cv.id}/pdf`} class="hidden items-center gap-2 md:flex">

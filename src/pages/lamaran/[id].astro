@@ -36,7 +36,7 @@ const queueUrl = queue.length ? `/lamaran/antrean?ids=${queue.join(',')}` : '';
   <a href={queueUrl || '/lamaran'} class="mt-4 inline-block text-[12.5px] font-semibold text-muted no-underline hover:text-ink">{queueUrl ? 'Kembali ke antrean' : 'Semua lamaran'}</a>
   <div class="mt-1 flex flex-wrap items-end justify-between gap-3">
     <div class="min-w-0">
-      <h1 class="m-0 text-2xl font-extrabold tracking-tight">{app.jobTitle}</h1>
+      <h1 class="m-0 page-title">{app.jobTitle}</h1>
       <p class="m-0 mt-1 text-[13px] text-muted">{app.company} · {CHANNEL_LABELS[app.channel] ?? app.channel} · disiapkan {formatDate(app.createdAt)}</p>
     </div>
     <span class:list={['pill', app.status === 'terkirim' && 'pill-solid']}>{app.status === 'terkirim' ? `Terkirim ${formatDate(app.sentAt)}` : app.status === 'batal' ? 'Dibatalkan' : 'Belum dikirim'}</span>

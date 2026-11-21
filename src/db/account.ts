@@ -44,6 +44,16 @@ export async function saveProfile(
     .where(eq(profiles.userId, userId));
 }
 
+export const PROFILE_FIELD_LABELS: Partial<Record<ProfileFieldKey, string>> = {
+  fullName: 'nama lengkap',
+  phone: 'nomor WhatsApp',
+  city: 'kota domisili',
+  lastEducation: 'pendidikan terakhir',
+  lastExperience: 'pengalaman terakhir',
+  skills: 'keahlian',
+  desiredRoles: 'posisi yang dicari',
+};
+
 export function profileCompleteness(profile: Profile | null): {
   percent: number;
   missing: ProfileFieldKey[];

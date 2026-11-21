@@ -26,9 +26,9 @@ if (Astro.request.method === 'POST') {
 ---
 
 <Base title={`Ubah ${job.title} — Panel Kurasi`} noindex>
-  <section class="mx-auto max-w-3xl px-4 pt-6 pb-12">
+  <section class="mx-auto max-w-3xl px-4 pt-8 sm:pt-10 pb-12">
     <a href="/kelola" class="text-[12.5px] text-muted underline">Panel kurasi</a>
-    <h1 class="m-0 mt-1 text-[26px] font-extrabold tracking-tight">Ubah lowongan</h1>
+    <h1 class="m-0 page-title mt-1">Ubah lowongan</h1>
     <p class="m-0 mt-1.5 text-[13px] text-muted">
       {job.title} · {job.company}. Alamat halaman <a href={`/lowongan/${job.slug}`} class="text-ink underline">/lowongan/{job.slug}</a> tidak berubah.
     </p>

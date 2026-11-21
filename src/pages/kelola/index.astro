@@ -31,11 +31,11 @@ const statusLabel: Record<string, string> = {
 ---
 
 <Base title="Panel Kurasi — RuangLoker" noindex>
-  <section class="mx-auto max-w-6xl px-4 pt-6">
+  <section class="mx-auto max-w-6xl px-4 pt-8 sm:pt-10">
     <div class="flex flex-wrap items-end justify-between gap-3">
       <div>
         <p class="label-mono m-0">Alat internal · tidak terindeks</p>
-        <h1 class="m-0 mt-1 text-[26px] leading-tight font-extrabold tracking-tight">Panel Kurasi</h1>
+        <h1 class="m-0 page-title mt-1">Panel Kurasi</h1>
         <p class="m-0 mt-1.5 max-w-2xl text-[13px] text-muted">
           Kurasi adalah produknya. Kalau antrean ini kosong setiap pagi, aliran lowongan berhenti —
           dan tidak ada harga yang menyelamatkan platform ini. Setiap keputusan di sini tercatat.
@@ -121,7 +121,7 @@ const statusLabel: Record<string, string> = {
                 {job.companyInitials}
               </div>
 
-              <div class="min-w-0 flex-1">
+              <div class="min-w-0 flex-1 basis-56">
                 <h3 class="m-0 text-[15px] font-bold">{job.title}</h3>
                 <p class="m-0 mt-0.5 text-[12.5px] text-muted">
                   {job.company} · {job.city} · {salaryRange(job.salaryMin, job.salaryMax)}
@@ -180,7 +180,7 @@ const statusLabel: Record<string, string> = {
 
     <div class="card mt-3 overflow-hidden">
       <div class="overflow-x-auto">
-        <table class="w-full border-collapse text-[12.5px]">
+        <table class="w-full min-w-[760px] border-collapse text-[12.5px]">
           <thead>
             <tr class="border-b border-line bg-surface-2 text-left">
               <th class="px-3 py-2.5 font-bold">Posisi</th>
