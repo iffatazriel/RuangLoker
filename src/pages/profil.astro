@@ -1,0 +1,231 @@
+---
+import AppLayout from '../layouts/AppLayout.astro';
+import { getProfile, profileCompleteness, saveProfile } from '../db/account';
+import { logAudit } from '../lib/auth';
+
+const user = Astro.locals.user!;
+let profile = await getProfile(user.id);
+
+let saved = false;
+let errors: Record<string, string> = {};
+
+const field = (name: string) => String((formValues[name] ?? '') as string);
+
+let formValues: Record<string, string> = {
+  fullName: profile?.fullName ?? '',
+  phone: profile?.phone ?? '',
+  emailForApplication: profile?.emailForApplication ?? user.email,
+  city: profile?.city ?? '',
+  maxRadiusKm: String(profile?.maxRadiusKm ?? 10),
+  lastEducation: profile?.lastEducation ?? '',
+  lastExperience: profile?.lastExperience ?? '',
+  skills: (profile?.skills ?? []).join(', '),
+  desiredRoles: profile?.desiredRoles ?? '',
+  expectedSalary: profile?.expectedSalary ?? '',
+  availability: profile?.availability ?? '',
+};
+
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData();
+
+  formValues = {
+    fullName: String(form.get('fullName') ?? '').trim(),
+    phone: String(form.get('phone') ?? '').trim(),
+    emailForApplication: String(form.get('emailForApplication') ?? '').trim(),
+    city: String(form.get('city') ?? '').trim(),
+    maxRadiusKm: String(form.get('maxRadiusKm') ?? '10'),
+    lastEducation: String(form.get('lastEducation') ?? '').trim(),
+    lastExperience: String(form.get('lastExperience') ?? '').trim(),
+    skills: String(form.get('skills') ?? '').trim(),
+    desiredRoles: String(form.get('desiredRoles') ?? '').trim(),
+    expectedSalary: String(form.get('expectedSalary') ?? '').trim(),
+    availability: String(form.get('availability') ?? '').trim(),
+  };
+
+  if (formValues.phone && !/^[0-9+\-\s()]{8,20}$/.test(formValues.phone)) {
+    errors.phone = 'Nomor WhatsApp tidak valid.';
+  }
+
+  if (formValues.emailForApplication && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(formValues.emailForApplication)) {
+    errors.emailForApplication = 'Email pengirim tidak valid.';
+  }
+
+  const radius = Number(formValues.maxRadiusKm);
+  if (!Number.isFinite(radius) || radius < 1 || radius > 100) {
+    errors.maxRadiusKm = 'Radius harus antara 1 dan 100 km.';
+  }
+
+  if (Object.keys(errors).length === 0) {
+    const skills = formValues.skills
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    await saveProfile(user.id, {
+      fullName: formValues.fullName || null,
+      phone: formValues.phone || null,
+      emailForApplication: formValues.emailForApplication || null,
+      city: formValues.city || null,
+      maxRadiusKm: Math.round(radius),
+      lastEducation: formValues.lastEducation || null,
+      lastExperience: formValues.lastExperience || null,
+      skills,
+      desiredRoles: formValues.desiredRoles || null,
+      expectedSalary: formValues.expectedSalary || null,
+      availability: formValues.availability || null,
+    });
+
+    await logAudit(user.id, 'profile.update');
+
+    profile = await getProfile(user.id);
+    saved = true;
+  }
+}
+
+const completeness = profileCompleteness(profile);
+
+const cities = [
+  'Jakarta Selatan', 'Jakarta Timur', 'Jakarta Pusat', 'Jakarta Barat', 'Jakarta Utara',
+  'Depok', 'Bekasi', 'Tangerang', 'Bogor',
+];
+---
+
+<AppLayout title="Profil" active="profil" userName={user.displayName}>
+  <div class="mt-3 flex flex-wrap items-end justify-between gap-2">
+    <div>
+      <h1 class="m-0 text-[24px] font-extrabold tracking-tight">Profil sekali isi</h1>
+      <p class="m-0 mt-1 text-[13px] text-muted">
+        Data ini yang akan mengisi semua lamaran, CV, dan surat lamaran. Diisi sekali, dipakai selamanya.
+      </p>
+    </div>
+    <span class="pill pill-solid">{completeness.percent}% lengkap</span>
+  </div>
+
+  {saved && (
+    <p class="mt-3 rounded-xl border border-ink bg-surface-2 px-4 py-2.5 text-[13px] font-semibold" role="status">
+      ✓ Profil tersimpan.
+    </p>
+  )}
+
+  {Object.keys(errors).length > 0 && (
+    <p class="mt-3 rounded-xl border border-ink bg-surface-2 px-4 py-2.5 text-[13px] font-semibold" role="alert">
+      Periksa kembali isian yang ditandai.
+    </p>
+  )}
+
+  <form method="POST" class="mt-3 grid gap-3 lg:grid-cols-[minmax(0,1fr)_320px]" novalidate>
+    <div class="flex flex-col gap-3">
+      <section class="card p-4">
+        <h2 class="label-mono m-0">Data diri</h2>
+        <div class="mt-3 flex flex-col gap-3">
+          <div>
+            <label class="block text-[12px] font-bold" for="fullName">Nama lengkap</label>
+            <input class="field mt-1.5" id="fullName" name="fullName" type="text" autocomplete="name" value={field('fullName')} required />
+          </div>
+
+          <div class="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label class="block text-[12px] font-bold" for="phone">No. WhatsApp</label>
+              <input class="field mt-1.5" id="phone" name="phone" type="tel" autocomplete="tel" value={field('phone')} placeholder="0812…" />
+              {errors.phone && <p class="m-0 mt-1 text-[11.5px] font-semibold">{errors.phone}</p>}
+            </div>
+            <div>
+              <label class="block text-[12px] font-bold" for="city">Kota domisili</label>
+              <select class="field mt-1.5" id="city" name="city">
+                <option value="">Pilih kota</option>
+                {cities.map((c) => <option value={c} selected={c === formValues.city}>{c}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[12px] font-bold" for="emailForApplication">Email pengirim lamaran</label>
+            <input
+              class="field mt-1.5"
+              id="emailForApplication"
+              name="emailForApplication"
+              type="email"
+              value={field('emailForApplication')}
+            />
+            <p class="m-0 mt-1 text-[11.5px] text-muted">
+              Balasan HRD masuk ke email ini — bukan ke platform.
+            </p>
+            {errors.emailForApplication && (
+              <p class="m-0 mt-1 text-[11.5px] font-semibold">{errors.emailForApplication}</p>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section class="card p-4">
+        <h2 class="label-mono m-0">Pendidikan &amp; pengalaman</h2>
+        <div class="mt-3 flex flex-col gap-3">
+          <div>
+            <label class="block text-[12px] font-bold" for="lastEducation">Pendidikan terakhir</label>
+            <input class="field mt-1.5" id="lastEducation" name="lastEducation" type="text" value={field('lastEducation')} placeholder="SMK Administrasi Perkantoran (2024)" />
+          </div>
+          <div>
+            <label class="block text-[12px] font-bold" for="lastExperience">Pengalaman terakhir</label>
+            <input class="field mt-1.5" id="lastExperience" name="lastExperience" type="text" value={field('lastExperience')} placeholder="Magang Admin — 8 bulan" />
+          </div>
+          <div>
+            <label class="block text-[12px] font-bold" for="skills">Keahlian</label>
+            <input class="field mt-1.5" id="skills" name="skills" type="text" value={field('skills')} placeholder="Excel, Google Sheets, input data" />
+            <p class="m-0 mt-1 text-[11.5px] text-muted">Pisahkan dengan koma.</p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="flex flex-col gap-3">
+      <section class="card p-4">
+        <h2 class="label-mono m-0">Preferensi kerja</h2>
+        <div class="mt-3 flex flex-col gap-3">
+          <div>
+            <label class="block text-[12px] font-bold" for="desiredRoles">Posisi yang dicari</label>
+            <input class="field mt-1.5" id="desiredRoles" name="desiredRoles" type="text" value={field('desiredRoles')} placeholder="Staff Admin, Data Entry" />
+          </div>
+          <div>
+            <label class="block text-[12px] font-bold" for="maxRadiusKm">Radius kerja maks.</label>
+            <select class="field mt-1.5" id="maxRadiusKm" name="maxRadiusKm">
+              {[5, 10, 15, 25, 50].map((r) => (
+                <option value={r} selected={String(r) === formValues.maxRadiusKm}>{r} km</option>
+              ))}
+            </select>
+            {errors.maxRadiusKm && <p class="m-0 mt-1 text-[11.5px] font-semibold">{errors.maxRadiusKm}</p>}
+          </div>
+          <div>
+            <label class="block text-[12px] font-bold" for="expectedSalary">Gaji harapan</label>
+            <select class="field mt-1.5" id="expectedSalary" name="expectedSalary">
+              <option value="">Tidak menyebutkan</option>
+              {['Rp 3 – 4 juta', 'Rp 4 – 5 juta', 'Rp 5 – 6 juta', 'Di atas Rp 6 juta'].map((s) => (
+                <option value={s} selected={s === formValues.expectedSalary}>{s}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label class="block text-[12px] font-bold" for="availability">Ketersediaan</label>
+            <select class="field mt-1.5" id="availability" name="availability">
+              <option value="">Pilih</option>
+              {['Bisa mulai segera', '2 minggu lagi', '1 bulan lagi'].map((a) => (
+                <option value={a} selected={a === formValues.availability}>{a}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </section>
+
+      {completeness.missing.length > 0 && (
+        <div class="card border-dashed p-4">
+          <p class="label-mono m-0">Masih kurang</p>
+          <p class="m-0 mt-1.5 text-[12px] leading-relaxed text-ink-2">
+            Isi ini agar profil dianggap lengkap: {completeness.missing.join(', ')}.
+          </p>
+        </div>
+      )}
+
+      <button class="btn" type="submit">Simpan profil</button>
+      <a href="/brankas" class="btn btn-ghost">Lanjut ke brankas berkas →</a>
+    </div>
+  </form>
+</AppLayout>

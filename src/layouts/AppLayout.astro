@@ -1,0 +1,59 @@
+---
+import Base from './Base.astro';
+
+interface Props {
+  title: string;
+  active: 'ringkasan' | 'profil' | 'brankas' | 'akun';
+  userName: string;
+}
+
+const { title, active, userName } = Astro.props;
+
+const nav = [
+  { key: 'ringkasan', href: '/app', label: 'Ringkasan' },
+  { key: 'profil', href: '/profil', label: 'Profil' },
+  { key: 'brankas', href: '/brankas', label: 'Brankas' },
+  { key: 'akun', href: '/akun', label: 'Akun' },
+] as const;
+
+const initials = userName
+  .split(' ')
+  .filter(Boolean)
+  .slice(0, 2)
+  .map((w) => w[0]?.toUpperCase() ?? '')
+  .join('');
+---
+
+<Base title={`${title} — RuangLoker`} noindex>
+  <section class="mx-auto max-w-5xl px-4 pt-6">
+    <div class="card flex flex-wrap items-center gap-3 px-4 py-3">
+      <nav class="flex flex-wrap gap-1 text-[13px] font-semibold">
+        {nav.map((item) => (
+          <a
+            href={item.href}
+            class:list={[
+              'rounded-full px-3 py-1.5 no-underline',
+              item.key === active ? 'bg-ink text-white' : 'text-muted hover:bg-surface-2 hover:text-ink',
+            ]}
+            aria-current={item.key === active ? 'page' : undefined}
+          >
+            {item.label}
+          </a>
+        ))}
+      </nav>
+
+      <div class="ml-auto flex items-center gap-2">
+        <span
+          class="grid size-8 place-items-center rounded-full bg-ink text-[11px] font-extrabold text-white"
+          aria-hidden="true">{initials || 'U'}</span
+        >
+        <span class="text-[12px] font-semibold">{userName}</span>
+        <form method="POST" action="/api/keluar">
+          <button class="btn btn-ghost btn-sm" type="submit">Keluar</button>
+        </form>
+      </div>
+    </div>
+
+    <slot />
+  </section>
+</Base>

@@ -1,24 +1,99 @@
 ---
 import Base from '../layouts/Base.astro';
+import { findUserByEmail, touchLogin, logAudit } from '../lib/auth';
+import { verifyPassword } from '../lib/password';
+
+const rawNext = Astro.url.searchParams.get('next') ?? '';
+// Hanya izinkan path internal — mencegah open redirect.
+const safeNext = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/app';
+
+let error: string | null = null;
+let emailValue = '';
+let attempts = 0;
+
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData();
+  const email = String(form.get('email') ?? '').trim();
+  const password = String(form.get('password') ?? '');
+  const nextUrl = String(form.get('next') ?? '/app');
+  const target = nextUrl.startsWith('/') && !nextUrl.startsWith('//') ? nextUrl : '/app';
+
+  emailValue = email;
+
+  const user = await findUserByEmail(email);
+
+  // Pesan gagal dibuat sama untuk email tidak ada maupun sandi salah,
+  // agar tidak bisa dipakai menebak email mana yang terdaftar.
+  const ok = user ? await verifyPassword(password, user.passwordHash) : false;
+
+  if (ok && user) {
+    await touchLogin(user.id);
+    await logAudit(user.id, 'auth.login');
+
+    await Astro.session?.regenerate();
+    Astro.session?.set('userId', user.id);
+
+    return Astro.redirect(target, 302);
+  }
+
+  attempts++;
+  error = 'Email atau kata sandi tidak cocok.';
+  await logAudit(null, 'auth.failed', email.slice(0, 3) + '***');
+}
 ---
 
 <Base title="Masuk — RuangLoker" noindex>
-  <section class="mx-auto max-w-md px-4 py-14">
-    <div class="card p-6">
-      <p class="label-mono m-0">Fase berikutnya</p>
-      <h1 class="m-0 mt-1 text-[24px] font-extrabold tracking-tight">Masuk</h1>
-      <p class="m-0 mt-2 text-[13px] leading-relaxed text-muted">
-        Autentikasi belum dibangun di slice ini. Slice yang sedang berjalan adalah lowongan publik
-        dan panel kurasi — keduanya tidak memerlukan akun.
+  <section class="mx-auto max-w-md px-4 py-12">
+    <h1 class="m-0 text-[28px] font-extrabold tracking-tight">Masuk</h1>
+    <p class="m-0 mt-1.5 text-[13px] text-muted">
+      Lanjutkan dari tempat kamu berhenti — profil dan berkasmu sudah tersimpan.
+    </p>
+
+    {error && (
+      <p class="mt-4 rounded-xl border border-ink bg-surface-2 px-4 py-2.5 text-[13px] font-semibold" role="alert">
+        {error}
       </p>
-      <p class="m-0 mt-3 text-[13px] leading-relaxed text-ink-2">
-        Yang akan dibangun di slice berikutnya: daftar/masuk, <strong>consent UU PDP terpisah</strong>{' '}
-        untuk KTP, profil sekali isi, dan brankas berkas terenkripsi.
-      </p>
-      <div class="mt-4 flex gap-2">
-        <a href="/lowongan" class="btn flex-1">Lihat lowongan</a>
-        <a href="/" class="btn btn-ghost flex-1">Beranda</a>
+    )}
+
+    <form method="POST" class="card mt-4 flex flex-col gap-4 p-5" novalidate>
+      <input type="hidden" name="next" value={safeNext} />
+
+      <div>
+        <label class="block text-[12px] font-bold" for="email">Email</label>
+        <input
+          class="field mt-1.5"
+          id="email"
+          name="email"
+          type="email"
+          autocomplete="email"
+          required
+          value={emailValue}
+        />
       </div>
-    </div>
+
+      <div>
+        <label class="block text-[12px] font-bold" for="password">Kata sandi</label>
+        <input
+          class="field mt-1.5"
+          id="password"
+          name="password"
+          type="password"
+          autocomplete="current-password"
+          required
+        />
+      </div>
+
+      <button class="btn" type="submit">Masuk</button>
+
+      <p class="m-0 text-center text-[12px] text-muted">
+        Belum punya akun? <a href="/daftar" class="text-ink underline">Daftar gratis</a>
+      </p>
+    </form>
+
+    {attempts > 0 && (
+      <p class="m-0 mt-3 text-center text-[11.5px] text-muted" role="status">
+        Percobaan masuk gagal dicatat untuk keamanan akun.
+      </p>
+    )}
   </section>
 </Base>

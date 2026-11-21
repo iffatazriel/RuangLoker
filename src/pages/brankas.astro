@@ -1,0 +1,175 @@
+---
+import AppLayout from '../layouts/AppLayout.astro';
+import { listFiles, storageUsed, formatBytes, hasSensitiveConsent } from '../db/account';
+import { FILE_KINDS, MAX_FILE_BYTES } from '../lib/vault';
+import { relativeTime } from '../lib/format';
+
+const user = Astro.locals.user!;
+const files = await listFiles(user.id);
+const used = storageUsed(files);
+const sensitive = await hasSensitiveConsent(user.id);
+
+const QUOTA = 50 * 1024 * 1024;
+const percentUsed = Math.min(100, Math.round((used / QUOTA) * 100));
+
+const params = Astro.url.searchParams;
+const ok = params.get('ok');
+const hapus = params.get('hapus');
+const error = params.get('error');
+
+const errorText: Record<string, string> = {
+  consent: 'Izin dokumen sensitif belum aktif. Aktifkan dulu di halaman Akun sebelum mengunggah KTP, ijazah, atau transkrip.',
+  kuota: 'Penyimpanan tidak cukup. Hapus berkas lama atau ganti berkas yang sudah ada.',
+  jenis: 'Jenis berkas tidak dikenal.',
+  berkas: 'Berkas tidak terbaca. Coba pilih ulang.',
+  'tidak-ada': 'Berkas tidak ditemukan.',
+  id: 'Permintaan tidak valid.',
+};
+
+const byKind = new Map(files.map((f) => [f.kind, f]));
+
+const pendingKinds = Object.entries(FILE_KINDS).filter(([key]) => !byKind.has(key));
+---
+
+<AppLayout title="Brankas berkas" active="brankas" userName={user.displayName}>
+  <div class="mt-3 flex flex-wrap items-end justify-between gap-2">
+    <div>
+      <h1 class="m-0 text-[24px] font-extrabold tracking-tight">Brankas berkas</h1>
+      <p class="m-0 mt-1 text-[13px] text-muted">
+        Unggah sekali, lampirkan ke lamaran mana pun tanpa mengunggah ulang.
+      </p>
+    </div>
+    <span class="pill">{formatBytes(used)} / 50 MB</span>
+  </div>
+
+  <div class="mt-3 h-2 overflow-hidden rounded-full bg-surface-3" role="img" aria-label={`Penyimpanan terpakai ${percentUsed} persen`}>
+    <div class="h-full bg-ink" style={`width:${percentUsed}%`}></div>
+  </div>
+
+  {ok && (
+    <p class="mt-3 rounded-xl border border-ink bg-surface-2 px-4 py-2.5 text-[13px] font-semibold" role="status">
+      ✓ {ok} tersimpan terenkripsi.
+    </p>
+  )}
+
+  {hapus && (
+    <p class="mt-3 rounded-xl border border-ink bg-surface-2 px-4 py-2.5 text-[13px] font-semibold" role="status">
+      ✓ Berkas dihapus permanen.
+    </p>
+  )}
+
+  {error && (
+    <p class="mt-3 rounded-xl border border-ink bg-surface-2 px-4 py-2.5 text-[13px] font-semibold" role="alert">
+      {errorText[error] ?? error}
+    </p>
+  )}
+
+  {!sensitive && (
+    <div class="mt-3 rounded-xl border border-dashed border-line bg-white p-4">
+      <p class="m-0 text-[13px] font-bold">Izin dokumen sensitif belum aktif</p>
+      <p class="m-0 mt-1 text-[12.5px] leading-relaxed text-muted">
+        Kamu tetap bisa mengunggah CV, sertifikat, dan foto. KTP, ijazah, dan transkrip memerlukan
+        persetujuan terpisah karena termasuk data pribadi yang spesifik menurut UU PDP.
+      </p>
+      <form method="POST" action="/api/consent" class="mt-2.5">
+        <input type="hidden" name="intent" value="grant" />
+        <button class="btn btn-sm" type="submit">Aktifkan izin dokumen sensitif</button>
+      </form>
+    </div>
+  )}
+
+  <section class="mt-4">
+    <h2 class="m-0 text-[15px] font-bold">Berkas tersimpan ({files.length})</h2>
+
+    {files.length === 0 ? (
+      <div class="card mt-2 p-6 text-center">
+        <p class="m-0 text-[13.5px] font-bold">Brankas masih kosong.</p>
+        <p class="m-0 mt-1 text-[12.5px] text-muted">
+          Mulai dari CV — itu yang paling sering diminta lowongan.
+        </p>
+      </div>
+    ) : (
+      <div class="mt-2 flex flex-col gap-2">
+        {files.map((file) => (
+          <article class="card flex flex-wrap items-center gap-3 p-3.5">
+            <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-surface-3 font-mono text-[9.5px] font-bold uppercase">
+              {file.mimeType === 'application/pdf' ? 'PDF' : file.mimeType === 'image/png' ? 'PNG' : 'JPG'}
+            </span>
+
+            <div class="min-w-0 flex-1">
+              <p class="m-0 text-[13.5px] font-bold">{file.label}</p>
+              <p class="m-0 mt-0.5 truncate text-[11.5px] text-muted">
+                {file.originalName} · {formatBytes(file.sizeBytes)} · diunggah {relativeTime(file.createdAt)}
+              </p>
+              <div class="mt-1 flex flex-wrap gap-1.5">
+                {file.isSensitive && <span class="pill">🔒 terenkripsi</span>}
+                <span class="pill">SHA-256 dicek</span>
+              </div>
+            </div>
+
+            <div class="flex gap-2">
+              <a href={`/api/berkas/${file.id}/unduh`} class="btn btn-ghost btn-sm">Unduh</a>
+              <form method="POST" action={`/api/berkas/${file.id}/hapus`}>
+                <button class="btn btn-ghost btn-sm" type="submit">Hapus</button>
+              </form>
+            </div>
+          </article>
+        ))}
+      </div>
+    )}
+  </section>
+
+  {pendingKinds.length > 0 && (
+    <section class="mt-4">
+      <h2 class="m-0 text-[15px] font-bold">Tambahkan berkas</h2>
+      <div class="mt-2 grid gap-2 sm:grid-cols-2">
+        {pendingKinds.map(([key, meta]) => {
+          const blocked = meta.sensitive && !sensitive;
+          return (
+            <form
+              method="POST"
+              action="/api/berkas"
+              enctype="multipart/form-data"
+              class="card p-3.5"
+            >
+              <input type="hidden" name="kind" value={key} />
+              <p class="m-0 text-[13px] font-bold">
+                {meta.label}
+                {meta.sensitive && <span class="ml-1.5 pill">sensitif</span>}
+              </p>
+              <p class="m-0 mt-0.5 text-[11.5px] text-muted">
+                PDF / JPG / PNG, maks. {formatBytes(MAX_FILE_BYTES)}
+              </p>
+
+              <div class="mt-2 flex flex-wrap items-center gap-2">
+                <input
+                  type="file"
+                  name="file"
+                  accept="application/pdf,image/jpeg,image/png"
+                  required
+                  class="text-[11.5px]"
+                  aria-label={`Pilih berkas ${meta.label}`}
+                />
+                <button class="btn btn-sm" type="submit" disabled={blocked}>
+                  Unggah
+                </button>
+              </div>
+
+              {blocked && (
+                <p class="m-0 mt-1.5 text-[11px] text-muted">
+                  Aktifkan izin dokumen sensitif terlebih dahulu.
+                </p>
+              )}
+            </form>
+          );
+        })}
+      </div>
+    </section>
+  )}
+
+  <p class="mt-4 text-[11.5px] leading-relaxed text-muted">
+    Semua berkas dienkripsi AES-256-GCM di server. Berkas tidak pernah bisa diakses lewat URL publik —
+    unduhan melewati pemeriksaan sesi pemilik. Berkas yang tidak dipakai 90 hari akan dihapus otomatis
+    setelah pemberitahuan.
+  </p>
+</AppLayout>

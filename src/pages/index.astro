@@ -4,9 +4,19 @@ import JobCard from '../components/JobCard.astro';
 import { findJobs, countActiveJobs } from '../db/queries';
 
 const [jobs, total] = await Promise.all([findJobs({ limit: 6 }), countActiveJobs()]);
+
+const accountDeleted = Astro.url.searchParams.get('akun-dihapus') === '1';
 ---
 
 <Base title="RuangLoker — Profil Sekali Isi, Lamaran Rapi ke Banyak Lowongan">
+  {accountDeleted && (
+    <div class="mx-auto max-w-4xl px-4 pt-4">
+      <p class="m-0 rounded-xl border border-ink bg-surface-2 px-4 py-2.5 text-[13px] font-semibold" role="status">
+        ✓ Akun dan seluruh berkasmu sudah dihapus permanen. Terima kasih sudah mencoba RuangLoker.
+      </p>
+    </div>
+  )}
+
   <section class="mx-auto max-w-4xl px-4 pt-10 text-center">
     <span class="pill">● {total} lowongan terverifikasi · Pilot Jabodetabek</span>
 

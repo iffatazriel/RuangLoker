@@ -14,6 +14,8 @@ const {
 } = Astro.props;
 
 const canonical = new URL(Astro.url.pathname, Astro.site);
+
+const currentUser = Astro.locals.user ?? null;
 ---
 
 <!doctype html>
@@ -72,11 +74,21 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
             <a href="/perusahaan" class="hidden rounded-full px-3 py-1.5 no-underline hover:bg-surface-2 hover:text-ink sm:inline">
               Untuk Perusahaan
             </a>
-            <a href="/masuk" class="rounded-full px-3 py-1.5 no-underline hover:bg-surface-2 hover:text-ink">
-              Masuk
-            </a>
+            {currentUser ? (
+              <a href="/app" class="rounded-full px-3 py-1.5 no-underline hover:bg-surface-2 hover:text-ink">
+                Dashboard
+              </a>
+            ) : (
+              <a href="/masuk" class="rounded-full px-3 py-1.5 no-underline hover:bg-surface-2 hover:text-ink">
+                Masuk
+              </a>
+            )}
           </nav>
-          <a href="/daftar" class="btn btn-sm">Daftar Gratis</a>
+          {currentUser ? (
+            <a href="/app" class="btn btn-sm">Buka dashboard</a>
+          ) : (
+            <a href="/daftar" class="btn btn-sm">Daftar Gratis</a>
+          )}
         </div>
       </header>
     </slot>

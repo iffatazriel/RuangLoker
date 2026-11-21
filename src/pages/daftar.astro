@@ -1,20 +1,201 @@
 ---
 import Base from '../layouts/Base.astro';
+import { checkPasswordStrength, hashPassword, isValidEmail } from '../lib/password';
+import { createUser, findUserByEmail, logAudit, recordConsents } from '../lib/auth';
+
+let error: string | null = null;
+let fieldErrors: Record<string, string> = {};
+let values = { displayName: '', email: '' };
+
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData();
+
+  const displayName = String(form.get('displayName') ?? '').trim();
+  const email = String(form.get('email') ?? '').trim();
+  const password = String(form.get('password') ?? '');
+  const passwordConfirm = String(form.get('passwordConfirm') ?? '');
+
+  const consentAkun = form.get('consentAkun') === 'on';
+  const consentSensitif = form.get('consentSensitif') === 'on';
+  const consentPemasaran = form.get('consentPemasaran') === 'on';
+
+  values = { displayName, email };
+
+  if (displayName.length < 2) fieldErrors.displayName = 'Nama minimal 2 karakter.';
+  if (!isValidEmail(email)) fieldErrors.email = 'Alamat email tidak valid.';
+
+  const pwIssue = checkPasswordStrength(password);
+  if (pwIssue) fieldErrors.password = pwIssue;
+  else if (password !== passwordConfirm) fieldErrors.passwordConfirm = 'Konfirmasi kata sandi tidak sama.';
+
+  if (!consentAkun) {
+    fieldErrors.consentAkun = 'Persetujuan ini wajib untuk membuat akun — tanpa ini kami tidak punya dasar memproses datamu.';
+  }
+
+  if (Object.keys(fieldErrors).length === 0) {
+    const existing = await findUserByEmail(email);
+    if (existing) {
+      fieldErrors.email = 'Email ini sudah terdaftar. Coba masuk.';
+    }
+  }
+
+  if (Object.keys(fieldErrors).length === 0) {
+    const passwordHash = await hashPassword(password);
+    const user = await createUser(email, passwordHash, displayName);
+
+    await recordConsents(
+      user.id,
+      { akun: consentAkun, data_sensitif: consentSensitif, pemasaran: consentPemasaran },
+      `${Astro.request.headers.get('user-agent') ?? 'unknown'} · ${new Date().toISOString()}`,
+    );
+
+    await logAudit(user.id, 'account.create');
+    await logAudit(user.id, 'consent.grant', consentSensitif ? 'akun+data_sensitif' : 'akun');
+
+    await Astro.session?.regenerate();
+    Astro.session?.set('userId', user.id);
+
+    return Astro.redirect(consentSensitif ? '/brankas' : '/profil', 302);
+  }
+
+  error = 'Periksa kembali isian di bawah.';
+}
 ---
 
-<Base title="Daftar Gratis — RuangLoker" noindex>
-  <section class="mx-auto max-w-md px-4 py-14">
-    <div class="card p-6">
-      <p class="label-mono m-0">Fase berikutnya</p>
-      <h1 class="m-0 mt-1 text-[24px] font-extrabold tracking-tight">Daftar Gratis</h1>
-      <p class="m-0 mt-2 text-[13px] leading-relaxed text-muted">
-        Pendaftaran belum dibangun di slice ini. Formulirnya akan memisahkan persetujuan pemrosesan
-        data pribadi dari persetujuan pemasaran, sesuai UU PDP — bukan satu centang untuk semuanya.
+<Base title="Daftar Gratis — RuangLoker" description="Buat akun RuangLoker gratis: profil sekali isi, lamaran rapi ke banyak lowongan terkurasi.">
+  <section class="mx-auto max-w-lg px-4 py-10">
+    <h1 class="m-0 text-[28px] font-extrabold tracking-tight">Buat akun gratis</h1>
+    <p class="m-0 mt-1.5 text-[13px] text-muted">
+      Profil dan berkas cukup sekali. Setelah ini kamu tidak perlu mengetik data yang sama lagi.
+    </p>
+
+    {error && (
+      <p class="mt-4 rounded-xl border border-ink bg-surface-2 px-4 py-2.5 text-[13px] font-semibold" role="alert">
+        {error}
       </p>
-      <div class="mt-4 flex gap-2">
-        <a href="/lowongan" class="btn flex-1">Lihat lowongan</a>
-        <a href="/" class="btn btn-ghost flex-1">Beranda</a>
+    )}
+
+    <form method="POST" class="card mt-4 flex flex-col gap-4 p-5" novalidate>
+      <div>
+        <label class="block text-[12px] font-bold" for="displayName">Nama lengkap</label>
+        <input
+          class="field mt-1.5"
+          id="displayName"
+          name="displayName"
+          type="text"
+          autocomplete="name"
+          required
+          value={values.displayName}
+          aria-describedby={fieldErrors.displayName ? 'err-displayName' : undefined}
+          aria-invalid={fieldErrors.displayName ? 'true' : undefined}
+        />
+        {fieldErrors.displayName && (
+          <p class="m-0 mt-1 text-[11.5px] font-semibold" id="err-displayName">{fieldErrors.displayName}</p>
+        )}
       </div>
-    </div>
+
+      <div>
+        <label class="block text-[12px] font-bold" for="email">Email</label>
+        <input
+          class="field mt-1.5"
+          id="email"
+          name="email"
+          type="email"
+          autocomplete="email"
+          required
+          value={values.email}
+          aria-describedby={fieldErrors.email ? 'err-email' : 'hint-email'}
+          aria-invalid={fieldErrors.email ? 'true' : undefined}
+        />
+        {fieldErrors.email ? (
+          <p class="m-0 mt-1 text-[11.5px] font-semibold" id="err-email">{fieldErrors.email}</p>
+        ) : (
+          <p class="m-0 mt-1 text-[11.5px] text-muted" id="hint-email">
+            Ini juga email pengirim lamaran. Balasan HRD masuk ke sini, bukan ke platform.
+          </p>
+        )}
+      </div>
+
+      <div class="grid gap-3 sm:grid-cols-2">
+        <div>
+          <label class="block text-[12px] font-bold" for="password">Kata sandi</label>
+          <input
+            class="field mt-1.5"
+            id="password"
+            name="password"
+            type="password"
+            autocomplete="new-password"
+            required
+            minlength="8"
+            aria-describedby="hint-password"
+            aria-invalid={fieldErrors.password ? 'true' : undefined}
+          />
+          <p class="m-0 mt-1 text-[11.5px] text-muted" id="hint-password">
+            Minimal 8 karakter, ada huruf dan angka.
+          </p>
+          {fieldErrors.password && (
+            <p class="m-0 mt-1 text-[11.5px] font-semibold">{fieldErrors.password}</p>
+          )}
+        </div>
+        <div>
+          <label class="block text-[12px] font-bold" for="passwordConfirm">Ulangi kata sandi</label>
+          <input
+            class="field mt-1.5"
+            id="passwordConfirm"
+            name="passwordConfirm"
+            type="password"
+            autocomplete="new-password"
+            required
+            aria-invalid={fieldErrors.passwordConfirm ? 'true' : undefined}
+          />
+          {fieldErrors.passwordConfirm && (
+            <p class="m-0 mt-1 text-[11.5px] font-semibold">{fieldErrors.passwordConfirm}</p>
+          )}
+        </div>
+      </div>
+
+      <fieldset class="rounded-xl border border-line-2 p-4">
+        <legend class="px-1 text-[12px] font-bold">Persetujuan data</legend>
+
+        <label class="flex items-start gap-2.5 text-[12.5px] leading-relaxed">
+          <input type="checkbox" name="consentAkun" class="mt-0.5 size-4 shrink-0" required />
+          <span>
+            <strong>Wajib.</strong> Saya setuju data akun dan profil saya diproses untuk
+            menyiapkan lamaran. Data disimpan selama akun aktif dan dapat saya hapus kapan saja.
+          </span>
+        </label>
+        {fieldErrors.consentAkun && (
+          <p class="m-0 mt-1.5 text-[11.5px] font-semibold">{fieldErrors.consentAkun}</p>
+        )}
+
+        <label class="mt-3 flex items-start gap-2.5 text-[12.5px] leading-relaxed">
+          <input type="checkbox" name="consentSensitif" class="mt-0.5 size-4 shrink-0" />
+          <span>
+            <strong>Terpisah, opsional.</strong> Saya setuju mengunggah dokumen sensitif
+            (KTP, ijazah, transkrip) yang disimpan terenkripsi dan hanya dipakai saat saya
+            melamar. Bisa saya cabut kapan saja — kalau dicabut, berkas tersebut dihapus.
+          </span>
+        </label>
+
+        <label class="mt-3 flex items-start gap-2.5 text-[12.5px] leading-relaxed">
+          <input type="checkbox" name="consentPemasaran" class="mt-0.5 size-4 shrink-0" />
+          <span>
+            <strong>Opsional.</strong> Saya bersedia menerima notifikasi lowongan dan info
+            produk lewat email atau WhatsApp.
+          </span>
+        </label>
+      </fieldset>
+
+      <p class="m-0 text-[11.5px] leading-relaxed text-muted">
+        Persetujuan pemasaran dipisahkan dari persetujuan data karena keduanya punya dasar hukum
+        berbeda. Menolak pemasaran tidak membatasi fitur apa pun.
+      </p>
+
+      <button class="btn" type="submit">Buat akun</button>
+
+      <p class="m-0 text-center text-[12px] text-muted">
+        Sudah punya akun? <a href="/masuk" class="text-ink underline">Masuk</a>
+      </p>
+    </form>
   </section>
 </Base>

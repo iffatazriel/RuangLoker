@@ -6,9 +6,9 @@ terkurasi disiapkan otomatis — dan tetap dikirim dari email / WhatsApp milik p
 Dokumen produk lengkap ada di [`blueprint-platform-lamaran-kerja-1-klik.md`](./blueprint-platform-lamaran-kerja-1-klik.md),
 dan mockup visual di [`Wireframe Platform Lamaran Kerja 1-Klik.html`](./Wireframe%20Platform%20Lamaran%20Kerja%201-Klik.html).
 
-## Status: slice 1 — Lowongan publik + kurasi
+## Status
 
-Yang sudah jadi:
+### Slice 1 — Lowongan publik + kurasi ✅
 
 - Daftar lowongan dengan pencarian, filter kota / kategori / tipe, dan **filter radius GPS** (Haversine di SQLite).
 - Detail lowongan: label kepercayaan, sumber asli, tanggal pengecekan, batas lamar, dan penjelasan jujur cara melamar.
@@ -16,7 +16,16 @@ Yang sudah jadi:
 - Aksi kurasi tercatat di `curation_log` (verify / manual check / reject / deactivate / extend).
 - Penanganan 404 asli, sembunyi otomatis untuk lowongan kedaluwarsa dan yang belum lolos kurasi.
 
-Belum dibangun: auth, consent UU PDP, profil, brankas berkas, CV builder, antrean kirim, pembayaran.
+### Slice 2 — Akun, consent UU PDP, profil, brankas berkas ✅
+
+- **Daftar / masuk / keluar** dengan hash kata sandi scrypt dan sesi server-side (cookie hanya membawa id).
+- **Consent bertingkat**: wajib (akun), terpisah (data sensitif), dan opsional (pemasaran) — masing-masing dicatat dengan versi kebijakan.
+- **Pencabutan consent data sensitif benar-benar menghapus** berkas KTP/ijazah/transkrip, bukan hanya menandai.
+- **Profil sekali isi** dengan indikator kelengkapan yang menjelaskan apa yang masih kurang.
+- **Brankas berkas** terenkripsi AES-256-GCM; unggahan baru satu jenis menggantikan yang lama (tidak menumpuk).
+- **Hapus akun** memusnahkan berkas fisik, menganonimkan email, dan mematikan sesi seketika.
+
+Belum dibangun: CV builder, Skor CV, antrean kirim lamaran, pembayaran, dashboard perusahaan.
 
 ## Stack
 
@@ -33,16 +42,20 @@ Belum dibangun: auth, consent UU PDP, profil, brankas berkas, CV builder, antrea
 ```bash
 npm install --include=dev      # penting: npm di mesin ini punya omit=dev
 cp .env.example .env
+# isi VAULT_SECRET — tanpa ini unggah berkas akan gagal
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 npm run db:migrate
 npm run db:seed
 npm run dev
 ```
 
-Buka `http://localhost:4321`.
-Panel kurasi: `http://localhost:4321/kelola`.
+Buka `http://localhost:4321`. Panel kurasi: `/kelola`. Aplikasi pelamar: `/app`.
 
-> Catatan Windows: kalau `npm install` melewatkan devDependencies, paket `drizzle-kit` dan
-> `dotenv` tidak akan ada. Selalu pakai `--include=dev`.
+> **Windows:** kalau `npm install` melewatkan devDependencies, paket `drizzle-kit` dan `dotenv`
+> tidak akan ada. Selalu pakai `--include=dev`.
+>
+> **Penting:** `VAULT_SECRET` mengunci enkripsi brankas. Kalau nilainya hilang atau berubah, berkas
+> lama tidak bisa dibuka lagi. Simpan di secret manager saat produksi, jangan di git.
 
 ## Perintah
 
@@ -67,6 +80,13 @@ Panel kurasi: `http://localhost:4321/kelola`.
 4. **Persentase kecocokan tidak ditampilkan sebelum ada definisi skornya.** Halaman detail
    menyebut hal ini secara eksplisit alih-alih menampilkan angka yang tidak bisa dipertanggungjawabkan.
 5. **Panel kurasi tidak diindeks** (`robots.txt` + `noindex`).
+6. **Consent diperiksa di server, bukan hanya disembunyikan di tampilan.** Unggah KTP tanpa izin
+   ditolak walaupun tombolnya diakali.
+7. **Mencabut izin data sensitif menghapus berkas fisiknya.** Consent yang dicabut tetapi datanya
+   tetap disimpan adalah pelanggaran, bukan fitur.
+8. **Berkas tidak pernah punya URL publik.** Unduhan melewati pemeriksaan sesi pemilik; user lain
+   mendapat 404, bukan 403 yang membocorkan keberadaan berkas.
+9. **Kegagalan login tidak membedakan** email tidak terdaftar vs kata sandi salah.
 
 ## Keputusan yang masih terbuka
 

@@ -1,0 +1,157 @@
+---
+import AppLayout from '../layouts/AppLayout.astro';
+import { getConsentState } from '../lib/auth';
+import { listFiles } from '../db/account';
+
+const user = Astro.locals.user!;
+const state = await getConsentState(user.id);
+const files = await listFiles(user.id);
+
+const params = Astro.url.searchParams;
+const ok = params.get('ok');
+const hapusCount = params.get('hapus');
+
+const fmt = (d: Date | null) =>
+  d ? new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : null;
+
+const consentRows = [
+  {
+    key: 'akun',
+    title: 'Pemrosesan data akun & profil',
+    required: true,
+    description:
+      'Dasar utama layanan. Tanpa ini, platform tidak bisa menyiapkan lamaran. Untuk berhenti, gunakan hapus akun.',
+    grantedAt: state.akun?.grantedAt ?? null,
+    version: state.akun?.version ?? null,
+  },
+  {
+    key: 'data_sensitif',
+    title: 'Dokumen sensitif (KTP, ijazah, transkrip)',
+    required: false,
+    description:
+      'Opsional dan dapat dicabut. Mencabut izin ini akan menghapus seluruh dokumen sensitif yang tersimpan.',
+    grantedAt: state.data_sensitif?.grantedAt ?? null,
+    version: state.data_sensitif?.version ?? null,
+  },
+  {
+    key: 'pemasaran',
+    title: 'Notifikasi lowongan & info produk',
+    required: false,
+    description: 'Opsional. Menolak ini tidak membatasi fitur apa pun.',
+    grantedAt: state.pemasaran?.grantedAt ?? null,
+    version: state.pemasaran?.version ?? null,
+  },
+] as const;
+
+const sensitiveCount = files.filter((f) => f.isSensitive).length;
+---
+
+<AppLayout title="Akun & persetujuan" active="akun" userName={user.displayName}>
+  <div class="mt-3">
+    <h1 class="m-0 text-[24px] font-extrabold tracking-tight">Akun &amp; persetujuan</h1>
+    <p class="m-0 mt-1 text-[13px] text-muted">
+      Kendali atas datamu. Setiap persetujuan dicatat dengan versi kebijakan dan waktu.
+    </p>
+  </div>
+
+  {ok === 'consent-grant' && (
+    <p class="mt-3 rounded-xl border border-ink bg-surface-2 px-4 py-2.5 text-[13px] font-semibold" role="status">
+      ✓ Izin dokumen sensitif aktif.
+    </p>
+  )}
+
+  {ok === 'consent-revoke' && (
+    <p class="mt-3 rounded-xl border border-ink bg-surface-2 px-4 py-2.5 text-[13px] font-semibold" role="status">
+      ✓ Izin dicabut. {hapusCount ? `${hapusCount} berkas sensitif dihapus permanen.` : 'Tidak ada berkas yang perlu dihapus.'}
+    </p>
+  )}
+
+  <section class="mt-3">
+    <h2 class="m-0 text-[15px] font-bold">Persetujuan</h2>
+
+    <div class="mt-2 flex flex-col gap-2">
+      {consentRows.map((row) => (
+        <article class="card p-4">
+          <div class="flex flex-wrap items-start justify-between gap-2">
+            <div class="min-w-0 flex-1">
+              <p class="m-0 text-[13.5px] font-bold">
+                {row.title}
+                {row.required && <span class="ml-1.5 pill">wajib</span>}
+              </p>
+              <p class="m-0 mt-1 text-[12px] leading-relaxed text-muted">{row.description}</p>
+            </div>
+            <span class="pill">{row.grantedAt ? '✓ aktif' : 'tidak aktif'}</span>
+          </div>
+
+          {row.grantedAt && (
+            <p class="m-0 mt-2 text-[11.5px] text-muted">
+              Diberikan {fmt(row.grantedAt)} · versi kebijakan {row.version}
+            </p>
+          )}
+
+          {!row.required && (
+            <form method="POST" action="/api/consent" class="mt-2.5">
+              <input type="hidden" name="intent" value={row.grantedAt ? 'revoke' : 'grant'} />
+              <button class="btn btn-ghost btn-sm" type="submit">
+                {row.grantedAt ? 'Cabut izin' : 'Berikan izin'}
+              </button>
+            </form>
+          )}
+
+          {row.key === 'data_sensitif' && row.grantedAt && sensitiveCount > 0 && (
+            <p class="m-0 mt-2 text-[11.5px] text-muted">
+              Mencabut izin akan menghapus {sensitiveCount} berkas sensitif yang tersimpan saat ini.
+            </p>
+          )}
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <section class="mt-4">
+    <h2 class="m-0 text-[15px] font-bold">Data yang kami simpan</h2>
+    <div class="card mt-2 p-4">
+      <dl class="m-0 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-[12.5px]">
+        <dt class="text-muted">Email</dt>
+        <dd class="m-0 text-right font-semibold">{user.email}</dd>
+
+        <dt class="text-muted">Nama tampilan</dt>
+        <dd class="m-0 text-right font-semibold">{user.displayName}</dd>
+
+        <dt class="text-muted">Berkas tersimpan</dt>
+        <dd class="m-0 text-right font-semibold">{files.length}</dd>
+
+        <dt class="text-muted">Akun dibuat</dt>
+        <dd class="m-0 text-right font-semibold">{fmt(user.createdAt)}</dd>
+      </dl>
+
+      <p class="m-0 mt-3 border-t border-line-2 pt-2.5 text-[11.5px] leading-relaxed text-muted">
+        Kata sandi disimpan sebagai hash scrypt, tidak pernah dalam bentuk asli. Berkas dienkripsi
+        AES-256-GCM. Kami tidak menyimpan riwayat pembacaan berkas untuk pemasaran.
+      </p>
+    </div>
+  </section>
+
+  <section class="mt-4">
+    <h2 class="m-0 text-[15px] font-bold">Hapus akun</h2>
+    <div class="card mt-2 border-dashed p-4">
+      <p class="m-0 text-[12.5px] leading-relaxed text-ink-2">
+        Menghapus akun akan menghapus profil, seluruh berkas di brankas, dan persetujuan yang
+        tercatat. Riwayat audit tetap disimpan tanpa identitas agar kewajiban pembukuan dan keamanan
+        dapat dipenuhi.
+      </p>
+      <p class="m-0 mt-1.5 text-[12.5px] leading-relaxed text-muted">
+        Lamaran yang sudah terkirim ke perusahaan tidak dapat ditarik — itu terjadi di luar platform,
+        di email atau WhatsApp milikmu sendiri.
+      </p>
+
+      <form method="POST" action="/api/hapus-akun" class="mt-3 flex flex-wrap items-center gap-2" data-confirm>
+        <label class="flex items-center gap-2 text-[12.5px]">
+          <input type="checkbox" name="confirm" value="yes" required class="size-4" />
+          Saya mengerti akun ini tidak dapat dipulihkan.
+        </label>
+        <button class="btn btn-ghost" type="submit">Hapus akun permanen</button>
+      </form>
+    </div>
+  </section>
+</AppLayout>
