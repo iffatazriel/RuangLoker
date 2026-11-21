@@ -58,7 +58,7 @@ const lift = 'absolute rounded-2xl border border-line bg-white shadow-[0_18px_40
           <dl class="m-0 text-[13px]">
             <div class="grid grid-cols-[72px_1fr] gap-2 border-t border-line-2 py-2.5"><dt class="text-muted">Kepada</dt><dd class="m-0">rekrutmen@majubersama.co.id</dd></div>
             <div class="grid grid-cols-[72px_1fr] gap-2 border-t border-line-2 py-2.5"><dt class="text-muted">Subjek</dt><dd class="m-0 font-semibold">Lamaran Staff Admin — Budi Santoso</dd></div>
-            <div class="grid grid-cols-[72px_1fr] gap-2 border-t border-line-2 py-2.5"><dt class="text-muted">Isi</dt><dd class="m-0 text-muted">Yth. Tim Rekrutmen PT Maju Bersama, saya Budi Santoso, lulusan SMK Administrasi Perkantoran, ingin melamar posisi Staff Admin…</dd></div>
+            <div class="hidden grid-cols-[72px_1fr] gap-2 border-t border-line-2 py-2.5 sm:grid"><dt class="text-muted">Isi</dt><dd class="m-0 text-muted">Yth. Tim Rekrutmen PT Maju Bersama, saya Budi Santoso, lulusan SMK Administrasi Perkantoran, ingin melamar posisi Staff Admin…</dd></div>
             <div class="grid grid-cols-[72px_1fr] gap-2 border-t border-line-2 py-2.5"><dt class="text-muted">Lampiran</dt><dd class="m-0"><span class="inline-flex items-center gap-2 rounded-lg bg-surface-2 px-2.5 py-1.5 text-[12.5px] font-semibold"><span class="rounded bg-[#e5484d] px-1 text-[10px] font-extrabold text-white">PDF</span>CV_Budi-Santoso_Staff-Admin.pdf</span></dd></div>
           </dl>
           <p class="m-0 mt-3 grid h-10 place-items-center rounded-[10px] bg-accent text-[13.5px] font-semibold text-white">Buka di aplikasi email</p>
@@ -98,17 +98,17 @@ const lift = 'absolute rounded-2xl border border-line bg-white shadow-[0_18px_40
     </dl>
   </section>
 
-  <section class="mx-auto max-w-6xl px-4 pt-20 lg:pt-24">
+  <section class="mx-auto max-w-6xl px-4 pt-14 sm:pt-20 lg:pt-24">
     <div class="flex flex-wrap items-end justify-between gap-3">
       <h2 class="m-0 text-[32px] leading-tight font-bold lg:text-[40px]">Baru masuk <span class="font-light">kurasi.</span></h2>
       <a href="/lowongan" class="btn btn-ghost btn-sm">Lihat semua ({total})</a>
     </div>
-    <div class="mt-6 grid gap-4 md:grid-cols-3">
-      {jobs.map((job) => <JobCard job={job} compact />)}
+    <div class="-mx-4 mt-6 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-3 md:gap-4 md:overflow-visible md:px-0 md:pb-0">
+      {jobs.map((job) => <div class="w-[82%] shrink-0 snap-start md:w-auto"><JobCard job={job} compact /></div>)}
     </div>
   </section>
 
-  <section class="mx-auto max-w-6xl px-4 pt-20 lg:pt-24">
+  <section class="mx-auto max-w-6xl px-4 pt-14 sm:pt-20 lg:pt-24">
     <div class="mx-auto max-w-2xl text-center">
       <h2 class="m-0 text-[32px] leading-tight font-bold lg:text-[44px]">Satu ruang, <span class="font-light">semua lamaran.</span></h2>
       <p class="m-0 mt-3 text-[16.5px] leading-relaxed text-ink-2">Yang biasanya kamu ketik ulang di setiap lamaran, cukup disiapkan sekali.</p>
@@ -117,36 +117,36 @@ const lift = 'absolute rounded-2xl border border-line bg-white shadow-[0_18px_40
       <div class="card p-6 transition hover:-translate-y-0.5 hover:shadow-[0_16px_36px_rgb(15_23_18/0.07)] md:col-span-3">
         <span class="grid size-11 place-items-center rounded-xl bg-[#fff1e8]" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e0662b" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4" /><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6" /></svg></span>
         <h3 class="m-0 mt-5 text-[19px] font-bold">Profil sekali isi</h3>
-        <p class="m-0 mt-2 text-[14.5px] leading-relaxed text-ink-2">Nama, kontak, pendidikan, pengalaman, dan keahlian diisi sekali. Setiap CV dan surat lamaran mengambil dari sini.</p>
+        <p class="col-start-2 m-0 mt-2 text-[14.5px] leading-relaxed text-ink-2">Nama, kontak, pendidikan, pengalaman, dan keahlian diisi sekali. Setiap CV dan surat lamaran mengambil dari sini.</p>
       </div>
       <div class="card p-6 transition hover:-translate-y-0.5 hover:shadow-[0_16px_36px_rgb(15_23_18/0.07)] md:col-span-3">
         <span class="grid size-11 place-items-center rounded-xl bg-accent-soft" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2" stroke-linecap="round"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2" /></svg></span>
         <h3 class="m-0 mt-5 text-[19px] font-bold">Skor CV dengan aturan terbuka</h3>
-        <p class="m-0 mt-2 text-[14.5px] leading-relaxed text-ink-2">Skor ini dihitung dari aturan yang kami tulis terbuka, bukan tebakan AI. Setiap saran menyebut poin yang hilang dan cara memperbaikinya.</p>
+        <p class="col-start-2 m-0 mt-2 text-[14.5px] leading-relaxed text-ink-2">Skor ini dihitung dari aturan yang kami tulis terbuka, bukan tebakan AI. Setiap saran menyebut poin yang hilang dan cara memperbaikinya.</p>
         <div class="mt-4 rounded-xl bg-surface-2 p-3.5 text-[13px]">
           <div class="flex justify-between gap-3"><span>Tulis ringkasan 2–3 kalimat</span><b class="text-accent">+10</b></div>
           <div class="mt-2 flex justify-between gap-3 border-t border-line pt-2"><span>Tambah angka di uraian tugas</span><b class="text-accent">+6</b></div>
         </div>
       </div>
-      <div class="card p-6 md:col-span-2">
-        <span class="grid size-11 place-items-center rounded-xl bg-[#eef2ff]" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b4fd8" stroke-width="2" stroke-linecap="round"><rect x="4" y="10" width="16" height="11" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg></span>
-        <h3 class="m-0 mt-5 text-[18px] font-bold">Brankas terenkripsi</h3>
-        <p class="m-0 mt-2 text-[14.5px] leading-relaxed text-ink-2">CV, ijazah, dan KTP disimpan terenkripsi. Hapus akun, semua berkas ikut dimusnahkan.</p>
+      <div class="card grid grid-cols-[44px_1fr] gap-x-4 p-5 md:block md:p-6 md:col-span-2">
+        <span class="row-span-2 grid size-11 shrink-0 place-items-center rounded-xl bg-[#eef2ff]" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b4fd8" stroke-width="2" stroke-linecap="round"><rect x="4" y="10" width="16" height="11" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg></span>
+        <h3 class="col-start-2 m-0 text-[17px] font-bold md:mt-5 md:text-[18px]">Brankas terenkripsi</h3>
+        <p class="col-start-2 m-0 mt-2 text-[14.5px] leading-relaxed text-ink-2">CV, ijazah, dan KTP disimpan terenkripsi. Hapus akun, semua berkas ikut dimusnahkan.</p>
       </div>
-      <div class="card p-6 md:col-span-2">
-        <span class="grid size-11 place-items-center rounded-xl bg-[#fdf2f8]" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c2417f" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg></span>
-        <h3 class="m-0 mt-5 text-[18px] font-bold">Lowongan dengan sumber</h3>
-        <p class="m-0 mt-2 text-[14.5px] leading-relaxed text-ink-2">Setiap kartu mencantumkan sumber asli dan tanggal terakhir dicek, jadi kamu bisa memastikan sendiri.</p>
+      <div class="card grid grid-cols-[44px_1fr] gap-x-4 p-5 md:block md:p-6 md:col-span-2">
+        <span class="row-span-2 grid size-11 shrink-0 place-items-center rounded-xl bg-[#fdf2f8]" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c2417f" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg></span>
+        <h3 class="col-start-2 m-0 text-[17px] font-bold md:mt-5 md:text-[18px]">Lowongan dengan sumber</h3>
+        <p class="col-start-2 m-0 mt-2 text-[14.5px] leading-relaxed text-ink-2">Setiap kartu mencantumkan sumber asli dan tanggal terakhir dicek, jadi kamu bisa memastikan sendiri.</p>
       </div>
-      <div class="card p-6 md:col-span-2">
-        <span class="grid size-11 place-items-center rounded-xl bg-[#ecfdf3]" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1f9d55" stroke-width="2" stroke-linecap="round"><path d="M4 6h16v12H4z" /><path d="m4 7 8 6 8-6" /></svg></span>
-        <h3 class="m-0 mt-5 text-[18px] font-bold">Kirim dari akunmu sendiri</h3>
-        <p class="m-0 mt-2 text-[14.5px] leading-relaxed text-ink-2">Email dan WhatsApp tetap milikmu. Balasan HRD masuk langsung ke kamu, bukan ke kami.</p>
+      <div class="card grid grid-cols-[44px_1fr] gap-x-4 p-5 md:block md:p-6 md:col-span-2">
+        <span class="row-span-2 grid size-11 shrink-0 place-items-center rounded-xl bg-[#ecfdf3]" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1f9d55" stroke-width="2" stroke-linecap="round"><path d="M4 6h16v12H4z" /><path d="m4 7 8 6 8-6" /></svg></span>
+        <h3 class="col-start-2 m-0 text-[17px] font-bold md:mt-5 md:text-[18px]">Kirim dari akunmu sendiri</h3>
+        <p class="col-start-2 m-0 mt-2 text-[14.5px] leading-relaxed text-ink-2">Email dan WhatsApp tetap milikmu. Balasan HRD masuk langsung ke kamu, bukan ke kami.</p>
       </div>
     </div>
   </section>
 
-  <section id="cara-kerja" class="mx-auto max-w-6xl scroll-mt-24 px-4 pt-20 lg:pt-24">
+  <section id="cara-kerja" class="mx-auto max-w-6xl scroll-mt-24 px-4 pt-14 sm:pt-20 lg:pt-24">
     <h2 class="m-0 text-center text-[32px] leading-tight font-bold lg:text-[44px]">Tiga langkah, <span class="font-light">tanpa mengetik ulang.</span></h2>
     <ol class="m-0 mt-10 grid list-none gap-4 p-0 md:grid-cols-3">
       {[
@@ -154,16 +154,16 @@ const lift = 'absolute rounded-2xl border border-line bg-white shadow-[0_18px_40
         ['Pilih lowongan yang cocok', 'Filter kota atau jarak. Lihat jalur lamar dan sumber asli sebelum memutuskan.'],
         ['Tinjau, lalu kirim sendiri', 'Lewat email, CV kamu lampirkan sendiri. Lewat WhatsApp, kami sertakan link CV.'],
       ].map(([title, text], i) => (
-        <li class="rounded-[20px] bg-surface-2 p-6">
-          <span class="grid size-9 place-items-center rounded-[10px] border border-line bg-white text-[14px] font-extrabold text-accent">{i + 1}</span>
-          <h3 class="m-0 mt-5 text-[18px] font-bold">{title}</h3>
-          <p class="m-0 mt-2 text-[14.5px] leading-relaxed text-ink-2">{text}</p>
+        <li class="grid grid-cols-[36px_1fr] gap-x-4 rounded-[20px] bg-surface-2 p-5 md:block md:p-6">
+          <span class="row-span-2 grid size-9 place-items-center rounded-[10px] border border-line bg-white text-[14px] font-extrabold text-accent">{i + 1}</span>
+          <h3 class="col-start-2 m-0 text-[17px] font-bold md:mt-5 md:text-[18px]">{title}</h3>
+          <p class="col-start-2 m-0 mt-2 text-[14.5px] leading-relaxed text-ink-2">{text}</p>
         </li>
       ))}
     </ol>
   </section>
 
-  <section id="janji" class="mx-auto max-w-6xl scroll-mt-24 px-4 pt-20 lg:pt-24">
+  <section id="janji" class="mx-auto max-w-6xl scroll-mt-24 px-4 pt-14 sm:pt-20 lg:pt-24">
     <h2 class="m-0 text-center text-[32px] leading-tight font-bold lg:text-[44px]">Yang kami janjikan, <span class="font-light">dan yang tidak.</span></h2>
     <div class="mt-10 grid gap-4 md:grid-cols-2">
       <div class="rounded-[20px] bg-ink p-7 text-white">
@@ -186,7 +186,7 @@ const lift = 'absolute rounded-2xl border border-line bg-white shadow-[0_18px_40
     <p class="m-0 mt-4 text-[13.5px] text-muted">Pengiriman otomatis dengan lampiran hanya mungkin lewat koneksi Gmail resmi. Itu rencana fitur Pro, bukan bagian dari versi ini.</p>
   </section>
 
-  <section class="mx-auto max-w-6xl px-4 pt-20 lg:pt-24">
+  <section class="mx-auto max-w-6xl px-4 pt-14 sm:pt-20 lg:pt-24">
     <div class="grid gap-5 rounded-[28px] bg-accent px-7 py-12 text-white md:grid-cols-[1fr_auto] md:items-center md:p-16">
       <div>
         <h2 class="m-0 text-[32px] leading-tight font-bold lg:text-[44px]">Mulai dari profil.</h2>

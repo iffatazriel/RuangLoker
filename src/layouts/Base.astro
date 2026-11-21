@@ -16,6 +16,16 @@ const {
 const canonical = new URL(Astro.url.pathname, Astro.site);
 
 const currentUser = Astro.locals.user ?? null;
+
+const path = Astro.url.pathname;
+const tabs = [
+  { href: '/app', label: 'Beranda', icon: 'M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z' },
+  { href: '/lowongan', label: 'Lowongan', icon: 'M10.5 17a6.5 6.5 0 1 0 0-13 6.5 6.5 0 0 0 0 13zM21 21l-5.5-5.5' },
+  { href: '/cv', label: 'CV', icon: 'M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6' },
+  { href: '/brankas', label: 'Brankas', icon: 'M5 10h14v11H5zM8 10V7a4 4 0 0 1 8 0v3' },
+  { href: '/profil', label: 'Profil', icon: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21c1.5-4 4.5-6 8-6s6.5 2 8 6' },
+];
+const isTab = (href: string) => path === href || path.startsWith(`${href}/`);
 ---
 
 <!doctype html>
@@ -44,7 +54,7 @@ const currentUser = Astro.locals.user ?? null;
       rel="stylesheet"
     />
   </head>
-  <body class="min-h-screen">
+  <body class:list={["min-h-screen", currentUser && "pb-28 md:pb-0"]}>
     <a
       href="#main"
       class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-accent focus:px-4 focus:py-2 focus:text-white"
@@ -70,9 +80,9 @@ const currentUser = Astro.locals.user ?? null;
           </nav>
 
           <div class="ml-auto flex items-center gap-2 md:ml-0">
-            <a href="/lowongan" class="px-2 text-[14px] font-medium text-ink-2 no-underline md:hidden">Lowongan</a>
+            {!currentUser && <a href="/lowongan" class="px-2 text-[14px] font-medium text-ink-2 no-underline md:hidden">Lowongan</a>}
             {currentUser ? (
-              <a href="/app" class="btn btn-sm">Dashboard</a>
+              <a href="/app" class="btn btn-sm hidden md:inline-flex">Dashboard</a>
             ) : (
               <>
                 <a href="/masuk" class="btn btn-ghost btn-sm hidden sm:inline-flex">Masuk</a>
@@ -104,5 +114,19 @@ const currentUser = Astro.locals.user ?? null;
         </p>
       </div>
     </footer>
+    {currentUser && (
+      <nav class="fixed inset-x-3 bottom-3 z-50 grid grid-cols-5 gap-1 rounded-[22px] border border-line bg-white/90 p-1.5 shadow-[0_12px_32px_rgb(15_23_18/0.14)] backdrop-blur md:hidden" aria-label="Menu aplikasi">
+        {tabs.map((t) => (
+          <a
+            href={t.href}
+            class:list={['flex flex-col items-center gap-0.5 rounded-2xl py-2 text-[11px] font-semibold no-underline', isTab(t.href) ? 'bg-accent-soft text-accent-2' : 'text-muted']}
+            aria-current={isTab(t.href) ? 'page' : undefined}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d={t.icon} /></svg>
+            {t.label}
+          </a>
+        ))}
+      </nav>
+    )}
   </body>
 </html>

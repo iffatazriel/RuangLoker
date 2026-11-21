@@ -1,12 +1,25 @@
 ---
 import AppLayout from '../layouts/AppLayout.astro';
-import { getAccountOverview, formatBytes, hasSensitiveConsent } from '../db/account';
+import { getAccountOverview, formatBytes, hasSensitiveConsent, listFiles } from '../db/account';
+import { listCvs } from '../db/cv';
 import { countActiveJobs } from '../db/queries';
 
 const user = Astro.locals.user!;
 const overview = await getAccountOverview(user.id);
 const sensitive = await hasSensitiveConsent(user.id);
 const totalJobs = await countActiveJobs();
+const [cvList, vaultFiles] = await Promise.all([listCvs(user.id), listFiles(user.id)]);
+const firstCv = cvList[0] ?? null;
+const hasCvPdf = vaultFiles.some((f) => f.kind === 'cv');
+
+const journey = [
+  { done: overview.completeness.percent === 100, title: 'Lengkapi profil', body: 'Data ini dipakai ulang untuk CV dan setiap lamaran.', href: '/profil', cta: 'Isi profil' },
+  { done: cvList.length > 0, title: 'Buat CV ATS', body: 'CV disusun dari profilmu, lalu dinilai dengan aturan terbuka.', href: '/cv', cta: 'Buat CV' },
+  { done: hasCvPdf, title: 'Unduh PDF CV', body: 'PDF disimpan ke brankas dan siap dilampirkan saat melamar.', href: firstCv ? `/cv/${firstCv.id}` : '/cv', cta: 'Buka CV' },
+  { done: false, title: 'Pilih lowongan, kirim sendiri', body: 'Lamar dari email atau WhatsApp milikmu. Antrean lamaran otomatis menyusul.', href: '/lowongan', cta: 'Cari lowongan' },
+];
+const currentIndex = journey.findIndex((s) => !s.done);
+const current = journey[currentIndex];
 
 const missingLabels: Record<string, string> = {
   fullName: 'nama lengkap',
@@ -47,31 +60,54 @@ const nextSteps = [
     </p>
   </div>
 
-  <div class="mt-3 grid gap-3 sm:grid-cols-3">
-    <div class="card p-4">
-      <p class="label-mono m-0">Kelengkapan profil</p>
-      <p class="m-0 mt-1 text-[26px] leading-none font-extrabold">{overview.completeness.percent}%</p>
+  <section class="mt-4 overflow-hidden rounded-[24px] bg-accent md:hidden p-5 text-white shadow-[0_16px_36px_rgb(28_124_244/0.25)] sm:p-6" aria-label="Langkah sekarang">
+    <p class="m-0 text-[12.5px] font-semibold text-white/80">Langkah {currentIndex + 1} dari {journey.length}</p>
+    <h2 class="m-0 mt-1 text-[22px] leading-tight font-bold sm:text-[26px]">{current.title}</h2>
+    <p class="m-0 mt-1.5 max-w-[34em] text-[14px] leading-relaxed text-white/85">{current.body}</p>
+    <div class="mt-4 flex gap-1.5" aria-hidden="true">
+      {journey.map((s, i) => (
+        <span class:list={['h-1.5 flex-1 rounded-full', s.done ? 'bg-white' : i === currentIndex ? 'bg-white/60' : 'bg-white/25']}></span>
+      ))}
+    </div>
+    <a href={current.href} class="btn mt-5 w-full border-white bg-white text-accent-2 shadow-none hover:bg-white/90 sm:w-auto">{current.cta}</a>
+  </section>
+
+  <ol class="m-0 mt-3 grid list-none grid-cols-2 gap-2 p-0 md:hidden">
+    {journey.map((s, i) => (
+      <li>
+        <a href={s.href} class:list={['card flex items-center gap-3 p-3 no-underline', i === currentIndex ? 'border-accent' : 'text-ink']}>
+          <span class:list={['grid size-7 shrink-0 place-items-center rounded-lg text-[12px] font-extrabold', s.done ? 'bg-accent text-white' : i === currentIndex ? 'bg-accent-soft text-accent-2' : 'bg-surface-2 text-muted']}>{i + 1}</span>
+          <span class="min-w-0 text-[13px] leading-snug font-semibold text-ink">{s.title}<span class="block text-[11.5px] font-medium text-muted">{s.done ? 'Selesai' : i === currentIndex ? 'Sekarang' : 'Nanti'}</span></span>
+        </a>
+      </li>
+    ))}
+  </ol>
+
+  <div class="mt-3 grid grid-cols-3 gap-2 sm:gap-3">
+    <div class="card p-3 sm:p-4">
+      <p class="label-mono m-0"><span class="sm:hidden">Profil</span><span class="hidden sm:inline">Kelengkapan profil</span></p>
+      <p class="m-0 mt-1 text-[22px] leading-none font-extrabold sm:text-[26px]">{overview.completeness.percent}%</p>
       <div class="mt-2 h-2 overflow-hidden rounded-full bg-surface-3">
         <div class="h-full rounded-full bg-accent" style={`width:${overview.completeness.percent}%`}></div>
       </div>
     </div>
 
-    <div class="card p-4">
-      <p class="label-mono m-0">Berkas di brankas</p>
-      <p class="m-0 mt-1 text-[26px] leading-none font-extrabold">{overview.fileCount}</p>
+    <div class="card p-3 sm:p-4">
+      <p class="label-mono m-0"><span class="sm:hidden">Berkas</span><span class="hidden sm:inline">Berkas di brankas</span></p>
+      <p class="m-0 mt-1 text-[22px] leading-none font-extrabold sm:text-[26px]">{overview.fileCount}</p>
       <p class="m-0 mt-1.5 text-[11.5px] text-muted">{formatBytes(overview.bytesUsed)} terpakai</p>
     </div>
 
-    <div class="card p-4">
-      <p class="label-mono m-0">Lowongan aktif</p>
-      <p class="m-0 mt-1 text-[26px] leading-none font-extrabold">{totalJobs}</p>
+    <div class="card p-3 sm:p-4">
+      <p class="label-mono m-0"><span class="sm:hidden">Lowongan</span><span class="hidden sm:inline">Lowongan aktif</span></p>
+      <p class="m-0 mt-1 text-[22px] leading-none font-extrabold sm:text-[26px]">{totalJobs}</p>
       <a href="/lowongan" class="mt-1.5 inline-block text-[11.5px] text-ink underline">Cari lowongan</a>
     </div>
   </div>
 
   {nextSteps.length > 0 && (
     <section class="mt-4">
-      <h2 class="m-0 text-[15px] font-bold">Langkah berikutnya</h2>
+      <h2 class="m-0 text-[15px] font-bold"><span class="md:hidden">Perlu juga</span><span class="hidden md:inline">Langkah berikutnya</span></h2>
       <div class="mt-2 flex flex-col gap-2">
         {nextSteps.map((step) => (
           <a

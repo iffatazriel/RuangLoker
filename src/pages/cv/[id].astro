@@ -128,11 +128,11 @@ function fixTarget(ruleId: string): { href: string; label: string } | null {
       <h1 class="m-0 text-2xl font-extrabold tracking-tight">CV ATS{s.targetRole ? ` — ${s.targetRole}` : ''}</h1>
       <p class="m-0 mt-1 text-[12.5px] text-muted">Berkas: <span class="font-mono">{fileName}</span></p>
     </div>
-    <form method="POST" action={`/api/cv/${cv.id}/pdf`} class="flex items-center gap-2">
+    <form method="POST" action={`/api/cv/${cv.id}/pdf`} class="hidden items-center gap-2 md:flex">
       <button class="btn" type="submit">Unduh PDF</button>
     </form>
   </div>
-  <p class="m-0 mt-1 text-[11.5px] text-muted sm:text-right">PDF juga disimpan ke brankas dan menggantikan CV lama di sana.</p>
+  <p class="m-0 mt-1 hidden text-[11.5px] text-muted md:block md:text-right">PDF juga disimpan ke brankas dan menggantikan CV lama di sana.</p>
 
   {(saved || okParam) && (
     <p class="mt-3 rounded-xl border border-line bg-white px-4 py-2.5 text-[13px] font-semibold" role="status">
@@ -364,4 +364,9 @@ function fixTarget(ruleId: string): { href: string; label: string } | null {
       </form>
     </div>
   </div>
+  <form method="POST" action={`/api/cv/${cv.id}/pdf`} class="fixed inset-x-3 bottom-[92px] z-40 flex items-center gap-3 rounded-2xl border border-line bg-white/95 p-2 pl-4 shadow-[0_10px_28px_rgb(15_23_18/0.12)] backdrop-blur md:hidden">
+    <p class="m-0 min-w-0 flex-1 text-[12px] leading-snug text-muted"><b class="block text-[13px] text-ink">Skor {score.score}/100</b>PDF disimpan juga ke brankas</p>
+    <button class="btn btn-sm" type="submit">Unduh PDF</button>
+  </form>
+  <div class="h-20 md:hidden" aria-hidden="true"></div>
 </AppLayout>
