@@ -1,4 +1,4 @@
-import { CITY_COORDS, type JobFormValues } from './job-form.ts';
+import { MAX_LISTING_DAYS, type JobFormValues } from './job-form.ts';
 import { FetchError, safeFetchPage } from './safe-fetch.ts';
 
 // Membaca data terstruktur schema.org JobPosting (format yang dipakai Google for Jobs)
@@ -49,6 +49,62 @@ const isType = (n: Node, t: string) => {
   return v === t || (Array.isArray(v) && v.includes(t));
 };
 
+const VOID_TAGS = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr']);
+const RICH_PROPS = new Set(['description', 'qualifications', 'responsibilities', 'skills', 'experienceRequirements', 'educationRequirements']);
+
+// Microdata (itemscope/itemprop), dipakai antara lain oleh Kalibrr dan SmartRecruiters.
+export function findMicrodata(html: string): Node[] {
+  const src = html.replace(/<(script|style|noscript)[\s\S]*?<\/\1>/gi, '').replace(/<!--[\s\S]*?-->/g, '');
+  type Frame = { tag: string; start: number; scope?: Node; props?: string[]; content?: string };
+  const stack: Frame[] = [];
+  const roots: Node[] = [];
+  const attr = (a: string, name: string) => a.match(new RegExp(`\\b${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`, 'i'))?.slice(1).find((x) => x !== undefined);
+  const finish = (f: Frame, end: number) => {
+    const raw = src.slice(f.start, end);
+    if (f.props) {
+      const parent = [...stack].reverse().find((s) => s.scope)?.scope;
+      if (!parent) return f.scope && roots.push(f.scope);
+      for (const p of f.props) {
+        const value = f.scope ?? f.content ?? (RICH_PROPS.has(p) ? raw.trim() : htmlToText(raw));
+        if (!(p in parent)) parent[p] = value;
+      }
+    } else if (f.scope) roots.push(f.scope);
+  };
+  for (const m of src.matchAll(/<(\/?)([a-zA-Z][\w-]*)((?:"[^"]*"|'[^']*'|[^>"'])*?)(\/?)>/g)) {
+    const [whole, closing, rawTag, attrs, selfClose] = m;
+    const tag = rawTag.toLowerCase();
+    const at = m.index!;
+    if (closing) {
+      const i = stack.map((f) => f.tag).lastIndexOf(tag);
+      if (i < 0) continue;
+      while (stack.length > i) {
+        const f = stack.pop()!;
+        if (f.scope || f.props) finish(f, at);
+      }
+      continue;
+    }
+    const hasScope = /\bitemscope\b/i.test(attrs);
+    const itemprop = attr(attrs, 'itemprop');
+    const type = attr(attrs, 'itemtype');
+    const content = attr(attrs, 'content') ?? (/^(a|link)$/.test(tag) ? attr(attrs, 'href') : tag === 'time' ? attr(attrs, 'datetime') : undefined);
+    const frame: Frame = {
+      tag,
+      start: at + whole.length,
+      scope: hasScope ? { '@type': type ? type.trim().split(/[\/#]/).pop()! : 'Thing' } : undefined,
+      props: itemprop ? itemprop.trim().split(/\s+/) : undefined,
+      content: content !== undefined ? decodeEntities(content).trim() : undefined,
+    };
+    if (VOID_TAGS.has(tag) || selfClose) {
+      if (frame.scope || frame.props) finish(frame, frame.start);
+    } else stack.push(frame);
+  }
+  while (stack.length) {
+    const f = stack.pop()!;
+    if (f.scope || f.props) finish(f, src.length);
+  }
+  return roots;
+}
+
 export function findJobPostings(html: string): Node[] {
   const out: Node[] = [];
   const walk = (v: unknown) => {
@@ -64,6 +120,13 @@ export function findJobPostings(html: string): Node[] {
     } catch {
       // JSON-LD rusak di halaman sumber; lewati blok ini.
     }
+  }
+  if (out.length === 0 && /itemtype=["']?https?:\/\/schema\.org\/JobPosting/i.test(html)) {
+    const walkMicro = (n: Node) => {
+      if (isType(n, 'JobPosting')) out.push(n);
+      for (const v of Object.values(n)) if (v && typeof v === 'object' && !Array.isArray(v)) walkMicro(v as Node);
+    };
+    findMicrodata(html).forEach(walkMicro);
   }
   return out;
 }
@@ -109,9 +172,9 @@ const EMPLOYMENT: Record<string, string> = {
 const CATEGORY_RULES: [RegExp, string][] = [
   [/gudang|warehouse|picker|packer|packing|inventory|logistik|logistic|checker/i, 'Gudang'],
   [/barista|cook|koki|kitchen|dapur|waiter|waitress|pelayan|f&b|restoran|crew outlet|bartender/i, 'F&B'],
+  [/admin|administrasi|data entry|staff kantor|resepsionis|receptionist|sekretaris|customer service/i, 'Admin'],
   [/kasir|cashier|retail|toko|store|spg|spb|sales|pramuniaga|merchandiser/i, 'Retail'],
   [/driver|sopir|kurir|courier|operasional|operator|produksi|cleaning|security|satpam|teknisi/i, 'Operasional'],
-  [/admin|administrasi|data entry|staff kantor|resepsionis|receptionist|sekretaris|customer service/i, 'Admin'],
 ];
 
 export function guessCategory(title: string): string | null {
@@ -165,7 +228,7 @@ export function extractJobFromHtml(html: string, pageUrl: string, now: Date): Im
   const company = htmlToText(str(job.hiringOrganization));
   if (company) values.company = company.slice(0, 120);
 
-  const descHtml = str(job.description);
+  const descHtml = str(job.description) || str(job.responsibilities);
   if (descHtml) values.description = htmlToText(descHtml).slice(0, 3000);
 
   const reqSource = [job.qualifications, job.experienceRequirements, job.educationRequirements, job.skills]
@@ -201,12 +264,16 @@ export function extractJobFromHtml(html: string, pageUrl: string, now: Date): Im
   const employment = types.map((t) => EMPLOYMENT[t]).find(Boolean);
   if (employment) values.employmentType = employment;
 
-  const category = guessCategory(`${title} ${str(job.occupationalCategory)} ${str(job.industry)}`);
+  const category = guessCategory(title) ?? guessCategory(`${str(job.occupationalCategory)} ${str(job.industry)}`);
   if (category) values.category = category;
 
   const validThrough = str(job.validThrough) ? new Date(str(job.validThrough)) : null;
   if (validThrough && !Number.isNaN(validThrough.getTime())) {
-    if (validThrough.getTime() > now.getTime()) values.expiresAt = wibDate(validThrough);
+    const cap = now.getTime() + MAX_LISTING_DAYS * 86_400_000;
+    if (validThrough.getTime() > cap) {
+      values.expiresAt = wibDate(new Date(cap));
+      notes.push(`Sumber menulis batas ${wibDate(validThrough)}; batas tayang di RuangLoker dibatasi ${MAX_LISTING_DAYS} hari.`);
+    } else if (validThrough.getTime() > now.getTime()) values.expiresAt = wibDate(validThrough);
     else notes.push(`Menurut halaman sumber, lowongan ini sudah berakhir pada ${wibDate(validThrough)}.`);
   }
 

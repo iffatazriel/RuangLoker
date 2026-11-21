@@ -1,5 +1,6 @@
 import { normalizeWaNumber } from './letter.ts';
 
+export const MAX_LISTING_DAYS = 30;
 export const JOB_CATEGORIES = ['Admin', 'Retail', 'Gudang', 'F&B', 'Operasional'] as const;
 export const EMPLOYMENT_TYPES = ['Full-time', 'Part-time', 'Shift', 'Kontrak', 'Hybrid', 'Magang'] as const;
 export const APPLY_CHANNELS = ['Email', 'WhatsApp', 'Google Form', 'Portal Eksternal'] as const;
@@ -165,6 +166,8 @@ export function validateJobForm(
   const expiresAt = /^\d{4}-\d{2}-\d{2}$/.test(v.expiresAt) ? new Date(`${v.expiresAt}T23:59:59+07:00`) : null;
   if (!expiresAt || Number.isNaN(expiresAt.getTime())) errors.expiresAt = 'Isi batas tayang.';
   else if (expiresAt.getTime() <= now.getTime()) errors.expiresAt = 'Batas tayang harus di masa depan.';
+  else if (expiresAt.getTime() > now.getTime() + (MAX_LISTING_DAYS + 1) * 86_400_000)
+    errors.expiresAt = `Maksimal ${MAX_LISTING_DAYS} hari dari hari ini. Perpanjang lewat panel kurasi kalau masih dibuka.`;
 
   const requirements = v.requirements
     .split('\n')
@@ -231,7 +234,7 @@ export function jobToFormValues(job: Omit<JobRecord, 'companyInitials' | 'provin
 }
 
 export function emptyJobForm(now: Date): JobFormValues {
-  const in30 = new Date(now.getTime() + 30 * 86_400_000 + 7 * 3600_000).toISOString().slice(0, 10);
+  const in30 = new Date(now.getTime() + MAX_LISTING_DAYS * 86_400_000 + 7 * 3600_000).toISOString().slice(0, 10);
   return {
     title: '', company: '', category: 'Admin', employmentType: 'Full-time', city: 'Jakarta Selatan', district: '',
     lat: '', lng: '', salaryMin: '', salaryMax: '', description: '', requirements: '', applyChannel: 'Email',

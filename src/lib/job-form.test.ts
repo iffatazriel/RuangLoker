@@ -55,3 +55,9 @@ test('companyInitials dan jobSlug', () => {
   assert.equal(companyInitials('Toko Ēlok'), 'TE');
   assert.equal(jobSlug('Kasir & SPG', 'Toko Ēlok', 'a1b2c3'), 'kasir-spg-toko-elok-a1b2c3');
 });
+
+test('batas tayang maksimal 30 hari', () => {
+  const r = validateJobForm({ ...valid(), expiresAt: '2027-01-15' }, now);
+  assert.equal(r.ok, false);
+  assert.ok(!r.ok && r.errors.expiresAt?.includes('Maksimal 30 hari'));
+});

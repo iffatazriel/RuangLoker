@@ -29,7 +29,7 @@ test('JobPosting JSON-LD mengisi form', () => {
   assert.equal(r.values.category, 'Gudang');
   assert.equal(r.values.employmentType, 'Full-time');
   assert.equal(r.values.salaryMin, '4800000');
-  assert.equal(r.values.expiresAt, '2026-12-31');
+  assert.equal(r.values.expiresAt, '2026-12-21');
   assert.equal(r.values.requirements, 'Min. SMA/SMK\nSiap shift');
   assert.equal(r.values.applyChannel, 'Portal Eksternal');
   assert.equal(r.values.verificationStatus, 'pending');
@@ -91,4 +91,34 @@ test('klasifikasi cek tautan', () => {
 test('alamat internal ditolak', () => {
   for (const a of ['127.0.0.1', '10.1.2.3', '192.168.1.1', '169.254.169.254', '::1', '::ffff:127.0.0.1', 'fd00::1']) assert.equal(isPublicAddress(a), false, a);
   assert.equal(isPublicAddress('8.8.8.8'), true);
+});
+
+test('microdata JobPosting (gaya Kalibrr/SmartRecruiters)', () => {
+  const html = `<html><body><div itemscope itemType="http://schema.org/JobPosting">
+    <h1 itemProp="title">Kasir Minimarket</h1>
+    <div itemprop="hiringOrganization" itemscope itemtype="http://schema.org/Organization"><meta itemProp="name" content="PT Maju &amp; Jaya"/><img itemprop="logo" src="/l.png"></div>
+    <div itemprop="jobLocation" itemscope itemtype="http://schema.org/Place"><div itemprop="address" itemscope itemtype="http://schema.org/PostalAddress">
+      <span itemprop="addressLocality">Kota Depok</span><span itemprop="addressRegion">Jawa Barat</span></div></div>
+    <span itemProp="employmentType">PART_TIME</span>
+    <span itemProp="validThrough">2027-03-01T00:00:00+07:00</span>
+    <div itemprop="description"><p>Melayani pembeli di kasir.</p></div>
+    <div itemprop="qualifications"><ul><li>Min. SMA</li><li>Jujur &amp; teliti</li></ul></div>
+  </div></body></html>`;
+  const r = extractJobFromHtml(html, 'https://jobs.example.com/1', now);
+  assert.equal(r.structured, true);
+  assert.equal(r.values.title, 'Kasir Minimarket');
+  assert.equal(r.values.company, 'PT Maju & Jaya');
+  assert.equal(r.values.city, 'Depok');
+  assert.equal(r.values.employmentType, 'Part-time');
+  assert.equal(r.values.category, 'Retail');
+  assert.equal(r.values.requirements, 'Min. SMA\nJujur & teliti');
+  assert.equal(r.values.description, 'Melayani pembeli di kasir.');
+  assert.equal(r.values.expiresAt, '2026-12-21', 'dibatasi 30 hari');
+  assert.ok(r.notes.some((n) => n.includes('dibatasi 30 hari')));
+});
+
+test('kategori: judul diutamakan, admin sebelum retail', () => {
+  assert.equal(guessCategory('Sales Admin'), 'Admin');
+  assert.equal(guessCategory('Admin Gudang'), 'Gudang');
+  assert.equal(guessCategory('Kasir Minimarket'), 'Retail');
 });

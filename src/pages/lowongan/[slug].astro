@@ -15,8 +15,9 @@ import {
 const { slug } = Astro.params;
 const job = await getJobBySlug(slug ?? '');
 
-const adminPreview = !!job && isAdmin(Astro.locals.user) && (!job.isActive || !isPublicStatus(job.verificationStatus));
-if (!job || ((!job.isActive || !isPublicStatus(job.verificationStatus)) && !adminPreview)) {
+const hidden = !!job && (!job.isActive || !isPublicStatus(job.verificationStatus) || (!!job.expiresAt && job.expiresAt.getTime() < Date.now()));
+const adminPreview = hidden && isAdmin(Astro.locals.user);
+if (!job || (hidden && !adminPreview)) {
   Astro.response.status = 404;
   return Astro.rewrite('/404');
 }
@@ -42,7 +43,7 @@ const description = `${job.title} di ${job.company} (${job.city}). ${salaryRange
 <Base title={title} description={description}>
   {adminPreview && (
     <p class="mx-auto mt-4 max-w-6xl rounded-lg border border-line bg-surface-2 px-4 py-2.5 text-[13px] text-ink-2">
-      Pratinjau admin: lowongan ini tidak tayang untuk publik ({job.isActive ? 'belum terverifikasi' : 'nonaktif'}).
+      Pratinjau admin: lowongan ini tidak tayang untuk publik ({!job.isActive ? 'nonaktif' : !isPublicStatus(job.verificationStatus) ? 'belum terverifikasi' : 'sudah lewat batas tayang'}).
       <a href={`/kelola/lowongan/${job.id}`} class="text-ink underline">Ubah</a>
     </p>
   )}
