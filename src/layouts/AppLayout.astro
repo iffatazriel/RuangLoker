@@ -3,7 +3,7 @@ import Base from './Base.astro';
 
 interface Props {
   title: string;
-  active: 'ringkasan' | 'profil' | 'cv' | 'brankas' | 'akun';
+  active: 'ringkasan' | 'profil' | 'cv' | 'lamaran' | 'brankas' | 'akun';
   userName: string;
 }
 
@@ -12,6 +12,7 @@ const { title, active, userName } = Astro.props;
 const nav = [
   { key: 'ringkasan', href: '/app', label: 'Ringkasan' },
   { key: 'profil', href: '/profil', label: 'Profil' },
+  { key: 'lamaran', href: '/lamaran', label: 'Lamaran' },
   { key: 'cv', href: '/cv', label: 'CV' },
   { key: 'brankas', href: '/brankas', label: 'Brankas' },
   { key: 'akun', href: '/akun', label: 'Akun' },

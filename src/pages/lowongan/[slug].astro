@@ -112,7 +112,15 @@ const description = `${job.title} di ${job.company} (${job.city}). ${salaryRange
           </p>
 
           <div class="mt-3 flex flex-wrap gap-2">
-            <a href="/masuk" class="btn">Masuk untuk melamar</a>
+            {Astro.locals.user ? (
+              ['Email', 'WhatsApp', 'Google Form'].includes(job.applyChannel) ? (
+                <form method="POST" action="/api/lamaran"><input type="hidden" name="jobId" value={job.id} /><button class="btn" type="submit">Siapkan lamaran</button></form>
+              ) : job.sourceUrl ? (
+                <a href={job.sourceUrl} class="btn" rel="nofollow noopener noreferrer" target="_blank">Lamar di portal perusahaan</a>
+              ) : null
+            ) : (
+              <a href={`/masuk?next=${encodeURIComponent(`/lowongan/${job.slug}`)}`} class="btn">Masuk untuk melamar</a>
+            )}
             <a href="/lowongan" class="btn btn-ghost">Cari lowongan lain</a>
           </div>
         </section>

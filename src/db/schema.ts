@@ -217,3 +217,55 @@ export type VaultFile = typeof files.$inferSelect;
 export type Consent = typeof consents.$inferSelect;
 export type Cv = typeof cvs.$inferSelect;
 export type CvScore = typeof cvScores.$inferSelect;
+
+export const applications = sqliteTable(
+  'applications',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    jobId: integer('job_id').references(() => jobs.id, { onDelete: 'set null' }),
+    cvId: integer('cv_id').references(() => cvs.id, { onDelete: 'set null' }),
+    // Salinan data lowongan saat lamaran disiapkan, supaya riwayat tetap utuh walau lowongan berubah.
+    jobTitle: text('job_title').notNull(),
+    company: text('company').notNull(),
+    channel: text('channel').notNull(),
+    target: text('target').notNull(),
+    // 'formal' | 'fresh' | 'retail'
+    template: text('template').notNull(),
+    // 'formal' | 'semi'
+    tone: text('tone').notNull(),
+    subject: text('subject').notNull(),
+    body: text('body').notNull(),
+    // 'draf' | 'terkirim' | 'batal'
+    status: text('status').notNull().default('draf'),
+    sentAt: integer('sent_at', { mode: 'timestamp' }),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+    updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+  },
+  (t) => [index('applications_user_idx').on(t.userId, t.createdAt)],
+);
+
+export const cvLinks = sqliteTable(
+  'cv_links',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    // Token = HMAC(kunci brankas, nonce). Database hanya menyimpan nonce dan hash token,
+    // jadi kebocoran database saja tidak cukup untuk membuka CV.
+    nonce: text('nonce').notNull(),
+    tokenHash: text('token_hash').notNull(),
+    expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
+    revokedAt: integer('revoked_at', { mode: 'timestamp' }),
+    accessCount: integer('access_count').notNull().default(0),
+    lastAccessedAt: integer('last_accessed_at', { mode: 'timestamp' }),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+  },
+  (t) => [uniqueIndex('cv_links_token_unique').on(t.tokenHash), index('cv_links_user_idx').on(t.userId)],
+);
+
+export type Application = typeof applications.$inferSelect;
+export type CvLink = typeof cvLinks.$inferSelect;

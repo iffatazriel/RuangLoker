@@ -1,0 +1,138 @@
+---
+import AppLayout from '../../layouts/AppLayout.astro';
+import { getProfile } from '../../db/account';
+import { activeCvFile, activeCvLink, getApplication } from '../../db/applications';
+import { CHANNEL_LABELS, formatDate } from '../../lib/format';
+import { CV_LINK_PLACEHOLDER, gmailComposeUrl, mailtoUrl, TEMPLATES, TONES, waUrl } from '../../lib/letter';
+
+const user = Astro.locals.user!;
+const id = Number(Astro.params.id);
+const app = Number.isInteger(id) && id > 0 ? await getApplication(user.id, id) : null;
+if (!app) return Astro.redirect('/lamaran?error=tidak-ada');
+
+const profile = await getProfile(user.id);
+const [cvFile, link] = await Promise.all([activeCvFile(user.id), activeCvLink(user.id)]);
+const cvUrl = link ? new URL(`/c/${link.token}`, Astro.url).toString() : '';
+const isWa = app.channel === 'WhatsApp';
+const isEmail = app.channel === 'Email';
+const sendBody = isWa ? app.body.replaceAll(CV_LINK_PLACEHOLDER, cvUrl || CV_LINK_PLACEHOLDER) : app.body;
+const gmail = isEmail ? gmailComposeUrl(app.target, app.subject, sendBody) : null;
+const wa = isWa && cvUrl ? waUrl(app.target, sendBody) : '';
+
+const ok = Astro.url.searchParams.get('ok');
+const error = Astro.url.searchParams.get('error');
+const okText: Record<string, string> = {
+  disimpan: 'Perubahan disimpan.',
+  disusun: 'Surat disusun ulang dari profil dan CV terbaru.',
+  terkirim: 'Ditandai terkirim. Balasan HRD akan masuk ke email atau WhatsApp kamu langsung.',
+  'tautan-baru': 'Tautan CV dibuat.',
+};
+const done = app.status !== 'draf';
+---
+
+<AppLayout title={`Lamaran ${app.jobTitle}`} active="lamaran" userName={profile?.fullName || user.email}>
+  <a href="/lamaran" class="mt-4 inline-block text-[12.5px] font-semibold text-muted no-underline hover:text-ink">Semua lamaran</a>
+  <div class="mt-1 flex flex-wrap items-end justify-between gap-3">
+    <div class="min-w-0">
+      <h1 class="m-0 text-2xl font-extrabold tracking-tight">{app.jobTitle}</h1>
+      <p class="m-0 mt-1 text-[13px] text-muted">{app.company} · {CHANNEL_LABELS[app.channel] ?? app.channel} · disiapkan {formatDate(app.createdAt)}</p>
+    </div>
+    <span class:list={['pill', app.status === 'terkirim' && 'pill-solid']}>{app.status === 'terkirim' ? `Terkirim ${formatDate(app.sentAt)}` : app.status === 'batal' ? 'Dibatalkan' : 'Belum dikirim'}</span>
+  </div>
+
+  {ok && okText[ok] && <p class="mt-3 rounded-xl border border-line bg-white px-4 py-2.5 text-[13px] font-semibold" role="status">{okText[ok]}</p>}
+  {error && <p class="mt-3 rounded-xl border border-ink bg-white px-4 py-2.5 text-[13px] font-semibold" role="alert">{error === 'kosong' ? 'Subjek dan isi tidak boleh kosong.' : 'Ada yang tidak valid. Coba lagi.'}</p>}
+
+  <div class="mt-4 grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+    <div class="grid gap-4">
+      <form method="POST" action={`/api/lamaran/${app.id}`} class="card grid gap-3 p-5">
+        <input type="hidden" name="action" value="simpan" />
+        <div class="flex items-center justify-between gap-2">
+          <label for="subject" class="text-[13px] font-semibold">Subjek</label>
+          <button type="button" class="btn btn-ghost btn-sm" data-copy="subject">Salin</button>
+        </div>
+        <input id="subject" name="subject" class="field" value={app.subject} maxlength="200" readonly={done} />
+        <div class="flex items-center justify-between gap-2">
+          <label for="body" class="text-[13px] font-semibold">{isWa ? 'Pesan WhatsApp' : isEmail ? 'Isi email' : 'Ringkasan untuk formulir'}</label>
+          <button type="button" class="btn btn-ghost btn-sm" data-copy="body">Salin</button>
+        </div>
+        <textarea id="body" name="body" class="field min-h-[320px] leading-relaxed" maxlength="6000" readonly={done}>{sendBody}</textarea>
+        {isWa && !cvUrl && <p class="m-0 text-[12.5px] text-muted">Tulisan {CV_LINK_PLACEHOLDER} diganti tautan CV setelah kamu membuat tautan di samping.</p>}
+        {!done && <div><button class="btn btn-ghost btn-sm" type="submit">Simpan perubahan</button></div>}
+      </form>
+
+      {!done && (
+        <form method="POST" action={`/api/lamaran/${app.id}`} class="card flex flex-wrap items-end gap-3 p-4">
+          <input type="hidden" name="action" value="susun" />
+          <label class="grid gap-1 text-[12.5px] font-semibold">Template
+            <select name="template" class="field">{Object.entries(TEMPLATES).map(([k, t]) => <option value={k} selected={app.template === k}>{t.label}</option>)}</select>
+          </label>
+          <label class="grid gap-1 text-[12.5px] font-semibold">Nada
+            <select name="tone" class="field">{Object.entries(TONES).map(([k, t]) => <option value={k} selected={app.tone === k}>{t}</option>)}</select>
+          </label>
+          <button class="btn btn-ghost" type="submit">Susun ulang</button>
+          <p class="m-0 basis-full text-[12px] text-muted">Susun ulang menimpa isi yang sudah kamu ubah.</p>
+        </form>
+      )}
+    </div>
+
+    <aside class="grid gap-4 lg:sticky lg:top-24">
+      <section class="card p-5">
+        <h2 class="m-0 text-[15px] font-bold">Kirim dari akunmu</h2>
+        <p class="m-0 mt-1 text-[12.5px] text-muted">Tujuan: <span class="font-semibold text-ink break-all">{app.target}</span></p>
+
+        <ol class="m-0 mt-4 grid list-none gap-3 p-0 text-[13px]">
+          <li class="grid gap-2">
+            <b>1. Siapkan CV</b>
+            {cvFile ? (
+              <a href={`/api/berkas/${cvFile.id}/unduh`} class="btn btn-ghost btn-sm justify-start">Unduh {cvFile.originalName}</a>
+            ) : (
+              <a href="/cv" class="btn btn-ghost btn-sm">Buat PDF CV dulu</a>
+            )}
+            {isWa && (cvUrl ? (
+              <p class="m-0 text-[12px] text-muted">Tautan CV aktif sampai {formatDate(link!.expiresAt)}. Bisa dicabut di Brankas.</p>
+            ) : (
+              <form method="POST" action="/api/tautan-cv"><input type="hidden" name="action" value="buat" /><input type="hidden" name="next" value={`/lamaran/${app.id}`} /><button class="btn btn-sm w-full" type="submit" disabled={!cvFile}>Buat tautan CV untuk HRD</button></form>
+            ))}
+          </li>
+          <li class="grid gap-2">
+            <b>2. Buka aplikasi lalu tekan kirim sendiri</b>
+            {isEmail && gmail && <a href={gmail.url} target="_blank" rel="noopener" class="btn btn-sm">Buka di Gmail</a>}
+            {isEmail && <a href={mailtoUrl(app.target, app.subject, sendBody)} class="btn btn-ghost btn-sm">Buka aplikasi email lain</a>}
+            {isEmail && gmail?.truncated && <p class="m-0 text-[12px] text-muted">Isi surat terlalu panjang untuk tautan Gmail dan akan terpotong. Salin isi lengkap dari kolom di kiri.</p>}
+            {isEmail && <p class="m-0 text-[12px] text-muted">Lampirkan PDF CV di jendela email. Tautan email tidak bisa membawa berkas.</p>}
+            {isEmail && <a href={`/api/lamaran/${app.id}/surat`} class="text-[12px] font-semibold text-accent">Unduh surat sebagai PDF</a>}
+            {isWa && (wa ? <a href={wa} target="_blank" rel="noopener" class="btn btn-sm">Buka WhatsApp</a> : <p class="m-0 text-[12px] text-muted">Tombol WhatsApp muncul setelah tautan CV dibuat.</p>)}
+            {app.channel === 'Google Form' && <a href={app.target} target="_blank" rel="noopener nofollow" class="btn btn-sm">Buka formulir</a>}
+          </li>
+          {!done && (
+            <li class="grid gap-2">
+              <b>3. Sudah terkirim?</b>
+              <form method="POST" action={`/api/lamaran/${app.id}`}><input type="hidden" name="action" value="terkirim" /><button class="btn btn-ghost btn-sm w-full" type="submit">Tandai terkirim</button></form>
+            </li>
+          )}
+        </ol>
+      </section>
+
+      {!done && (
+        <form method="POST" action={`/api/lamaran/${app.id}`} onsubmit="return confirm('Batalkan lamaran ini? Kuota yang sudah terpakai tidak kembali.')">
+          <input type="hidden" name="action" value="batal" />
+          <button class="text-[12.5px] font-semibold text-muted underline" type="submit">Batalkan lamaran</button>
+        </form>
+      )}
+    </aside>
+  </div>
+</AppLayout>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const el = document.getElementById(btn.dataset.copy!) as HTMLInputElement | HTMLTextAreaElement | null;
+      if (!el) return;
+      await navigator.clipboard.writeText(el.value);
+      const old = btn.textContent;
+      btn.textContent = 'Tersalin';
+      setTimeout(() => (btn.textContent = old), 1500);
+    });
+  });
+</script>

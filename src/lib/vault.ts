@@ -1,4 +1,4 @@
-import { createCipheriv, createDecipheriv, createHash, randomBytes, scryptSync } from 'node:crypto';
+import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes, scryptSync } from 'node:crypto';
 import { mkdir, readFile, unlink, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 
@@ -127,4 +127,17 @@ export function isAllowedUpload(type: string, size: number): { ok: true } | { ok
 
 export function extensionFor(type: string): string {
   return ALLOWED_MIME[type] ?? 'bin';
+}
+
+// Token tautan publik: diturunkan dari kunci brankas + nonce acak, tidak pernah disimpan utuh.
+export function newLinkNonce(): string {
+  return randomBytes(18).toString('base64url');
+}
+
+export function linkToken(nonce: string): string {
+  return createHmac('sha256', key()).update(`cv-link:${nonce}`).digest('base64url').slice(0, 32);
+}
+
+export function hashToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex');
 }

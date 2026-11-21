@@ -29,6 +29,9 @@ const errorText: Record<string, string> = {
 const byKind = new Map(files.map((f) => [f.kind, f]));
 
 const pendingKinds = Object.entries(FILE_KINDS).filter(([key]) => !byKind.has(key));
+import { activeCvLink } from '../db/applications';
+const cvLink = await activeCvLink(Astro.locals.user!.id);
+const cvLinkUrl = cvLink ? new URL(`/c/${cvLink.token}`, Astro.url).toString() : '';
 ---
 
 <AppLayout title="Brankas berkas" active="brankas" userName={user.displayName}>
@@ -77,6 +80,20 @@ const pendingKinds = Object.entries(FILE_KINDS).filter(([key]) => !byKind.has(ke
       </form>
     </div>
   )}
+
+  <section class="card mt-4 p-4">
+    <h2 class="m-0 text-[15px] font-bold">Tautan CV untuk HRD</h2>
+    <p class="m-0 mt-1 text-[12.5px] text-muted">Dipakai di pesan WhatsApp. Siapa pun yang punya tautan ini bisa membuka CV aktifmu, bukan berkas lain.</p>
+    {cvLink ? (
+      <div class="mt-3 grid gap-2">
+        <input class="field font-mono text-[12px]" readonly value={cvLinkUrl} aria-label="Tautan CV" />
+        <p class="m-0 text-[12px] text-muted">Aktif sampai {cvLink.expiresAt.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })} · dibuka {cvLink.accessCount} kali</p>
+        <form method="POST" action="/api/tautan-cv"><input type="hidden" name="action" value="cabut" /><button class="btn btn-ghost btn-sm" type="submit">Cabut tautan</button></form>
+      </div>
+    ) : (
+      <form method="POST" action="/api/tautan-cv" class="mt-3"><input type="hidden" name="action" value="buat" /><button class="btn btn-sm" type="submit">Buat tautan CV</button></form>
+    )}
+  </section>
 
   <section class="mt-4">
     <h2 class="m-0 text-[15px] font-bold">Berkas tersimpan ({files.length})</h2>
