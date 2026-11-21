@@ -50,7 +50,7 @@ const description = `${job.title} di ${job.company} (${job.city}). ${salaryRange
     <div class="card mt-3 p-5">
       <div class="flex flex-wrap items-start gap-4">
         <div
-          class="grid size-14 shrink-0 place-items-center rounded-2xl bg-ink text-[16px] font-extrabold text-white"
+          class="grid size-14 shrink-0 place-items-center rounded-2xl bg-accent-soft text-[16px] font-extrabold text-accent-2"
           aria-hidden="true"
         >
           {job.companyInitials}
@@ -65,7 +65,7 @@ const description = `${job.title} di ${job.company} (${job.city}). ${salaryRange
           <div class="mt-2.5 flex flex-wrap gap-1.5">
             {labels.map((label) => (
               <span class:list={['pill', label.tone === 'warn' && 'border-[#d4d4d4] bg-[#f0f0f0] text-[#525252]']}>
-                {label.tone === 'ok' ? '✓' : label.tone === 'warn' ? '!' : '★'} {label.text}
+                {label.text}
               </span>
             ))}
             <span class="pill">{CATEGORY_LABELS[job.category] ?? job.category}</span>
@@ -93,9 +93,7 @@ const description = `${job.title} di ${job.company} (${job.city}). ${salaryRange
           <ul class="m-0 mt-2 flex list-none flex-col gap-2 p-0">
             {job.requirements.map((req) => (
               <li class="flex items-start gap-2 text-[13.5px] leading-relaxed text-ink-2">
-                <span class="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-surface-3 text-[10px] font-extrabold" aria-hidden="true">
-                  ✓
-                </span>
+                <span class="mt-[0.55em] size-2 shrink-0 rounded-[3px] bg-accent" aria-hidden="true"></span>
                 {req}
               </li>
             ))}
@@ -161,7 +159,7 @@ const description = `${job.title} di ${job.company} (${job.city}). ${salaryRange
               target="_blank"
               class="mt-3 inline-block text-[12px] text-ink underline"
             >
-              Buka sumber asli →
+              Buka sumber asli
             </a>
           )}
 

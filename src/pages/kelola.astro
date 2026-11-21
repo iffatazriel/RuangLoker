@@ -35,7 +35,7 @@ const statusLabel: Record<string, string> = {
           dan tidak ada harga yang menyelamatkan platform ini. Setiap keputusan di sini tercatat.
         </p>
       </div>
-      <a href="/lowongan" class="btn btn-ghost btn-sm">Lihat sisi publik →</a>
+      <a href="/lowongan" class="btn btn-ghost btn-sm">Lihat sisi publik</a>
     </div>
 
     {okAction && actionLabel[okAction] && (
@@ -43,7 +43,7 @@ const statusLabel: Record<string, string> = {
         class="mt-4 rounded-xl border border-ink bg-surface-2 px-4 py-2.5 text-[13px] font-semibold"
         role="status"
       >
-        ✓ {actionLabel[okAction]}
+        {actionLabel[okAction]}
       </p>
     )}
 
@@ -117,7 +117,7 @@ const statusLabel: Record<string, string> = {
                 aria-label="Catatan kurasi"
               />
 
-              <button class="btn btn-sm" type="submit" name="action" value="verify">✓ Verifikasi</button>
+              <button class="btn btn-sm" type="submit" name="action" value="verify">Verifikasi</button>
               <button class="btn btn-ghost btn-sm" type="submit" name="action" value="manual_check">
                 Dicek manual
               </button>

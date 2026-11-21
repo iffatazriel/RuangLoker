@@ -159,7 +159,7 @@ function fixTarget(ruleId: string): { href: string; label: string } | null {
         <div class="flex items-center gap-4">
           <svg class="shrink-0" width="96" height="96" viewBox="0 0 120 120" role="img" aria-label={`Skor ${score.score} dari 100`}>
             <circle cx="60" cy="60" r={RADIUS} fill="none" stroke="var(--color-surface-3)" stroke-width="10" />
-            <circle cx="60" cy="60" r={RADIUS} fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round"
+            <circle cx="60" cy="60" r={RADIUS} fill="none" stroke="var(--color-accent)" stroke-width="10" stroke-linecap="round"
               stroke-dasharray={CIRC.toFixed(2)} stroke-dashoffset={(CIRC * (1 - score.score / 100)).toFixed(2)} transform="rotate(-90 60 60)" />
             <text x="60" y="68" text-anchor="middle" font-size="32" font-weight="800" fill="currentColor">{score.score}</text>
           </svg>
@@ -182,7 +182,7 @@ function fixTarget(ruleId: string): { href: string; label: string } | null {
                 <dd class="m-0 font-mono font-semibold">{c.earned}/{c.max}</dd>
               </div>
               <div class="mt-1 h-1 overflow-hidden rounded-full bg-surface-3" aria-hidden="true">
-                <div class="h-full bg-ink" style={`width:${(c.earned / c.max) * 100}%`}></div>
+                <div class="h-full rounded-full bg-accent" style={`width:${(c.earned / c.max) * 100}%`}></div>
               </div>
             </div>
           ))}
@@ -203,11 +203,11 @@ function fixTarget(ruleId: string): { href: string; label: string } | null {
               const fix = fixTarget(r.id);
               return (
                 <li class="grid grid-cols-[2.5rem_1fr] gap-x-2 text-[12.5px] leading-relaxed">
-                  <span class="font-mono font-semibold">+{r.max - r.earned}</span>
+                  <span class="font-bold text-accent">+{r.max - r.earned}</span>
                   <div>
                     <p class="m-0 font-semibold">{r.label}</p>
                     <p class="m-0 text-muted">{r.message}</p>
-                    {fix && <a href={fix.href} class="text-[12px] font-semibold text-ink">{fix.label}</a>}
+                    {fix && <a href={fix.href} class="text-[12px] font-semibold text-accent no-underline hover:underline">{fix.label}</a>}
                   </div>
                 </li>
               );
@@ -235,8 +235,8 @@ function fixTarget(ruleId: string): { href: string; label: string } | null {
 
     <div class="grid min-w-0 gap-4 lg:col-start-1 lg:row-start-1">
       <div class="flex gap-1 rounded-full border border-line bg-white p-1 text-[13px] font-semibold" aria-label="Mode halaman">
-        <a href={`/cv/${cv.id}`} aria-current={!editing ? 'page' : undefined} class:list={['flex-1 rounded-full px-3 py-1.5 text-center no-underline', !editing ? 'bg-ink text-white' : 'text-muted hover:text-ink']}>Pratinjau</a>
-        <a href={`/cv/${cv.id}?ubah=1`} aria-current={editing ? 'page' : undefined} class:list={['flex-1 rounded-full px-3 py-1.5 text-center no-underline', editing ? 'bg-ink text-white' : 'text-muted hover:text-ink']}>Ubah isi</a>
+        <a href={`/cv/${cv.id}`} aria-current={!editing ? 'page' : undefined} class:list={['flex-1 rounded-full px-3 py-1.5 text-center no-underline', !editing ? 'bg-accent text-white' : 'text-muted hover:text-ink']}>Pratinjau</a>
+        <a href={`/cv/${cv.id}?ubah=1`} aria-current={editing ? 'page' : undefined} class:list={['flex-1 rounded-full px-3 py-1.5 text-center no-underline', editing ? 'bg-accent text-white' : 'text-muted hover:text-ink']}>Ubah isi</a>
       </div>
 
       {!editing ? (

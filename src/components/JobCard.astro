@@ -28,12 +28,12 @@ const channelClass =
 ---
 
 <article
-  class="card flex flex-col gap-3 p-4 transition-shadow hover:shadow-md"
+  class="card flex flex-col gap-3 p-4 transition hover:-translate-y-0.5 hover:shadow-[0_16px_36px_rgb(15_23_18/0.08)]"
   data-job-card
 >
   <div class="flex items-start gap-3">
     <div
-      class="grid size-11 shrink-0 place-items-center rounded-xl bg-ink text-[12px] font-extrabold text-white"
+      class="grid size-11 shrink-0 place-items-center rounded-xl bg-accent-soft text-[12px] font-extrabold text-accent-2"
       aria-hidden="true"
     >
       {job.companyInitials}
@@ -56,12 +56,11 @@ const channelClass =
 
   <div class="flex flex-wrap gap-1.5">
     {job.distanceKm !== null && (
-      <span class="pill">📍 {job.distanceKm.toFixed(1).replace('.', ',')} km</span>
+      <span class="pill">{job.distanceKm.toFixed(1).replace('.', ',')} km</span>
     )}
     <span class="pill">{salaryRange(job.salaryMin, job.salaryMax)}</span>
     <span class="pill">{job.employmentType}</span>
     <span class={`${channelClass} ${job.applyChannel === 'Email' ? 'pill-solid' : ''}`}>
-      {job.applyChannel === 'Email' ? '✉' : job.applyChannel === 'WhatsApp' ? '💬' : '🔗'}
       {CHANNEL_LABELS[job.applyChannel] ?? job.applyChannel}
     </span>
   </div>
@@ -75,7 +74,7 @@ const channelClass =
             label.tone === 'warn' && 'border-[#d4d4d4] bg-[#f0f0f0] text-[#525252]',
           ]}
         >
-          {label.tone === 'ok' ? '✓' : label.tone === 'warn' ? '!' : '★'} {label.text}
+          {label.text}
         </span>
       ))}
     </div>
@@ -84,7 +83,7 @@ const channelClass =
   <div
     class="mt-auto flex flex-wrap items-center gap-2 border-t border-line-2 pt-3 text-[11.5px] text-muted"
   >
-    <span class="label-mono">Sumber: {job.sourceName}</span>
+    <span>Sumber: {job.sourceName}</span>
     <span aria-hidden="true">·</span>
     <span>Dilihat {relativeTime(job.lastSeenAt)}</span>
     {isExpiringSoon && (

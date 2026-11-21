@@ -59,7 +59,7 @@ const description = `${jobs.length} lowongan valid${city ? ` di ${city}` : ' di 
           terakhir dicek kurator — bukan tautan yang menumpuk tanpa dicek.
         </p>
       </div>
-      <a href="/kelola" class="btn btn-ghost btn-sm">Panel kurasi →</a>
+      <a href="/kelola" class="btn btn-ghost btn-sm">Panel kurasi</a>
     </div>
 
     <form method="GET" action="/lowongan" class="card mt-4 p-3" data-filter-form>
@@ -99,7 +99,7 @@ const description = `${jobs.length} lowongan valid${city ? ` di ${city}` : ' di 
 
       <div class="mt-2.5 flex flex-wrap items-center gap-2">
         <button class="btn btn-ghost btn-sm" type="button" id="gps-btn" aria-describedby="gps-hint">
-          📍 Pakai GPS saya
+          Pakai lokasi saya
         </button>
         <span id="gps-hint" class="text-[11.5px] text-muted">
           Izin lokasi hanya diminta setelah kamu menekan tombol ini.
@@ -108,7 +108,7 @@ const description = `${jobs.length} lowongan valid${city ? ` di ${city}` : ' di 
         {hasGeo && (
           <span class="pill pill-solid ml-auto">
             Radius {radiusKm} km aktif
-            <a href={queryFor({ lat: null, lng: null, radius: null })} class="text-white/80 no-underline">✕</a>
+            <a href={queryFor({ lat: null, lng: null, radius: null })} class="text-accent-2 underline" aria-label="Matikan filter radius">hapus</a>
           </span>
         )}
 
@@ -164,7 +164,7 @@ const description = `${jobs.length} lowongan valid${city ? ` di ${city}` : ' di 
     }
 
     btn.disabled = true;
-    btn.textContent = '📍 Meminta izin…';
+    btn.textContent = 'Meminta izin…';
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -184,7 +184,7 @@ const description = `${jobs.length} lowongan valid${city ? ` di ${city}` : ' di 
       },
       () => {
         btn.disabled = false;
-        btn.textContent = '📍 Pakai GPS saya';
+        btn.textContent = 'Pakai lokasi saya';
         if (hint) hint.textContent = 'Izin lokasi ditolak. Pilih kota secara manual di atas.';
       },
       { enableHighAccuracy: false, timeout: 10_000, maximumAge: 600_000 },

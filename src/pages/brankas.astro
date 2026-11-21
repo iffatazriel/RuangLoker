@@ -43,18 +43,18 @@ const pendingKinds = Object.entries(FILE_KINDS).filter(([key]) => !byKind.has(ke
   </div>
 
   <div class="mt-3 h-2 overflow-hidden rounded-full bg-surface-3" role="img" aria-label={`Penyimpanan terpakai ${percentUsed} persen`}>
-    <div class="h-full bg-ink" style={`width:${percentUsed}%`}></div>
+    <div class="h-full rounded-full bg-accent" style={`width:${percentUsed}%`}></div>
   </div>
 
   {ok && (
     <p class="mt-3 rounded-xl border border-ink bg-surface-2 px-4 py-2.5 text-[13px] font-semibold" role="status">
-      ✓ {ok} tersimpan terenkripsi.
+      {ok} tersimpan terenkripsi.
     </p>
   )}
 
   {hapus && (
     <p class="mt-3 rounded-xl border border-ink bg-surface-2 px-4 py-2.5 text-[13px] font-semibold" role="status">
-      ✓ Berkas dihapus permanen.
+      Berkas dihapus permanen.
     </p>
   )}
 

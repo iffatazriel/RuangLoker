@@ -27,14 +27,14 @@ const initials = userName
 
 <Base title={`${title} — RuangLoker`} noindex>
   <section class="mx-auto max-w-5xl px-4 pt-6">
-    <div class="card flex items-center gap-2 px-2 py-2 sm:gap-3 sm:px-4 sm:py-3">
+    <div class="card flex items-center shadow-[0_8px_24px_rgb(15_23_18/0.04)] gap-2 px-2 py-2 sm:gap-3 sm:px-4 sm:py-3">
       <nav class="-mx-1 flex min-w-0 flex-1 gap-1 overflow-x-auto px-1 text-[13px] font-semibold" aria-label="Menu akun">
         {nav.map((item) => (
           <a
             href={item.href}
             class:list={[
               'shrink-0 rounded-full px-3 py-1.5 no-underline',
-              item.key === active ? 'bg-ink text-white' : 'text-muted hover:bg-surface-2 hover:text-ink',
+              item.key === active ? 'bg-accent-soft text-accent-2' : 'text-muted hover:bg-surface-2 hover:text-ink',
             ]}
             aria-current={item.key === active ? 'page' : undefined}
           >
@@ -46,7 +46,7 @@ const initials = userName
       <div class="flex shrink-0 items-center gap-2">
         <span
           title={userName}
-          class="hidden size-8 place-items-center sm:grid rounded-full bg-ink text-[11px] font-extrabold text-white"
+          class="hidden size-8 place-items-center sm:grid rounded-full bg-accent-soft text-[11px] font-extrabold text-accent-2"
           aria-hidden="true">{initials || 'U'}</span
         >
         <span class="hidden text-[12px] font-semibold md:inline">{userName}</span>

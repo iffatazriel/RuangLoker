@@ -52,7 +52,7 @@ const nextSteps = [
       <p class="label-mono m-0">Kelengkapan profil</p>
       <p class="m-0 mt-1 text-[26px] leading-none font-extrabold">{overview.completeness.percent}%</p>
       <div class="mt-2 h-2 overflow-hidden rounded-full bg-surface-3">
-        <div class="h-full bg-ink" style={`width:${overview.completeness.percent}%`}></div>
+        <div class="h-full rounded-full bg-accent" style={`width:${overview.completeness.percent}%`}></div>
       </div>
     </div>
 
@@ -65,7 +65,7 @@ const nextSteps = [
     <div class="card p-4">
       <p class="label-mono m-0">Lowongan aktif</p>
       <p class="m-0 mt-1 text-[26px] leading-none font-extrabold">{totalJobs}</p>
-      <a href="/lowongan" class="mt-1.5 inline-block text-[11.5px] text-ink underline">Cari lowongan →</a>
+      <a href="/lowongan" class="mt-1.5 inline-block text-[11.5px] text-ink underline">Cari lowongan</a>
     </div>
   </div>
 
